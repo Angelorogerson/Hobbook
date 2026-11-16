@@ -1,0 +1,511 @@
+/* =========================================
+   FavoritesPage — Hobbook Design System
+   Primary: #004E89 | Font: Inter
+   ========================================= */
+
+.fav-page {
+  min-height: 100vh;
+  background-color: #f5f7f8;
+  font-family: 'Inter', sans-serif;
+}
+
+/* =========================================
+   HERO — dark
+   ========================================= */
+.fav-hero {
+  position: relative;
+  background-color: #1a1a1a;
+  padding: 64px 24px;
+  overflow: hidden;
+}
+
+.fav-hero-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='%23004E89' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 40px 40px;
+}
+
+.fav-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.fav-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 20px;
+}
+
+.fav-hero-title {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 16px 0;
+  line-height: 1.1;
+}
+
+.fav-hero-sub {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0 0 32px 0;
+  line-height: 1.65;
+  max-width: 480px;
+}
+
+.fav-hero-stats {
+  display: flex;
+  gap: 32px;
+}
+
+.fav-stat {
+  border-left: 4px solid #ef4444;
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fav-stat-val {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.fav-stat-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* =========================================
+   CONTENT AREA
+   ========================================= */
+.fav-content {
+  padding: 48px 24px 80px;
+}
+
+.fav-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Loading */
+.fav-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 280px;
+  color: #94a3b8;
+}
+
+.fav-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty */
+.fav-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 20px;
+  padding: 60px 32px;
+  border: 1px solid #e2e8f0;
+}
+
+.fav-empty-icon {
+  font-size: 56px;
+  color: #fca5a5;
+}
+
+.fav-empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.fav-empty-sub {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+}
+
+.fav-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px 28px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.fav-empty-btn:hover {
+  background-color: var(--primary-dark, #003a66);
+  transform: none;
+  opacity: 1;
+}
+
+/* TAB BUTTONS */
+.fav-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.fav-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+
+.fav-tab:hover {
+  color: #0f172a;
+}
+
+.fav-tab--active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+/* EMPTY SECTION (for tabs) */
+.fav-empty-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 280px;
+  text-align: center;
+  padding: 48px 32px;
+}
+
+.fav-empty-section p {
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
+}
+
+.fav-link-btn {
+  padding: 10px 24px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fav-link-btn:hover {
+  background-color: var(--primary-dark, #003a66);
+}
+
+/* EVENT CARD STATS */
+.fav-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.fav-stat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background-color: #f1f5f9;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.fav-stat-tag span {
+  font-size: 14px;
+}
+
+/* =========================================
+   CARDS LIST
+   ========================================= */
+.fav-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Single Card ── */
+.fav-card {
+  background-color: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(0,78,137,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  overflow: hidden;
+  display: flex;
+  transition: all 0.3s ease;
+}
+
+.fav-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1);
+}
+
+.fav-card--removing {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Image */
+.fav-card-img-wrap {
+  width: 33%;
+  flex-shrink: 0;
+  position: relative;
+  min-height: 200px;
+}
+
+.fav-card-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.fav-card-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.fav-card-placeholder--football   { background: linear-gradient(135deg,#003a66,#004E89); }
+.fav-card-placeholder--basketball { background: linear-gradient(135deg,#c2410c,#f97316); }
+.fav-card-placeholder--both       { background: linear-gradient(135deg,#1d4ed8,#7c3aed); }
+
+.fav-card-sport-icon { font-size: 72px; color: rgba(255,255,255,0.25); }
+
+.fav-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.fav-card-badge--football   { background-color: var(--primary-color); }
+.fav-card-badge--basketball { background-color: #ea580c; }
+.fav-card-badge--both       { background-color: #7c3aed; }
+
+/* Content */
+.fav-card-content {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+}
+
+.fav-card-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.fav-card-name {
+  font-size: 19px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.fav-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.fav-star { font-size: 18px; color: #f59e0b; }
+
+.fav-card-addr {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+.fav-loc-icon { font-size: 15px; }
+
+.fav-card-desc {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.fav-card-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fav-amenity-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background-color: #f1f5f9;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  text-transform: capitalize;
+}
+.fav-amenity-icon { font-size: 13px; }
+
+/* Bottom */
+.fav-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(0,78,137,0.05);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.fav-price-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0;
+}
+.fav-price-val {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--primary-color);
+  margin: 0;
+  line-height: 1.1;
+}
+.fav-price-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.fav-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fav-remove-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #fff0f0;
+  border: 1.5px solid #fecaca;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+.fav-remove-btn:hover {
+  background-color: #fecaca;
+  transform: none;
+  opacity: 1;
+}
+.fav-remove-icon { font-size: 20px; color: #ef4444; }
+
+.fav-book-btn {
+  padding: 12px 28px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0,78,137,0.25);
+}
+.fav-book-btn:hover {
+  background-color: var(--primary-dark, #003a66);
+  transform: none;
+  opacity: 1;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 768px) {
+  .fav-card { flex-direction: column; }
+  .fav-card-img-wrap { width: 100%; height: 160px; min-height: unset; }
+  .fav-hero { padding: 48px 16px; }
+  .fav-content { padding: 32px 16px 60px; }
+}

@@ -1,0 +1,384 @@
+/* =========================================
+   HomePage – Hobbook Design System
+   Primary: #004E89 | Font: Inter
+   ========================================= */
+
+.home-page {
+  min-height: 100vh;
+  background-color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Icon Helpers ── */
+.home-icon-sm  { font-size: 18px; vertical-align: middle; }
+.home-icon-lg  { font-size: 48px; }
+.home-icon-xl  { font-size: 56px; color: #cbd5e1; display: block; margin-bottom: 12px; }
+
+/* =========================================
+   SPLIT HERO
+   ========================================= */
+.home-split-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 700px;
+  width: 100%;
+}
+
+/* Left – Blue */
+.home-hero-left {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  background-color: var(--primary-color);
+  color: #fff;
+  overflow: hidden;
+  text-align: center;
+}
+
+/* SVG Grid Pattern */
+.home-hero-grid-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M 40 0 L 0 0 0 40' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E");
+  background-size: 40px 40px;
+}
+
+/* Right – White */
+.home-hero-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  background-color: #fff;
+  text-align: center;
+}
+
+.home-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Icon Box */
+.home-hero-icon-box {
+  width: 80px;
+  height: 80px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.home-hero-icon-box--white {
+  background-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  color: #fff;
+}
+.home-hero-icon-box--blue {
+  background-color: rgba(0, 78, 137, 0.06);
+}
+
+/* Titles */
+.home-hero-title {
+  font-size: clamp(32px, 3.5vw, 48px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  margin: 0;
+}
+.home-hero-title--white { color: #fff; }
+.home-hero-title--blue  { color: var(--primary-color); }
+
+/* Subtitles */
+.home-hero-sub {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+}
+.home-hero-sub--white { color: rgba(255,255,255,0.8); }
+.home-hero-sub--gray  { color: #64748b; }
+
+/* Buttons */
+.home-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 36px;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+}
+.home-hero-btn--outline {
+  background: transparent;
+  border: 2.5px solid #fff;
+  color: #fff;
+}
+.home-hero-btn--outline:hover {
+  background-color: #fff;
+  color: var(--primary-color);
+  transform: none;
+  opacity: 1;
+}
+.home-hero-btn--primary {
+  background-color: var(--primary-color);
+  color: #fff;
+  box-shadow: 0 20px 40px rgba(0, 78, 137, 0.3);
+}
+.home-hero-btn--primary:hover {
+  background-color: var(--primary-dark);
+  transform: none;
+  opacity: 1;
+}
+
+/* =========================================
+   TRUST SECTION
+   ========================================= */
+.home-trust-section {
+  background-color: #f8fafc;
+  padding: 80px 24px;
+}
+
+.home-trust-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.home-trust-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 40px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.home-trust-card:hover {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  transform: translateY(-4px);
+}
+
+.home-trust-icon {
+  width: 56px;
+  height: 56px;
+  background-color: #eff6ff;
+  color: var(--primary-color);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s;
+}
+.home-trust-card:hover .home-trust-icon {
+  transform: scale(1.1);
+}
+.home-trust-icon .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.home-trust-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+}
+
+.home-trust-text {
+  font-size: 15px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.home-trust-stars {
+  display: flex;
+  gap: 4px;
+}
+.home-star {
+  color: #f59e0b;
+  font-size: 22px;
+}
+
+.home-trust-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: auto;
+}
+
+/* =========================================
+   FEATURED VENUES
+   ========================================= */
+.home-venues-section {
+  padding: 80px 24px;
+  background-color: #fff;
+}
+
+.home-venues-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.home-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 36px;
+}
+
+.home-section-title {
+  font-size: 28px;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: -0.3px;
+}
+
+.home-section-link {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.home-section-link:hover {
+  color: var(--primary-dark);
+}
+
+.home-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 280px;
+}
+
+.home-empty {
+  text-align: center;
+  padding: 60px;
+  color: #94a3b8;
+  font-size: 16px;
+}
+
+.home-venues-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+/* =========================================
+   SPORT QUICK-FILTER
+   ========================================= */
+.home-sports-section {
+  padding: 60px 24px 80px;
+  background-color: #f8fafc;
+}
+
+.home-sports-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.home-sport-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 32px;
+  background-color: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+.home-sport-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 8px 24px rgba(0, 78, 137, 0.12);
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+.home-sport-icon {
+  font-size: 28px;
+  color: var(--primary-color);
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .home-split-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+  .home-hero-left,
+  .home-hero-right {
+    padding: 60px 32px;
+  }
+  .home-trust-grid {
+    grid-template-columns: 1fr;
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-hero-left,
+  .home-hero-right {
+    padding: 48px 24px;
+  }
+  .home-hero-title {
+    font-size: 32px;
+  }
+  .home-trust-section,
+  .home-venues-section,
+  .home-sports-section {
+    padding: 48px 16px;
+  }
+  .home-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .home-venues-grid {
+    grid-template-columns: 1fr;
+  }
+}

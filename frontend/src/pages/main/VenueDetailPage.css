@@ -1,0 +1,518 @@
+/* =========================================
+   VenueDetailPage — Hobbook Design System
+   Primary: #004E89 | Font: Inter
+   ========================================= */
+
+.vd-page {
+  min-height: 100vh;
+  background-color: #f5f7f8;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Loading ── */
+.vd-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+.vd-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* =========================================
+   HERO
+   ========================================= */
+.vd-hero {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+}
+
+.vd-hero-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.vd-hero-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vd-hero-placeholder--football   { background: linear-gradient(135deg,#003a66,#004E89); }
+.vd-hero-placeholder--basketball { background: linear-gradient(135deg,#c2410c,#f97316); }
+.vd-hero-placeholder--both       { background: linear-gradient(135deg,#1d4ed8,#7c3aed); }
+.vd-hero-icon { font-size: 140px; color: rgba(255,255,255,0.18); }
+
+.vd-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Thumbnails */
+.vd-thumbnails {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+.vd-thumb {
+  width: 56px;
+  height: 40px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: border-color 0.2s;
+}
+.vd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.vd-thumb--active { border-color: #fff; }
+
+/* Back + Fav buttons */
+.vd-back-btn, .vd-fav-btn {
+  position: absolute;
+  top: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+.vd-back-btn {
+  left: 16px;
+  background-color: rgba(255,255,255,0.9);
+  color: #0f172a;
+}
+.vd-back-btn:hover { background-color: #fff; transform: none; opacity: 1; }
+
+.vd-fav-btn {
+  right: 16px;
+  background-color: rgba(255,255,255,0.9);
+  color: #94a3b8;
+}
+.vd-fav-btn:hover { background-color: #fff; transform: none; opacity: 1; }
+.vd-fav-btn--active { color: #ef4444; }
+.vd-fav-btn:disabled { opacity: 0.6; }
+
+/* =========================================
+   MAIN CONTENT
+   ========================================= */
+.vd-content {
+  padding: 0 24px 80px;
+}
+
+.vd-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+  padding-top: 40px;
+}
+
+/* =========================================
+   LEFT — Details
+   ========================================= */
+.vd-details {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Title block */
+.vd-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vd-sport-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  align-self: flex-start;
+}
+.vd-sport-badge--football   { background-color: var(--primary-color); }
+.vd-sport-badge--basketball { background-color: #ea580c; }
+.vd-sport-badge--both       { background-color: #7c3aed; }
+
+/* Fix: the outer wrapping div */
+.vd-title-block > div:first-child { align-self: flex-start; }
+
+.vd-title {
+  font-size: clamp(24px, 3vw, 36px);
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.15;
+}
+
+.vd-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.vd-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #64748b;
+}
+.vd-meta-icon { font-size: 17px; color: #94a3b8; }
+
+/* Section */
+.vd-section {}
+
+.vd-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.vd-description {
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.75;
+  margin: 0;
+}
+
+/* Amenities */
+.vd-amenities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.vd-amenity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  font-weight: 500;
+}
+.vd-amenity-icon {
+  font-size: 20px;
+  color: var(--primary-color);
+}
+
+/* Opening Hours */
+.vd-hours {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.vd-hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.vd-hours-row:last-child { border-bottom: none; }
+
+.vd-hours-day {
+  font-weight: 600;
+  color: #0f172a;
+}
+.vd-hours-time {
+  color: #64748b;
+}
+
+/* =========================================
+   RIGHT — Booking Card
+   ========================================= */
+.vd-booking-col {
+  position: sticky;
+  top: 88px;
+}
+
+.vd-booking-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.vd-booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.vd-booking-price {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--primary-color);
+}
+.vd-booking-per {
+  font-size: 15px;
+  color: #64748b;
+}
+
+.vd-booking-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.vd-star { font-size: 18px; color: #f59e0b; }
+
+/* Form */
+.vd-booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vd-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vd-form-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.vd-label-icon { font-size: 16px; }
+
+.vd-form-input {
+  width: 100%;
+  padding: 10px 14px;
+  background-color: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.vd-form-input:focus { border-color: var(--primary-color); }
+.vd-form-textarea { resize: none; }
+
+/* Sport pills */
+.vd-sport-pills {
+  display: flex;
+  gap: 10px;
+}
+.vd-sport-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.vd-sport-pill:hover { border-color: var(--primary-color); transform: none; opacity: 1; }
+.vd-sport-pill--active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+
+/* Slots */
+.vd-slots-loading {
+  font-size: 13px;
+  color: #94a3b8;
+  padding: 8px 0;
+}
+
+.vd-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vd-slot {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vd-slot:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: none;
+  opacity: 1;
+}
+.vd-slot--selected {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #fff;
+}
+.vd-slot--booked {
+  background-color: #f1f5f9;
+  color: #cbd5e1;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Price summary */
+.vd-price-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background-color: #f0f7ff;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #475569;
+}
+.vd-price-total {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary-color);
+}
+
+/* Error */
+.vd-booking-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+/* Book button */
+.vd-book-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background-color: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  box-shadow: 0 6px 20px rgba(0,78,137,0.3);
+}
+.vd-book-btn:hover:not(:disabled) {
+  background-color: var(--primary-dark, #003a66);
+  transform: none;
+  opacity: 1;
+}
+.vd-book-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Success */
+.vd-booking-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 16px 0;
+}
+.vd-success-icon {
+  font-size: 56px;
+  color: #22c55e;
+}
+.vd-booking-success h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.vd-booking-success p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1024px) {
+  .vd-inner {
+    grid-template-columns: 1fr;
+  }
+  .vd-booking-col { position: static; }
+}
+
+@media (max-width: 640px) {
+  .vd-hero { height: 260px; }
+  .vd-content { padding: 0 16px 60px; }
+  .vd-inner { padding-top: 24px; gap: 28px; }
+  .vd-title { font-size: 24px; }
+}
