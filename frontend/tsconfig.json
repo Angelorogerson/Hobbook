@@ -19,7 +19,6 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "ignoreDeprecations": "6.0",
 
     /* Linting */
     "strict": true,
@@ -27,8 +26,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src"],
+  "exclude": ["src/legacy"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

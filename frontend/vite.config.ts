@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -12,10 +13,19 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: true,
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    // Source maps are not published with the production bundle.
+    sourcemap: false,
+    chunkSizeWarningLimit: 1200,
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+    exclude: ['src/legacy/**', 'node_modules/**', 'e2e/**'],
+    css: false,
   },
 })

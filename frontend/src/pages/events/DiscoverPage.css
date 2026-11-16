@@ -1,0 +1,142 @@
+.discover {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) 1fr;
+  min-height: 0;
+}
+.discover-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--c-border);
+  background: var(--c-bg);
+}
+.discover-head {
+  padding: 16px 16px 8px;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+}
+.discover-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.discover-count {
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+  margin-top: 8px;
+  min-height: 1.3em;
+}
+.discover-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+}
+.discover-cards {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.discover-empty {
+  text-align: center;
+  padding: 32px 12px;
+}
+.discover-empty h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+.discover-empty p {
+  color: var(--c-text-muted);
+  margin-bottom: 16px;
+}
+.discover-map {
+  position: relative;
+  min-height: 0;
+}
+.discover-toggle {
+  display: none;
+}
+
+/* Filters */
+.filterbar {
+  display: grid;
+  gap: 8px;
+}
+.filterbar-city {
+  display: flex;
+  gap: 6px;
+}
+.filterbar-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.filterbar-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-primary);
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .discover {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  .discover-panel {
+    border-right: none;
+  }
+  .discover--list .discover-map,
+  .discover--map .discover-list {
+    display: none;
+  }
+  .discover--map {
+    grid-template-rows: auto 1fr;
+  }
+  .discover--map .discover-panel {
+    flex: none;
+  }
+  .discover--map .discover-title {
+    display: none;
+  }
+  .discover-toggle {
+    display: inline-flex;
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    z-index: 5;
+    background: var(--c-text);
+    border-radius: 999px;
+    padding: 4px;
+    box-shadow: var(--shadow-lg);
+  }
+  .discover-toggle button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .discover-toggle button[aria-pressed='true'] {
+    background: #fff;
+    color: var(--c-text);
+  }
+}

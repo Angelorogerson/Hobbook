@@ -92,14 +92,14 @@ Erfolg: Die Version wird angezeigt.
 3. Wähle **"Drivers"**
 4. Unter **"Connection String"** siehst du einen String wie:
    ```
-   mongodb+srv://<username>:<password>@<cluster-host>/hobbook?retryWrites=true&w=majority
+   mongodb+srv://<user>:<password>@<cluster-host>/hobbook?retryWrites=true&w=majority
    ```
 
 5. **Copiere diesen String** und ersetze `<password>` mit deinem echten Passwort.
 
 **Beispiel (mit Beispiel-Credentials):**
 ```
-mongodb+srv://hobbook_user:HobBook2024Secure!@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority
+mongodb+srv://<user>:<password>@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority
 ```
 
 ---
@@ -121,7 +121,7 @@ Führe den folgenden Befehl im **Projektwurzeverzeichnis** aus:
 
 ```bash
 mongorestore \
-  --uri "mongodb+srv://hobbook_user:HobBook2024Secure!@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority" \
+  --uri "mongodb+srv://<user>:<password>@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority" \
   --drop \
   ./dump
 ```
@@ -153,7 +153,7 @@ mongorestore \
    **Beispiel `backend/.env`:**
    ```env
    # MongoDB Connection String (dein vollständiger String von Atlas)
-   MONGODB_URI=mongodb+srv://hobbook_user:HobBook2024Secure!@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority
+   MONGODB_URI=mongodb+srv://<user>:<password>@hobbook.xxxxx.mongodb.net/hobbook?retryWrites=true&w=majority
 
    # JWT für Authentication
    JWT_SECRET=your_jwt_secret_key_here

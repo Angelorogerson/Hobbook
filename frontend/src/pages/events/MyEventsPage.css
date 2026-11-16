@@ -1,0 +1,35 @@
+.my-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.my-section {
+  margin-bottom: 24px;
+}
+.my-section h2 {
+  font-size: 1rem;
+  color: var(--c-text-muted);
+  margin-bottom: 8px;
+}
+.my-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+.my-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.my-empty {
+  text-align: center;
+  padding: 32px 0;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  color: var(--c-text-muted);
+}

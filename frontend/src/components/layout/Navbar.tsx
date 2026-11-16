@@ -1,69 +1,93 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { Compass, Map as MapIcon, Plus, CalendarCheck, User, Shield, LogIn } from 'lucide-react'
 import { useAuthContext } from '../../store/AuthContext'
 import './Navbar.css'
 
+const linkClass = ({ isActive }: { isActive: boolean }) => `nav-link${isActive ? ' active' : ''}`
+
+/** Top bar on desktop, bottom tab bar on mobile. Create stays prominent in both. */
 export default function Navbar() {
   const { authState, logout } = useAuthContext()
-  const location = useLocation()
   const navigate = useNavigate()
-
-  const isAuthPage = ['/login', '/register'].includes(location.pathname)
-
-  if (isAuthPage) {
-    return null
-  }
-
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
-
-  const navLinks = [
-    { label: '🏠 Home', path: '/home' },
-     { label: '🤝 Connect', path: '/connect' },
-    { label: '🔍 Venue ', path: '/search' },
-  
-    { label: '📊 About us', path: '/dashboard' },
-    { label: '📅 Buchungen', path: '/bookings' },
-    { label: '❤️ Favoriten', path: '/favorites' },
-    { label: '👤 Profil', path: '/profile' },
-  ]
+  const isAdmin = authState.user?.role === 'admin'
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <Link to="/home" className="navbar-brand">
-           HOBBOOK
-        </Link>
+    <>
+      <header className="topbar">
+        <div className="topbar-inner">
+          <Link to="/" className="brand" aria-label="Hobbook Startseite">
+            <span className="brand-mark" aria-hidden="true" />
+            Hobbook
+          </Link>
 
-        <ul className="navbar-links">
-          {navLinks.map((link) => (
-            <li key={link.path}>
-              <Link
-                to={link.path}
-                className={`navbar-link ${location.pathname === link.path ? 'active' : ''}`}
-              >
-                {link.label}
+          <nav className="topnav" aria-label="Hauptnavigation">
+            <NavLink to="/" end className={linkClass}>
+              <Compass size={18} aria-hidden="true" /> Entdecken
+            </NavLink>
+            <NavLink to="/karte" className={linkClass}>
+              <MapIcon size={18} aria-hidden="true" /> Karte
+            </NavLink>
+            <NavLink to="/meine-events" className={linkClass}>
+              <CalendarCheck size={18} aria-hidden="true" /> Meine Events
+            </NavLink>
+            {isAdmin && (
+              <NavLink to="/admin" className={linkClass}>
+                <Shield size={18} aria-hidden="true" /> Moderation
+              </NavLink>
+            )}
+          </nav>
+
+          <div className="topbar-actions">
+            <Link to="/events/neu" className="btn btn-primary create-btn">
+              <Plus size={18} aria-hidden="true" /> Event erstellen
+            </Link>
+            {authState.isLoggedIn ? (
+              <>
+                <NavLink to="/profil" className={linkClass}>
+                  <User size={18} aria-hidden="true" />
+                  <span className="nav-username">{authState.user?.name?.split(' ')[0]}</span>
+                </NavLink>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    logout()
+                    navigate('/')
+                  }}
+                >
+                  Abmelden
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="btn btn-secondary btn-sm">
+                <LogIn size={16} aria-hidden="true" /> Anmelden
               </Link>
-            </li>
-          ))}
-
-          {authState.user?.role === 'admin' && (
-            <li>
-              <Link to="/admin" className={`navbar-link ${location.pathname === '/admin' ? 'active' : ''}`}>
-                ⚙️ Admin
-              </Link>
-            </li>
-          )}
-        </ul>
-
-        <div className="navbar-right">
-          <span className="user-badge">{authState.user?.name}</span>
-          <button onClick={handleLogout} className="btn-logout">
-            Logout
-          </button>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </header>
+
+      <nav className="bottomnav" aria-label="Hauptnavigation (mobil)">
+        <NavLink to="/" end className={linkClass}>
+          <Compass size={22} aria-hidden="true" />
+          <span>Entdecken</span>
+        </NavLink>
+        <NavLink to="/karte" className={linkClass}>
+          <MapIcon size={22} aria-hidden="true" />
+          <span>Karte</span>
+        </NavLink>
+        <NavLink to="/events/neu" className="bottomnav-create" aria-label="Event erstellen">
+          <Plus size={28} aria-hidden="true" />
+        </NavLink>
+        <NavLink to="/meine-events" className={linkClass}>
+          <CalendarCheck size={22} aria-hidden="true" />
+          <span>Meine</span>
+        </NavLink>
+        <NavLink to={authState.isLoggedIn ? '/profil' : '/login'} className={linkClass}>
+          <User size={22} aria-hidden="true" />
+          <span>{authState.isLoggedIn ? 'Profil' : 'Anmelden'}</span>
+        </NavLink>
+      </nav>
+    </>
   )
 }

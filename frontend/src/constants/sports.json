@@ -1,0 +1,14 @@
+[
+  { "key": "football", "label": "Fußball" },
+  { "key": "basketball", "label": "Basketball" },
+  { "key": "volleyball", "label": "Volleyball" },
+  { "key": "beach_volleyball", "label": "Beachvolleyball" },
+  { "key": "running", "label": "Laufen" },
+  { "key": "cycling", "label": "Radfahren" },
+  { "key": "tennis", "label": "Tennis" },
+  { "key": "table_tennis", "label": "Tischtennis" },
+  { "key": "badminton", "label": "Badminton" },
+  { "key": "frisbee", "label": "Ultimate Frisbee" },
+  { "key": "fitness", "label": "Outdoor-Fitness" },
+  { "key": "other", "label": "Sonstiges" }
+]

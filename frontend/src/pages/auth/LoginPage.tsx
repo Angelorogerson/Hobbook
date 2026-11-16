@@ -1,110 +1,83 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuthContext } from '../../store/AuthContext'
-import { Button, Input, LoadingSpinner } from '../../components/common'
-import './LoginPage.css'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthContext } from '@/store/AuthContext'
+import { apiError } from '@/api/axiosInstance'
+import './auth.css'
+
+interface FromState {
+  from?: string
+  intent?: string
+}
+
+export const INTENT_TEXT: Record<string, string> = {
+  join: 'Melde dich an, um bei diesem Event mitzumachen.',
+  report: 'Melde dich an, um dieses Event zu melden.',
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const { authState, login } = useAuthContext()
+  const location = useLocation()
+  const state = (location.state || {}) as FromState
+  const from = state.from && state.from.startsWith('/') ? state.from : '/'
+  const { login } = useAuthContext()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
-
-    if (!email.trim()) {
-      errors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email'
-    }
-
-    if (!password.trim()) {
-      errors.password = 'Password is required'
-    } else if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters'
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setValidationErrors({})
-
-    if (!validateForm()) {
-      return
-    }
-
-    try {
-      await login(email, password)
-      navigate('/home')
-    } catch (error) {
-      // Error is handled by authState.error from context
-    }
-  }
-
-  if (authState.isLoading) {
-    return <LoadingSpinner fullScreen />
-  }
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
-          <h1 className="login-title">Hobbook</h1>
-          <p className="login-subtitle">Sports Booking Platform</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="login-form">
-          {authState.error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
-              {authState.error}
-            </div>
-          )}
-
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="Enter your email"
-            error={validationErrors.email}
-            disabled={authState.isLoading}
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Enter your password"
-            error={validationErrors.password}
-            disabled={authState.isLoading}
-          />
-
-          <Button
-            type="submit"
-            variant="primary"
-            loading={authState.isLoading}
-            disabled={authState.isLoading}
-            className="login-button"
-          >
-            Sign In
-          </Button>
-        </form>
-
-        <div className="login-footer">
-          <p className="login-text">
-            Don't have an account?{' '}
-            <Link to="/register" className="login-link">
-              Create one
-            </Link>
+    <div className="auth-page">
+      <div className="auth-card card">
+        <Link to="/" className="auth-brand">Hobbook</Link>
+        <h1>Anmelden</h1>
+        {state.intent && INTENT_TEXT[state.intent] && (
+          <p className="notice notice-info" role="status">
+            {INTENT_TEXT[state.intent]}
           </p>
-        </div>
+        )}
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setError('')
+            if (!email.trim() || !password) {
+              setError('Bitte E-Mail und Passwort eingeben.')
+              return
+            }
+            setBusy(true)
+            try {
+              await login(email.trim(), password)
+              navigate(from, { replace: true })
+            } catch (err) {
+              setError(apiError(err, 'Anmeldung fehlgeschlagen.').message)
+              setBusy(false)
+            }
+          }}
+          noValidate
+        >
+          <div className="field">
+            <label htmlFor="login-email">E-Mail</label>
+            <input id="login-email" type="email" className="input" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="login-password">Passwort</label>
+            <input id="login-password" type="password" className="input" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          {error && (
+            <p className="notice notice-danger" role="alert">
+              {error}
+            </p>
+          )}
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+            {busy ? 'Wird angemeldet …' : 'Anmelden'}
+          </button>
+        </form>
+        <p className="auth-switch">
+          Noch kein Konto?{' '}
+          <Link to="/registrieren" state={location.state}>
+            Kostenlos registrieren
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -1,0 +1,116 @@
+.back-link {
+  margin-bottom: 12px;
+}
+.event-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 32px;
+  align-items: start;
+}
+.event-detail-tags {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.event-detail-sport {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sport-color);
+}
+.event-detail-organizer {
+  color: var(--c-text-muted);
+  margin-bottom: 16px;
+}
+.event-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 8px 0 24px;
+}
+.event-facts dt {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-text-muted);
+  margin-bottom: 4px;
+}
+.event-description,
+.event-participants {
+  margin-bottom: 24px;
+}
+.event-description h2,
+.event-participants h2 {
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+}
+.event-description p {
+  white-space: pre-line;
+}
+.event-participants ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.event-participants li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  font-size: 0.875rem;
+}
+.event-detail-side {
+  display: grid;
+  gap: 16px;
+  position: sticky;
+  top: calc(var(--header-h) + 16px);
+}
+.event-action-card {
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+.event-action-card .notice {
+  margin-bottom: 0;
+}
+.joined-note {
+  font-weight: 600;
+  color: var(--c-success);
+}
+.manage-actions {
+  display: grid;
+  gap: 8px;
+}
+.secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  border-top: 1px solid var(--c-border);
+  padding-top: 8px;
+}
+.radio-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 400 !important;
+}
+fieldset.field {
+  border: none;
+}
+
+@media (max-width: 860px) {
+  .event-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .event-detail-side {
+    position: static;
+  }
+}

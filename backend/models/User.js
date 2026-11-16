@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { SPORT_KEYS } from '../config/sports.js';
 import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema(
@@ -13,7 +14,9 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
-      match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email'],
+      trim: true,
+      // Previous pattern rejected valid TLDs longer than 3 chars (e.g. .online, .test).
+      match: [/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/, 'Bitte gib eine gültige E-Mail-Adresse ein'],
     },
     password: {
       type: String,
@@ -28,7 +31,7 @@ const userSchema = new mongoose.Schema(
     },
     sports: {
       type: [String],
-      enum: ['football', 'basketball'],
+      enum: SPORT_KEYS,
       default: [],
     },
     city: {

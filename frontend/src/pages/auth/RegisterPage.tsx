@@ -1,144 +1,99 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { useAuthContext } from '../../store/AuthContext'
-import { Button, Input, LoadingSpinner } from '../../components/common'
-import './RegisterPage.css'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useAuthContext } from '@/store/AuthContext'
+import { apiError } from '@/api/axiosInstance'
+import { INTENT_TEXT } from './LoginPage'
+import './auth.css'
+
+export function validateRegistration(v: { name: string; email: string; password: string; confirm: string }) {
+  const e: Record<string, string> = {}
+  if (v.name.trim().length < 2) e.name = 'Bitte gib deinen Namen an (mind. 2 Zeichen).'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) e.email = 'Bitte gib eine gültige E-Mail-Adresse ein.'
+  if (v.password.length < 8) e.password = 'Das Passwort muss mindestens 8 Zeichen haben.'
+  if (v.password !== v.confirm) e.confirm = 'Die Passwörter stimmen nicht überein.'
+  return e
+}
 
 export default function RegisterPage() {
   const navigate = useNavigate()
-  const { authState, register } = useAuthContext()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const location = useLocation()
+  const state = (location.state || {}) as { from?: string; intent?: string }
+  const from = state.from && state.from.startsWith('/') ? state.from : '/'
+  const { register } = useAuthContext()
 
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {}
+  const [v, setV] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-    if (!name.trim()) {
-      errors.name = 'Name is required'
-    } else if (name.length < 2) {
-      errors.name = 'Name must be at least 2 characters'
-    }
-
-    if (!email.trim()) {
-      errors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Please enter a valid email'
-    }
-
-    if (!password.trim()) {
-      errors.password = 'Password is required'
-    } else if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters'
-    }
-
-    if (!confirmPassword.trim()) {
-      errors.confirmPassword = 'Please confirm your password'
-    } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match'
-    }
-
-    setValidationErrors(errors)
-    return Object.keys(errors).length === 0
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setValidationErrors({})
-
-    if (!validateForm()) {
-      return
-    }
-
-    try {
-      await register({ name, email, password })
-      navigate('/home')
-    } catch (error) {
-      // Error is handled by authState.error from context
-    }
-  }
-
-  if (authState.isLoading) {
-    return <LoadingSpinner fullScreen />
-  }
+  const field = (key: keyof typeof v, label: string, type: string, autoComplete: string, hint?: string) => (
+    <div className="field">
+      <label htmlFor={`reg-${key}`}>{label}</label>
+      <input
+        id={`reg-${key}`}
+        type={type}
+        className="input"
+        autoComplete={autoComplete}
+        value={v[key]}
+        onChange={(e) => setV({ ...v, [key]: e.target.value })}
+        aria-invalid={!!errors[key]}
+        aria-describedby={errors[key] ? `reg-${key}-err` : undefined}
+      />
+      {hint && <span className="hint">{hint}</span>}
+      {errors[key] && (
+        <span id={`reg-${key}-err`} className="error">
+          {errors[key]}
+        </span>
+      )}
+    </div>
+  )
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h1 className="register-title">Create Account</h1>
-          <p className="register-subtitle">Join Hobbook Today</p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="register-form">
-          {authState.error && (
-            <div className="error-message">
-              <span className="error-icon">⚠️</span>
-              {authState.error}
-            </div>
+    <div className="auth-page">
+      <div className="auth-card card">
+        <Link to="/" className="auth-brand">Hobbook</Link>
+        <h1>Konto erstellen</h1>
+        {state.intent && INTENT_TEXT[state.intent] && <p className="notice notice-info">{INTENT_TEXT[state.intent]}</p>}
+        <form
+          noValidate
+          onSubmit={async (e) => {
+            e.preventDefault()
+            setError('')
+            const errs = validateRegistration(v)
+            setErrors(errs)
+            if (Object.keys(errs).length) return
+            setBusy(true)
+            try {
+              await register({ name: v.name.trim(), email: v.email.trim(), password: v.password })
+              navigate(from, { replace: true })
+            } catch (err) {
+              setError(apiError(err, 'Registrierung fehlgeschlagen.').message)
+              setBusy(false)
+            }
+          }}
+        >
+          {field('name', 'Name', 'text', 'name', 'Öffentlich sichtbar ist nur „Vorname N.“')}
+          {field('email', 'E-Mail', 'email', 'email')}
+          {field('password', 'Passwort', 'password', 'new-password', 'Mindestens 8 Zeichen')}
+          {field('confirm', 'Passwort wiederholen', 'password', 'new-password')}
+          {error && (
+            <p className="notice notice-danger" role="alert">
+              {error}
+            </p>
           )}
-
-          <Input
-            label="Full Name"
-            type="text"
-            value={name}
-            onChange={setName}
-            placeholder="Enter your full name"
-            error={validationErrors.name}
-            disabled={authState.isLoading}
-          />
-
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={setEmail}
-            placeholder="Enter your email"
-            error={validationErrors.email}
-            disabled={authState.isLoading}
-          />
-
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={setPassword}
-            placeholder="Enter your password"
-            error={validationErrors.password}
-            disabled={authState.isLoading}
-          />
-
-          <Input
-            label="Confirm Password"
-            type="password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            placeholder="Confirm your password"
-            error={validationErrors.confirmPassword}
-            disabled={authState.isLoading}
-          />
-
-          <Button
-            type="submit"
-            variant="primary"
-            loading={authState.isLoading}
-            disabled={authState.isLoading}
-            className="register-button"
-          >
-            Create Account
-          </Button>
-        </form>
-
-        <div className="register-footer">
-          <p className="register-text">
-            Already have an account?{' '}
-            <Link to="/login" className="register-link">
-              Sign In
-            </Link>
+          <p className="hint" style={{ marginBottom: 12 }}>
+            Mit der Registrierung akzeptierst du unsere <Link to="/datenschutz">Datenschutzhinweise</Link>.
           </p>
-        </div>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>
+            {busy ? 'Konto wird erstellt …' : 'Registrieren'}
+          </button>
+        </form>
+        <p className="auth-switch">
+          Schon registriert?{' '}
+          <Link to="/login" state={location.state}>
+            Anmelden
+          </Link>
+        </p>
       </div>
     </div>
   )

@@ -1,0 +1,57 @@
+.location-search {
+  display: flex;
+  gap: 6px;
+}
+.location-results {
+  list-style: none;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-surface);
+  margin: -8px 0 12px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.location-results button {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--c-border);
+}
+.location-results button:hover,
+.location-results button:focus-visible {
+  background: var(--c-primary-soft);
+}
+.location-results small {
+  display: block;
+  color: var(--c-text-muted);
+}
+.location-map {
+  position: relative;
+  height: 300px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  background: #e8ecef;
+  margin-top: 8px;
+}
+.location-pin-state {
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+  margin: 6px 0 12px;
+}
+.location-pin-state.ok {
+  color: var(--c-success);
+  font-weight: 600;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
