@@ -1,0 +1,96 @@
+/* Date tile */
+.date-tile {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  width: 56px;
+  min-height: 64px;
+  padding: var(--space-1) 0;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.date-tile-wd,
+.date-tile-mo {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-muted);
+}
+.date-tile-day {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-3xl);
+  margin: 2px 0;
+}
+.date-tile--lg {
+  width: 72px;
+  min-height: 80px;
+}
+.date-tile--lg .date-tile-day {
+  font-size: var(--text-4xl);
+}
+
+/* Capacity meter */
+.capacity {
+  --cap-color: var(--c-success);
+  display: grid;
+  gap: var(--space-1);
+}
+.capacity--low {
+  --cap-color: var(--c-accent);
+}
+.capacity--full {
+  --cap-color: var(--c-warning);
+}
+.capacity--muted {
+  --cap-color: var(--c-text-subtle);
+}
+.capacity-track {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: transparent;
+}
+.capacity-seg {
+  flex: 1;
+  border-radius: 2px;
+  background: var(--c-neutral-soft);
+}
+.capacity-seg.is-taken {
+  background: var(--cap-color);
+}
+.capacity-track:has(.capacity-fill) {
+  background: var(--c-neutral-soft);
+}
+.capacity-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cap-color);
+  transition: width var(--dur-slow) var(--ease-out);
+}
+.capacity-label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.capacity-left {
+  font-weight: var(--weight-semibold);
+  color: var(--c-text);
+}
+.capacity--low .capacity-left {
+  color: var(--c-accent-text);
+}
+.capacity--muted .capacity-left {
+  color: var(--c-text-muted);
+}
+.capacity-count {
+  color: var(--c-text-subtle);
+}

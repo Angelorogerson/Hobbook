@@ -4,7 +4,8 @@ import { Box, Search } from 'lucide-react'
 import type { BBox, SportEvent } from '@/api/eventApi'
 import { sportColor, sportLabel } from '@/constants/sports'
 import { formatEventDate, spotsText } from '@/utils/format'
-import { BUILDINGS_MIN_ZOOM, boundsToBBox, createMap, has3dBuildings, set3d, webglSupported } from './mapSetup'
+import { BUILDINGS_MIN_ZOOM, boundsToBBox, createMap, has3dBuildings, set3d, sportIconSvg, webglSupported } from './mapSetup'
+import { useTheme } from '@/store/ThemeContext'
 import MapFallback from './MapFallback'
 import './EventMap.css'
 
@@ -65,13 +66,14 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
   const [is3d, setIs3d] = useState(false)
   const [zoom, setZoom] = useState(0)
   const [moved, setMoved] = useState(false)
+  const { theme } = useTheme()
 
-  // Init once
+  // Init (again when the colour theme switches the map style)
   useEffect(() => {
     if (failed || !containerRef.current) return
     let map: MlMap
     try {
-      map = createMap(containerRef.current, compact ? { zoom: 14 } : {})
+      map = createMap(containerRef.current, theme, compact ? { zoom: 14 } : {})
     } catch {
       setFailed(true)
       return
@@ -81,9 +83,8 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
 
     map.on('load', () => {
       setLoaded(true)
+      // Start flat; 3D is opt-in (ensure3dLayer adds it hidden).
       setCan3d(has3dBuildings(map))
-      // Start flat; 3D is opt-in.
-      if (has3dBuildings(map)) map.setLayoutProperty('building-3d', 'visibility', 'none')
       setZoom(map.getZoom())
     })
     map.on('error', (ev) => {
@@ -108,8 +109,10 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
       popupRef.current?.remove()
       map.remove()
       mapRef.current = null
+      setLoaded(false)
+      setIs3d(false)
     }
-  }, [failed, compact])
+  }, [failed, compact, theme])
 
   // Sync markers with the (same) result set the list shows
   useEffect(() => {
@@ -142,9 +145,11 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
       el.dataset.status = e.status
       el.style.setProperty('--marker-color', sportColor(e.sport))
       el.title = e.title
-      // MapLibre positions the marker element via transform; the rotated pin is a child.
+      // MapLibre positions the marker element via transform; the pin is a child.
+      // innerHTML only receives our own static icon markup, never event data.
       const pin = document.createElement('span')
       pin.className = 'map-marker-pin'
+      pin.innerHTML = sportIconSvg(e.sport)
       el.appendChild(pin)
       el.addEventListener('click', (ev) => {
         ev.stopPropagation()

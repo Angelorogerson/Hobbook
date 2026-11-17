@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Search, X } from 'lucide-react'
 import { SPORTS } from '@/constants/sports'
 import { WHEN_OPTIONS, type DiscoveryFilters, type WhenFilter } from '@/hooks/useEventDiscovery'
+import './FilterBar.css'
 
 interface Props {
   filters: DiscoveryFilters
@@ -21,7 +22,7 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
   return (
     <div className="filterbar">
       <form
-        className="filterbar-city"
+        className="filterbar-search"
         role="search"
         onSubmit={(e) => {
           e.preventDefault()
@@ -31,6 +32,7 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
         <label htmlFor="filter-city" className="sr-only">
           Stadt oder Gebiet
         </label>
+        <Search size={18} className="filterbar-search-icon" aria-hidden="true" />
         <input
           id="filter-city"
           className="input"
@@ -39,9 +41,10 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
           value={city}
           onChange={(e) => setCity(e.target.value)}
           autoComplete="address-level2"
+          enterKeyHint="search"
         />
         <button type="submit" className="btn btn-primary" aria-label="Stadt suchen">
-          <Search size={18} aria-hidden="true" />
+          Suchen
         </button>
       </form>
 
@@ -75,18 +78,16 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
         </select>
       </div>
 
-      {(filters.area || active) && (
+      {active && (
         <div className="filterbar-chips">
           {filters.area && (
-            <button type="button" className="chip" onClick={onClearArea}>
+            <button type="button" className="chip is-on" onClick={onClearArea}>
               Kartenausschnitt <X size={14} aria-label="entfernen" />
             </button>
           )}
-          {active && (
-            <button type="button" className="btn btn-ghost btn-sm" onClick={onReset}>
-              Filter zurücksetzen
-            </button>
-          )}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={onReset}>
+            Filter zurücksetzen
+          </button>
         </div>
       )}
     </div>

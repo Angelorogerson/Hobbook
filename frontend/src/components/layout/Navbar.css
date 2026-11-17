@@ -1,78 +1,112 @@
 .topbar {
   position: sticky;
   top: 0;
-  z-index: 50;
+  z-index: var(--z-nav);
   height: var(--header-h);
-  background: var(--c-surface);
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
   border-bottom: 1px solid var(--c-border);
+  backdrop-filter: saturate(1.4) blur(8px);
 }
 .topbar-inner {
   height: 100%;
-  max-width: 1400px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: var(--space-6);
 }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 1.2rem;
-  letter-spacing: -0.02em;
-  color: var(--c-primary);
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  color: var(--c-text);
   text-decoration: none;
 }
-.brand-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--c-primary);
-  box-shadow: inset 0 0 0 5px var(--c-primary), inset 0 0 0 8px #fff;
+.brand:hover {
+  text-decoration: none;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-2xl);
+  letter-spacing: 0.01em;
 }
 .topnav {
   display: flex;
-  gap: 4px;
+  gap: var(--space-1);
   flex: 1;
 }
 .nav-link {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   color: var(--c-text-muted);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
   text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
 }
 .nav-link:hover {
   color: var(--c-text);
-  background: var(--c-bg);
+  background: var(--c-surface-2);
+  text-decoration: none;
 }
 .nav-link.active {
-  color: var(--c-primary);
-  background: var(--c-primary-soft);
+  color: var(--c-text);
+}
+/* Active marker: a short accent bar under the item (state, not decoration) */
+.topnav .nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: -10px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-accent);
 }
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
+}
+.topbar-mobile-actions {
+  display: none;
+  margin-left: auto;
 }
 .bottomnav {
   display: none;
 }
 
+/* Tablet: keep the top bar, drop text labels where space is tight */
+@media (max-width: 1024px) {
+  .topbar-inner {
+    gap: var(--space-3);
+  }
+  .nav-username {
+    display: none;
+  }
+}
+
+/* Phone: slim top bar + bottom tab bar (≤5 items) */
 @media (max-width: 860px) {
   .topnav,
   .topbar-actions {
     display: none;
   }
+  .topbar-mobile-actions {
+    display: block;
+  }
   .bottomnav {
     position: fixed;
     inset: auto 0 0 0;
-    z-index: 50;
+    z-index: var(--z-nav);
     height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
     display: grid;
@@ -83,21 +117,32 @@
   }
   .bottomnav .nav-link {
     flex-direction: column;
+    justify-content: center;
     gap: 2px;
-    font-size: 0.7rem;
-    padding: 6px 0;
+    min-height: 56px;
+    padding: 0;
+    font-size: var(--text-xs);
     background: none;
+  }
+  .bottomnav .nav-link.active {
+    color: var(--c-accent-text);
   }
   .bottomnav-create {
     justify-self: center;
-    width: 54px;
-    height: 54px;
-    margin-top: -22px;
-    border-radius: 50%;
     display: grid;
     place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-pill);
     background: var(--c-accent);
-    color: #fff;
-    box-shadow: var(--shadow-lg);
+    color: var(--c-on-accent);
+    box-shadow: var(--shadow-2);
+    transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .bottomnav-create:active {
+    transform: scale(0.96);
+  }
+  .bottomnav-create.active {
+    background: var(--c-accent-hover);
   }
 }

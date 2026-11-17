@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AlertTriangle } from 'lucide-react'
 import { listAllEventsAdmin, deleteEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import StatusBadge from '@/components/events/StatusBadge'
@@ -32,10 +33,13 @@ export default function AdminEventsPage() {
 
   return (
     <div className="page admin">
-      <h1 className="page-title">Moderation</h1>
+      <div className="page-head">
+        <h1 className="page-title">Moderation</h1>
+      </div>
       <AdminNav />
       {error && (
         <p className="notice notice-danger" role="alert">
+          <AlertTriangle size={18} aria-hidden="true" />
           {error}
         </p>
       )}
@@ -45,8 +49,8 @@ export default function AdminEventsPage() {
           <p className="admin-meta">
             {total} Events insgesamt{total > events.length ? `, die neuesten ${events.length} werden angezeigt` : ''}.
           </p>
-          <div className="admin-table-wrap">
-            <table className="admin-table">
+          <div className="table-wrap admin-table-wrap">
+            <table className="table admin-table">
               <caption className="sr-only">Alle Events</caption>
               <thead>
                 <tr>
@@ -66,22 +70,22 @@ export default function AdminEventsPage() {
                   const active = e.status === 'open' || e.status === 'full'
                   return (
                     <tr key={e._id}>
-                      <td>
+                      <td data-label="Event">
                         <Link to={`/events/${e._id}`}>{e.title}</Link>
                         <div className="admin-meta">
                           {sportLabel(e.sport)} · {e.organizer.displayName}
                           {e.visibility === 'unlisted' ? ' · nur per Link' : ''}
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Wann">
                         {day}
                         <div className="admin-meta">{time}</div>
                       </td>
-                      <td>{e.location.city}</td>
-                      <td>
+                      <td data-label="Ort">{e.location.city}</td>
+                      <td data-label="Status">
                         <StatusBadge status={e.status} />
                       </td>
-                      <td>
+                      <td data-label="Plätze" className="num">
                         {e.participantCount}/{e.maxParticipants}
                       </td>
                       <td className="admin-row-actions">

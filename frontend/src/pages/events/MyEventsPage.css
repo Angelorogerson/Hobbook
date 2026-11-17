@@ -1,35 +1,32 @@
-.my-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
 .my-section {
-  margin-bottom: 24px;
+  margin-bottom: var(--space-8);
 }
 .my-section h2 {
-  font-size: 1rem;
-  color: var(--c-text-muted);
-  margin-bottom: 8px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c-text-subtle);
+  margin-bottom: var(--space-3);
 }
 .my-list {
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-4);
+}
+.my-list > li {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
 }
 .my-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
+  gap: var(--space-2);
 }
-.my-empty {
-  text-align: center;
-  padding: 32px 0;
-  display: grid;
-  gap: 12px;
-  justify-items: center;
-  color: var(--c-text-muted);
+@media (max-width: 400px) {
+  .my-list {
+    grid-template-columns: 1fr;
+  }
 }

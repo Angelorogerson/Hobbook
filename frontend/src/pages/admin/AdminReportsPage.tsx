@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AlertTriangle, Inbox } from 'lucide-react'
+import { EmptyState } from '@/components/ui/DataPieces'
 import { listReports, updateReport, REPORT_REASONS, type Report, type ReportStatus } from '@/api/reportApi'
 import { apiError } from '@/api/axiosInstance'
 import StatusBadge from '@/components/events/StatusBadge'
@@ -41,12 +43,14 @@ export default function AdminReportsPage() {
 
   return (
     <div className="page admin">
-      <h1 className="page-title">Moderation</h1>
+      <div className="page-head">
+        <h1 className="page-title">Moderation</h1>
+      </div>
       <AdminNav />
 
       <div className="admin-filter" role="group" aria-label="Status">
         {(['open', 'resolved', 'dismissed'] as ReportStatus[]).map((s) => (
-          <button key={s} type="button" className={`chip${status === s ? '' : ' chip-off'}`} aria-pressed={status === s} onClick={() => setStatus(s)}>
+          <button key={s} type="button" className={`chip${status === s ? ' is-on' : ''}`} aria-pressed={status === s} onClick={() => setStatus(s)}>
             {STATUS_TEXT[s]}
           </button>
         ))}
@@ -54,11 +58,16 @@ export default function AdminReportsPage() {
 
       {error && (
         <p className="notice notice-danger" role="alert">
+          <AlertTriangle size={18} aria-hidden="true" />
           {error}
         </p>
       )}
       {!reports && !error && <LoadingSpinner />}
-      {reports && reports.length === 0 && <p className="admin-empty">Keine Meldungen mit Status „{STATUS_TEXT[status]}“.</p>}
+      {reports && reports.length === 0 && (
+        <EmptyState icon={<Inbox size={24} aria-hidden="true" />} title={`Keine Meldungen mit Status „${STATUS_TEXT[status]}“.`}>
+          {status === 'open' ? 'Neue Meldungen erscheinen hier.' : undefined}
+        </EmptyState>
+      )}
 
       <ul className="admin-list">
         {reports?.map((r) => (

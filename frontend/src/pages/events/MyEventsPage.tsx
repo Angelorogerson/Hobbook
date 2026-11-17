@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
+import { AlertTriangle, CalendarPlus, Compass, Info, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
+import { EmptyState } from '@/components/ui/DataPieces'
 import { deleteEvent, getMyEvents, leaveEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import EventCard from '@/components/events/EventCard'
@@ -97,7 +98,7 @@ export default function MyEventsPage() {
 
   return (
     <div className="page">
-      <div className="my-head">
+      <div className="page-head">
         <div>
           <h1 className="page-title">Meine Events</h1>
           <p className="page-subtitle">Alles, was du organisierst oder wo du mitmachst.</p>
@@ -117,38 +118,50 @@ export default function MyEventsPage() {
       </div>
 
       {error && (
-        <p className="notice notice-danger" role="alert">
-          {error}{' '}
-          <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
-            Erneut versuchen
-          </button>
-        </p>
+        <div className="notice notice-danger" role="alert">
+          <AlertTriangle size={18} aria-hidden="true" />
+          <div className="notice-body">
+            <p>{error}</p>
+            <button type="button" className="btn btn-secondary btn-sm" onClick={load}>
+              Erneut versuchen
+            </button>
+          </div>
+        </div>
       )}
       {message && (
         <p className="notice notice-info" role="status">
+          <Info size={18} aria-hidden="true" />
           {message}
         </p>
       )}
 
       <div role="tabpanel">
         {data && list.length === 0 && (
-          <div className="my-empty">
-            {tab === 'created' ? (
-              <>
-                <p>Du hast noch kein Event erstellt.</p>
+          tab === 'created' ? (
+            <EmptyState
+              icon={<CalendarPlus size={24} aria-hidden="true" />}
+              title="Du hast noch kein Event erstellt."
+              action={
                 <Link to="/events/neu" className="btn btn-primary">
                   Erstes Event erstellen
                 </Link>
-              </>
-            ) : (
-              <>
-                <p>Du bist noch bei keinem Event dabei.</p>
-                <Link to="/" className="btn btn-primary">
+              }
+            >
+              Leg ein Datum und einen Treffpunkt fest – andere finden dein Event dann in Liste und Karte.
+            </EmptyState>
+          ) : (
+            <EmptyState
+              icon={<Compass size={24} aria-hidden="true" />}
+              title="Du bist noch bei keinem Event dabei."
+              action={
+                <Link to="/entdecken" className="btn btn-primary">
                   Events entdecken
                 </Link>
-              </>
-            )}
-          </div>
+              }
+            >
+              Such dir ein Event in deiner Nähe aus und tippe auf „Mitmachen“.
+            </EmptyState>
+          )
         )}
         {section('Anstehend', upcoming)}
         {section('Vergangen & abgesagt', past)}

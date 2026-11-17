@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { AlertTriangle, Info } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
 import { apiError } from '@/api/axiosInstance'
+import { Logo } from '@/components/ui/Brand'
 import { INTENT_TEXT } from './LoginPage'
 import './auth.css'
 
@@ -51,9 +53,16 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
-        <Link to="/" className="auth-brand">Hobbook</Link>
+        <Link to="/" className="auth-brand">
+          <Logo /> Hobbook
+        </Link>
         <h1>Konto erstellen</h1>
-        {state.intent && INTENT_TEXT[state.intent] && <p className="notice notice-info">{INTENT_TEXT[state.intent]}</p>}
+        {state.intent && INTENT_TEXT[state.intent] && (
+          <p className="notice notice-info">
+            <Info size={18} aria-hidden="true" />
+            {INTENT_TEXT[state.intent]}
+          </p>
+        )}
         <form
           noValidate
           onSubmit={async (e) => {
@@ -78,6 +87,7 @@ export default function RegisterPage() {
           {field('confirm', 'Passwort wiederholen', 'password', 'new-password')}
           {error && (
             <p className="notice notice-danger" role="alert">
+              <AlertTriangle size={18} aria-hidden="true" />
               {error}
             </p>
           )}

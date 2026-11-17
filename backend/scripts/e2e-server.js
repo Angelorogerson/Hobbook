@@ -12,7 +12,7 @@ process.env.DISABLE_RATE_LIMIT = 'true';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-only-secret-not-for-production-0123456789abcdef';
 process.env.JWT_EXPIRES_IN = '1d';
 process.env.CLIENT_URL =
-  process.env.CLIENT_URL || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174';
+  process.env.CLIENT_URL || 'http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5180';
 
 const { createApp } = await import('../app.js');
 const { seed } = await import('./seed.js');

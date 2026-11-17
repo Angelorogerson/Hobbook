@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const API_PORT = 5055
-const WEB_PORT = 5174
+const WEB_PORT = 5190
 
 /**
  * E2E runs against an in-memory MongoDB seeded by backend/scripts/e2e-server.js.

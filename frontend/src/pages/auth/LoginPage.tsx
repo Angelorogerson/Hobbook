@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { AlertTriangle, Info } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
 import { apiError } from '@/api/axiosInstance'
+import { Logo } from '@/components/ui/Brand'
 import './auth.css'
 
 interface FromState {
@@ -29,10 +31,13 @@ export default function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
-        <Link to="/" className="auth-brand">Hobbook</Link>
+        <Link to="/" className="auth-brand">
+          <Logo /> Hobbook
+        </Link>
         <h1>Anmelden</h1>
         {state.intent && INTENT_TEXT[state.intent] && (
           <p className="notice notice-info" role="status">
+            <Info size={18} aria-hidden="true" />
             {INTENT_TEXT[state.intent]}
           </p>
         )}
@@ -65,6 +70,7 @@ export default function LoginPage() {
           </div>
           {error && (
             <p className="notice notice-danger" role="alert">
+              <AlertTriangle size={18} aria-hidden="true" />
               {error}
             </p>
           )}

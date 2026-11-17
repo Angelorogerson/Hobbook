@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test('mobile: list/map toggle and visible create button', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/entdecken')
   await expect(page.getByTestId('event-card').first()).toBeVisible()
   await expect(page.getByRole('link', { name: 'Event erstellen' }).last()).toBeVisible()
 

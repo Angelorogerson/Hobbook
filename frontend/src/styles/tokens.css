@@ -1,0 +1,207 @@
+/*
+ * Hobbook design tokens — "athletic, calm, data-forward".
+ * Semantic tokens only in components; raw values live here.
+ * Light is the default; dark applies via [data-theme="dark"] or the system
+ * preference when no explicit theme was chosen (see ThemeContext).
+ * Contrast pairs are verified in docs/DESIGN.md (WCAG AA minimum).
+ */
+
+:root {
+  /* ── Type ─────────────────────────────────────────── */
+  --font-ui: 'Inter Variable', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+
+  /* Fixed rem scale, ratio ≈1.2 (Operate surfaces: no fluid type) */
+  --text-xs: 0.75rem; /* 12 */
+  --text-sm: 0.875rem; /* 14 */
+  --text-md: 1rem; /* 16 */
+  --text-lg: 1.125rem; /* 18 */
+  --text-xl: 1.25rem; /* 20 */
+  --text-2xl: 1.5rem; /* 24 */
+  --text-3xl: 1.875rem; /* 30 */
+  --text-4xl: 2.25rem; /* 36 */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ── Space (4px grid) ─────────────────────────────── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ── Shape ────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* ── Size ─────────────────────────────────────────── */
+  --control-h: 44px; /* touch minimum */
+  --control-h-sm: 36px; /* pointer-fine only */
+  --header-h: 64px;
+  --bottom-nav-h: 64px;
+  --content-max: 1200px;
+
+  /* ── Layers ───────────────────────────────────────── */
+  --z-map-ui: 5;
+  --z-sticky: 40;
+  --z-nav: 50;
+  --z-overlay: 100;
+  --z-toast: 110;
+
+  /* ── Motion (state changes only, 150–250ms) ───────── */
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 250ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Color: light (default) ───────────────────────── */
+  color-scheme: light;
+  --c-bg: #f4f6f9;
+  --c-surface: #ffffff;
+  --c-surface-2: #eef2f6; /* panels, sunken areas, second neutral layer */
+  --c-surface-raised: #ffffff;
+  --c-overlay: rgba(9, 15, 26, 0.55);
+
+  --c-text: #0e1726;
+  --c-text-muted: #485569;
+  --c-text-subtle: #5f6d80;
+  --c-text-inverse: #ffffff;
+
+  --c-border: #dce3eb;
+  --c-border-strong: #7f8b9c; /* ≥3:1 on surface: input and control boundaries */
+
+  /* Brand ink (header, brand mark, headings accents) */
+  --c-ink: #0e1726;
+  --c-on-ink: #ffffff;
+
+  /* Accent: signal orange — primary actions, selection, "Plätze frei" */
+  --c-accent: #c2410c;
+  --c-accent-hover: #9a3412;
+  --c-on-accent: #ffffff;
+  --c-accent-soft: #ffedd5;
+  --c-accent-text: #9a3412;
+
+  /* Map/info blue — links, focus, info */
+  --c-link: #1d4ed8;
+  --c-info: #1d4ed8;
+  --c-info-soft: #dbeafe;
+  --c-focus: #1d4ed8;
+
+  --c-success: #15803d;
+  --c-success-soft: #dcfce7;
+  --c-warning: #8a5300;
+  --c-warning-soft: #fef3c7;
+  --c-danger: #b91c1c;
+  --c-danger-soft: #fee2e2;
+  --c-neutral-soft: #e9edf2;
+
+  --shadow-1: 0 1px 2px rgba(14, 23, 38, 0.06), 0 1px 3px rgba(14, 23, 38, 0.08);
+  --shadow-2: 0 4px 8px -2px rgba(14, 23, 38, 0.1), 0 12px 24px -6px rgba(14, 23, 38, 0.14);
+
+  --map-bg: #e8ecef;
+  --map-building: #d8dce2;
+
+  /* Landing "stage": the same night-pitch ink in both themes */
+  --c-stage: #0b1424;
+  --c-stage-2: #111d33;
+  --c-on-stage: #f4f7fb;
+  --c-on-stage-muted: #b4c0d3;
+  --c-stage-line: rgba(244, 247, 251, 0.2);
+  --c-stage-field-border: #7686a3; /* ≥3:1 on stage: field and ghost-button boundaries */
+  --c-stage-accent: #fb923c;
+  --c-on-stage-accent: #1a0e05;
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Sport data palette (always paired with a text label) */
+  --sport-football: #15803d;
+  --sport-basketball: #c2410c;
+  --sport-volleyball: #a16207;
+  --sport-beach_volleyball: #b45309;
+  --sport-running: #0f766e;
+  --sport-cycling: #0e7490;
+  --sport-tennis: #4d7c0f;
+  --sport-table_tennis: #be123c;
+  --sport-badminton: #0369a1;
+  --sport-frisbee: #9d174d;
+  --sport-fitness: #334155;
+  --sport-other: #475569;
+}
+
+/* ── Color: dark ─────────────────────────────────────── */
+/* data-theme is always set to the resolved theme (explicit choice or system),
+   by an inline script in index.html before first paint and by ThemeContext. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --c-bg: #0a101a;
+  --c-surface: #111a27;
+  --c-surface-2: #172233;
+  --c-surface-raised: #1b2739;
+  --c-overlay: rgba(0, 0, 0, 0.65);
+
+  --c-text: #e7edf5;
+  --c-text-muted: #a9b6c6;
+  --c-text-subtle: #8c9bb0;
+  --c-text-inverse: #0e1726;
+
+  --c-border: #253246;
+  --c-border-strong: #5f7090; /* ≥3:1 on surface */
+
+  --c-ink: #e7edf5;
+  --c-on-ink: #0e1726;
+
+  --c-accent: #fb923c;
+  --c-accent-hover: #fdba74;
+  --c-on-accent: #1a0e05;
+  --c-accent-soft: rgba(251, 146, 60, 0.16);
+  --c-accent-text: #fdba74;
+
+  --c-link: #93c5fd;
+  --c-info: #93c5fd;
+  --c-info-soft: rgba(96, 165, 250, 0.16);
+  --c-focus: #93c5fd;
+
+  --c-success: #4ade80;
+  --c-success-soft: rgba(74, 222, 128, 0.14);
+  --c-warning: #facc15;
+  --c-warning-soft: rgba(250, 204, 21, 0.14);
+  --c-danger: #f87171;
+  --c-danger-soft: rgba(248, 113, 113, 0.14);
+  --c-neutral-soft: #1d2a3d;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-2: 0 6px 12px -2px rgba(0, 0, 0, 0.5), 0 16px 32px -8px rgba(0, 0, 0, 0.55);
+
+  --map-bg: #45516e;
+  --map-building: #3b4766;
+
+  --sport-football: #4ade80;
+  --sport-basketball: #fb923c;
+  --sport-volleyball: #facc15;
+  --sport-beach_volleyball: #fbbf24;
+  --sport-running: #2dd4bf;
+  --sport-cycling: #22d3ee;
+  --sport-tennis: #a3e635;
+  --sport-table_tennis: #fb7185;
+  --sport-badminton: #38bdf8;
+  --sport-frisbee: #f472b6;
+  --sport-fitness: #cbd5e1;
+  --sport-other: #94a3b8;
+}
+
+@media (max-width: 860px) {
+  :root {
+    --header-h: 56px;
+  }
+}

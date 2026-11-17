@@ -5,8 +5,23 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Finde kostenlose Sport-Events in deiner Nähe, sieh genau wo sie stattfinden, mach mit oder starte dein eigenes." />
-    <meta name="theme-color" content="#004E89" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#ffffff" />
     <title>Hobbook – Sport in deiner Nähe</title>
+    <script>
+      // Resolve the theme before first paint to avoid a light/dark flash (see ThemeContext).
+      ;(function () {
+        var t = null
+        try {
+          t = localStorage.getItem('hobbook_theme')
+        } catch (e) {}
+        if (t !== 'light' && t !== 'dark') {
+          t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        }
+        document.documentElement.dataset.theme = t
+        if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#111a27')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

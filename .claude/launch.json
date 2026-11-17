@@ -4,14 +4,16 @@
     {
       "name": "api-demo",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["backend/scripts/e2e-server.js", "--port", "5000"],
-      "port": 5000
+      "runtimeArgs": ["backend/scripts/e2e-server.js", "--port", "5055"],
+      "port": 5055,
+      "autoPort": false
     },
     {
-      "name": "web",
+      "name": "web-demo",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
-      "port": 5173
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--port", "5180", "--strictPort", "--mode", "demo"],
+      "port": 5180,
+      "autoPort": false
     }
   ]
 }

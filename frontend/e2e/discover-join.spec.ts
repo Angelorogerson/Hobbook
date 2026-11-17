@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { PLAYER, login } from './helpers'
 
 test('Discover → Detail → Join (sign in only when joining)', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/entdecken')
   // Public discovery without login
   await expect(page.getByRole('heading', { name: /Sport-Events/ })).toBeVisible()
   const cards = page.getByTestId('event-card')
@@ -42,7 +42,7 @@ test('Discover → Detail → Join (sign in only when joining)', async ({ page }
 })
 
 test('full events cannot be joined', async ({ page }) => {
-  await page.goto('/?stadt=M%C3%BCnchen')
+  await page.goto('/entdecken?stadt=M%C3%BCnchen')
   await page.getByRole('link', { name: 'Volleyball am Isarstrand' }).click()
   await expect(page.getByRole('button', { name: 'Event ist voll' })).toBeDisabled()
 })

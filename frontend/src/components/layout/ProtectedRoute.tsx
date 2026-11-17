@@ -17,7 +17,7 @@ export default function ProtectedRoute({ adminOnly = false }: Props) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
   }
 
-  if (adminOnly && authState.user?.role !== 'admin') return <Navigate to="/" replace />
+  if (adminOnly && authState.user?.role !== 'admin') return <Navigate to="/entdecken" replace />
 
   return <Outlet />
 }

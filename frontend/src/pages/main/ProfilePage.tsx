@@ -5,6 +5,7 @@ import { changePassword, deleteAccount } from '@/api/userApi'
 import { apiError } from '@/api/axiosInstance'
 import Modal from '@/components/common/Modal'
 import { SPORTS } from '@/constants/sports'
+import { ThemeChoice } from '@/components/ui/Brand'
 import './ProfilePage.css'
 
 export default function ProfilePage() {
@@ -27,9 +28,13 @@ export default function ProfilePage() {
   const [deleteErr, setDeleteErr] = useState('')
 
   return (
-    <div className="page profile">
-      <h1 className="page-title">Profil</h1>
-      <p className="page-subtitle">{user.email}</p>
+    <div className="page page--narrow profile">
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">Profil</h1>
+          <p className="page-subtitle">{user.email}</p>
+        </div>
+      </div>
 
       <section className="card profile-section">
         <h2>Persönliche Angaben</h2>
@@ -61,7 +66,7 @@ export default function ProfilePage() {
             <legend className="label">Lieblingssportarten</legend>
             <div className="sport-chips">
               {SPORTS.map((s) => (
-                <label key={s.key} className={`sport-chip${sports.includes(s.key) ? ' on' : ''}`}>
+                <label key={s.key} className={`chip${sports.includes(s.key) ? ' is-on' : ''}`}>
                   <input
                     type="checkbox"
                     checked={sports.includes(s.key)}
@@ -121,6 +126,14 @@ export default function ProfilePage() {
             Passwort ändern
           </button>
         </form>
+      </section>
+
+      <section className="card profile-section">
+        <h2>Darstellung</h2>
+        <p className="hint" style={{ marginBottom: 12 }}>
+          „System“ folgt der Einstellung deines Geräts.
+        </p>
+        <ThemeChoice />
       </section>
 
       <section className="card profile-section">

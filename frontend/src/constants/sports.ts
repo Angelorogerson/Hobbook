@@ -12,23 +12,8 @@ export const SPORT_LABELS: Record<string, string> = Object.fromEntries(SPORTS.ma
 
 export const sportLabel = (key: string) => SPORT_LABELS[key] || key
 
-/** Distinct, accessible marker colours (always paired with a text label). */
-const SPORT_COLORS: Record<string, string> = {
-  football: '#1e7d3a',
-  basketball: '#c2410c',
-  volleyball: '#a16207',
-  beach_volleyball: '#b45309',
-  running: '#7c3aed',
-  cycling: '#0e7490',
-  tennis: '#4d7c0f',
-  table_tennis: '#be123c',
-  badminton: '#0369a1',
-  frisbee: '#9d174d',
-  fitness: '#334155',
-  other: '#475569',
-}
-
-export const sportColor = (key: string) => SPORT_COLORS[key] || '#004e89'
+/** Sport data colour as a theme-aware CSS variable (tokens.css; always paired with a text label). */
+export const sportColor = (key: string) => `var(--sport-${key}, var(--sport-other))`
 
 export const LEVELS: { key: string; label: string }[] = [
   { key: 'all', label: 'Alle Niveaus' },

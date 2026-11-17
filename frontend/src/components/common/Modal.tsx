@@ -35,7 +35,7 @@ export default function Modal({ title, onClose, children }: Props) {
       <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <div className="modal-head">
           <h2 id={titleId}>{title}</h2>
-          <button type="button" className="modal-close btn btn-ghost btn-sm" onClick={onClose} aria-label="Schließen">
+          <button type="button" className="modal-close btn btn-ghost btn-icon" onClick={onClose} aria-label="Schließen">
             <X size={18} aria-hidden="true" />
           </button>
         </div>

@@ -13,6 +13,7 @@ import {
   XCircle,
   ExternalLink,
   AlertTriangle,
+  CheckCircle2,
 } from 'lucide-react'
 import { getEvent, joinEvent, leaveEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
@@ -23,6 +24,8 @@ import CancelEventDialog from '@/components/events/CancelEventDialog'
 import ReportDialog from '@/components/events/ReportDialog'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { levelLabel, sportColor, sportLabel } from '@/constants/sports'
+import SportIcon from '@/components/ui/SportIcon'
+import { CapacityMeter, DateTile, EmptyState } from '@/components/ui/DataPieces'
 import { downloadIcs, formatEventDate, formatLongDate, formatDateTime, osmLink } from '@/utils/format'
 import './EventDetailPage.css'
 
@@ -61,13 +64,17 @@ export default function EventDetailPage() {
     const notFound = loadError?.status === 404
     return (
       <div className="page">
-        <h1 className="page-title">{notFound ? 'Event nicht gefunden' : 'Fehler'}</h1>
-        <p className="page-subtitle">
+        <EmptyState
+          icon={<AlertTriangle size={24} aria-hidden="true" />}
+          title={notFound ? 'Event nicht gefunden' : 'Fehler'}
+          action={
+            <Link to="/entdecken" className="btn btn-primary">
+              Andere Events entdecken
+            </Link>
+          }
+        >
           {notFound ? 'Dieses Event existiert nicht oder wurde gelöscht.' : loadError?.message}
-        </p>
-        <Link to="/" className="btn btn-primary">
-          Andere Events entdecken
-        </Link>
+        </EmptyState>
       </div>
     )
   }
@@ -116,19 +123,26 @@ export default function EventDetailPage() {
 
   return (
     <div className="page event-detail" style={{ ['--sport-color' as string]: sportColor(event.sport) }}>
-      <button type="button" className="btn btn-ghost btn-sm back-link" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/'))}>
+      <button type="button" className="btn btn-ghost btn-sm back-link" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate('/entdecken'))}>
         <ArrowLeft size={16} aria-hidden="true" /> Zurück
       </button>
 
       <div className="event-detail-grid">
         <div>
-          <div className="event-detail-tags">
-            <span className="event-detail-sport">{sportLabel(event.sport)}</span>
-            <StatusBadge status={event.status} />
-            {event.visibility === 'unlisted' && <span className="badge badge-neutral">Nur per Link</span>}
-          </div>
-          <h1 className="page-title">{event.title}</h1>
-          <p className="event-detail-organizer">Organisiert von {event.organizer.displayName}</p>
+          <header className="event-detail-head">
+            <DateTile iso={event.startAt} timeZone={event.timezone} size="lg" />
+            <div>
+              <div className="event-detail-tags">
+                <span className="event-detail-sport">
+                  <SportIcon sport={event.sport} size={16} /> {sportLabel(event.sport)}
+                </span>
+                <StatusBadge status={event.status} />
+                {event.visibility === 'unlisted' && <span className="badge badge-neutral">Nur per Link</span>}
+              </div>
+              <h1 className="page-title">{event.title}</h1>
+              <p className="event-detail-organizer">Organisiert von {event.organizer.displayName}</p>
+            </div>
+          </header>
 
           {event.status === 'cancelled' && (
             <div className="notice notice-danger" role="status">
@@ -141,6 +155,7 @@ export default function EventDetailPage() {
           )}
           {event.status === 'completed' && (
             <div className="notice" role="status">
+              <CalendarDays size={18} aria-hidden="true" />
               Dieses Event ist bereits vorbei.
             </div>
           )}
@@ -223,13 +238,16 @@ export default function EventDetailPage() {
 
         <aside className="event-detail-side">
           <div className="card event-action-card">
+            <CapacityMeter taken={event.participantCount} max={event.maxParticipants} status={event.status} />
             {feedback && (
               <p className="notice notice-success" role="status">
+                <CheckCircle2 size={18} aria-hidden="true" />
                 {feedback}
               </p>
             )}
             {actionError && (
               <p className="notice notice-danger" role="alert">
+                <AlertTriangle size={18} aria-hidden="true" />
                 {actionError}
               </p>
             )}
@@ -294,7 +312,10 @@ export default function EventDetailPage() {
           {hasCoords ? (
             <EventMap events={[event]} selectedId={event._id} compact fitKey={event._id} label={`Karte: ${event.location.placeName}`} />
           ) : (
-            <p className="notice">Für dieses Event ist keine genaue Kartenposition hinterlegt.</p>
+            <p className="notice">
+              <MapPin size={18} aria-hidden="true" />
+              Für dieses Event ist keine genaue Kartenposition hinterlegt.
+            </p>
           )}
         </aside>
       </div>

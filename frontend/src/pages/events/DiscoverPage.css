@@ -1,7 +1,7 @@
 .discover {
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(340px, 420px) 1fr;
+  grid-template-columns: minmax(360px, 440px) 1fr;
   min-height: 0;
 }
 .discover-panel {
@@ -12,43 +12,34 @@
   background: var(--c-bg);
 }
 .discover-head {
-  padding: 16px 16px 8px;
+  padding: var(--space-5) var(--space-4) var(--space-3);
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border);
 }
 .discover-title {
-  font-size: 1.2rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  margin-bottom: 12px;
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-3xl);
+  line-height: 1.05;
+  margin-bottom: var(--space-4);
 }
 .discover-count {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: var(--c-text-muted);
-  margin-top: 8px;
-  min-height: 1.3em;
+  margin-top: var(--space-3);
+  min-height: 1.5em;
+  font-variant-numeric: tabular-nums;
 }
 .discover-list {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px 24px;
+  padding: var(--space-3) var(--space-4) var(--space-6);
+  scrollbar-gutter: stable;
 }
 .discover-cards {
   list-style: none;
   display: grid;
-  gap: 10px;
-}
-.discover-empty {
-  text-align: center;
-  padding: 32px 12px;
-}
-.discover-empty h2 {
-  font-size: 1.1rem;
-  margin-bottom: 8px;
-}
-.discover-empty p {
-  color: var(--c-text-muted);
-  margin-bottom: 16px;
+  gap: var(--space-3);
 }
 .discover-map {
   position: relative;
@@ -57,40 +48,33 @@
 .discover-toggle {
   display: none;
 }
-
-/* Filters */
-.filterbar {
+.notice-body {
   display: grid;
-  gap: 8px;
-}
-.filterbar-city {
-  display: flex;
-  gap: 6px;
-}
-.filterbar-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-}
-.filterbar-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-}
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--c-primary);
-  background: var(--c-primary-soft);
-  color: var(--c-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
+  gap: var(--space-2);
+  justify-items: start;
 }
 
+/* Large desktop: a wider list column */
+@media (min-width: 1440px) {
+  .discover {
+    grid-template-columns: 480px 1fr;
+  }
+}
+
+/* Tablet: narrower list so the map keeps room */
+@media (max-width: 1024px) and (min-width: 861px) {
+  .discover {
+    grid-template-columns: 340px 1fr;
+  }
+  .discover-title {
+    font-size: var(--text-2xl);
+  }
+  .discover-head .filterbar-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Phone: one view at a time, toggle above the tab bar */
 @media (max-width: 860px) {
   .discover {
     grid-template-columns: 1fr;
@@ -98,6 +82,15 @@
   }
   .discover-panel {
     border-right: none;
+  }
+  .discover-head {
+    padding: var(--space-4) var(--space-4) var(--space-3);
+  }
+  .discover-title {
+    font-size: var(--text-2xl);
+  }
+  .discover-list {
+    padding-bottom: calc(var(--space-16) + var(--space-4));
   }
   .discover--list .discover-map,
   .discover--map .discover-list {
@@ -116,27 +109,28 @@
     display: inline-flex;
     position: absolute;
     left: 50%;
-    bottom: 16px;
+    bottom: var(--space-4);
     transform: translateX(-50%);
-    z-index: 5;
-    background: var(--c-text);
-    border-radius: 999px;
-    padding: 4px;
-    box-shadow: var(--shadow-lg);
+    z-index: var(--z-map-ui);
+    padding: var(--space-1);
+    border-radius: var(--radius-pill);
+    background: var(--c-ink);
+    box-shadow: var(--shadow-2);
   }
   .discover-toggle button {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-2);
+    min-height: var(--control-h);
+    padding: 0 var(--space-4);
     border: none;
+    border-radius: var(--radius-pill);
     background: transparent;
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-weight: 700;
+    color: var(--c-on-ink);
+    font-weight: var(--weight-semibold);
   }
   .discover-toggle button[aria-pressed='true'] {
-    background: #fff;
+    background: var(--c-surface);
     color: var(--c-text);
   }
 }

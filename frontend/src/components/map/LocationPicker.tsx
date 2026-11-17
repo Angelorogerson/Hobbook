@@ -4,6 +4,7 @@ import { Search, MapPin, Loader2 } from 'lucide-react'
 import { searchPlaces, reverseGeocode, type GeoResult } from '@/api/geocodeApi'
 import { apiError } from '@/api/axiosInstance'
 import { createMap, webglSupported } from './mapSetup'
+import { useTheme } from '@/store/ThemeContext'
 import './LocationPicker.css'
 
 export interface PickedLocation {
@@ -39,6 +40,7 @@ export default function LocationPicker({ value, onChange, errors = {} }: Props) 
   const [searching, setSearching] = useState(false)
   const [geoMessage, setGeoMessage] = useState('')
   const [mapFailed] = useState(() => !webglSupported())
+  const { theme } = useTheme()
 
   const hasPin = value.lat !== null && value.lng !== null
 
@@ -46,7 +48,11 @@ export default function LocationPicker({ value, onChange, errors = {} }: Props) 
     const map = mapRef.current
     if (!map) return
     if (!markerRef.current) {
-      markerRef.current = new maplibregl.Marker({ draggable: true, color: '#004e89' }).setLngLat([lng, lat]).addTo(map)
+      markerRef.current = new maplibregl.Marker({
+        draggable: true,
+        // MapLibre needs a literal colour: read the theme's accent token.
+        color: getComputedStyle(document.documentElement).getPropertyValue('--c-accent').trim() || undefined,
+      }).setLngLat([lng, lat]).addTo(map)
       markerRef.current.on('dragend', () => {
         const p = markerRef.current!.getLngLat()
         void onPin(p.lat, p.lng)
@@ -84,7 +90,7 @@ export default function LocationPicker({ value, onChange, errors = {} }: Props) 
 
   useEffect(() => {
     if (mapFailed || !mapEl.current) return
-    const map = createMap(mapEl.current, {})
+    const map = createMap(mapEl.current, theme)
     mapRef.current = map
     map.getCanvas().style.cursor = 'crosshair'
     map.on('load', () => {
@@ -108,7 +114,7 @@ export default function LocationPicker({ value, onChange, errors = {} }: Props) 
       mapRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapFailed])
+  }, [mapFailed, theme])
 
   const doSearch = async () => {
     if (query.trim().length < 3) {

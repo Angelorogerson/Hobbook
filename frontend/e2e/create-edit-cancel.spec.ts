@@ -38,7 +38,7 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   const detailUrl = page.url()
 
   // Appears in discovery (one result set feeds list and map)
-  await page.goto('/?stadt=Berlin&sport=frisbee')
+  await page.goto('/entdecken?stadt=Berlin&sport=frisbee')
   await expect(page.getByRole('link', { name: 'Ultimate am Tempelhofer Feld' })).toBeVisible()
   await expect(page.getByRole('status').filter({ hasText: /^1 Event$/ })).toBeVisible()
 
@@ -59,13 +59,13 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   await expect(page.getByText('Grund: Sturmwarnung')).toBeVisible()
 
   // No longer in default discovery
-  await page.goto('/?stadt=Berlin&sport=frisbee')
+  await page.goto('/entdecken?stadt=Berlin&sport=frisbee')
   await expect(page.getByText('Hier ist noch nichts los.')).toBeVisible()
 })
 
 test('other users cannot edit an event they do not organize', async ({ page }) => {
   await loginFromStart(page, PLAYER)
-  await page.goto('/?stadt=Frankfurt')
+  await page.goto('/entdecken?stadt=Frankfurt')
   await page.getByRole('link', { name: 'Lauftreff am Main' }).click()
   await expect(page.getByRole('heading', { name: 'Lauftreff am Main' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Bearbeiten' })).toHaveCount(0)

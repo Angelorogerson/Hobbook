@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { List, Map as MapIcon, Plus, RefreshCw } from 'lucide-react'
+import { AlertTriangle, CalendarX2, List, Map as MapIcon, Plus, RefreshCw } from 'lucide-react'
 import EventMap from '@/components/map/EventMap'
 import EventCard from '@/components/events/EventCard'
 import FilterBar from '@/components/events/FilterBar'
-import LoadingSpinner from '@/components/common/LoadingSpinner'
+import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
 import { useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
 import './DiscoverPage.css'
@@ -79,11 +79,18 @@ export default function DiscoverPage({ initialView }: Props) {
         </div>
 
         <div className="discover-list">
-          {d.loading && d.events.length === 0 && <LoadingSpinner />}
+          {d.loading && d.events.length === 0 && (
+            <div className="discover-cards" aria-hidden="true">
+              <EventCardSkeleton />
+              <EventCardSkeleton />
+              <EventCardSkeleton />
+            </div>
+          )}
 
           {d.error && (
             <div className="notice notice-danger" role="alert">
-              <div>
+              <AlertTriangle size={18} aria-hidden="true" />
+              <div className="notice-body">
                 <p>{d.error}</p>
                 <button type="button" className="btn btn-secondary btn-sm" onClick={d.retry}>
                   <RefreshCw size={14} aria-hidden="true" /> Erneut versuchen
@@ -93,18 +100,20 @@ export default function DiscoverPage({ initialView }: Props) {
           )}
 
           {!d.loading && !d.error && d.events.length === 0 && (
-            <div className="discover-empty">
-              <h2>Hier ist noch nichts los.</h2>
-              <p>
-                {areaActive || d.filters.city
-                  ? 'Für diesen Ort und diese Filter gibt es gerade keine offenen Events.'
-                  : 'Es gibt gerade keine offenen Events.'}{' '}
-                Starte das erste – andere können es dann hier und auf der Karte finden.
-              </p>
-              <Link to="/events/neu" className="btn btn-primary">
-                <Plus size={18} aria-hidden="true" /> Event erstellen
-              </Link>
-            </div>
+            <EmptyState
+              icon={<CalendarX2 size={24} aria-hidden="true" />}
+              title="Hier ist noch nichts los."
+              action={
+                <Link to="/events/neu" className="btn btn-primary">
+                  <Plus size={18} aria-hidden="true" /> Event erstellen
+                </Link>
+              }
+            >
+              {areaActive || d.filters.city
+                ? 'Für diesen Ort und diese Filter gibt es gerade keine offenen Events.'
+                : 'Es gibt gerade keine offenen Events.'}{' '}
+              Starte das erste – andere können es dann hier und auf der Karte finden.
+            </EmptyState>
           )}
 
           <ol className="discover-cards" aria-label="Gefundene Events">

@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Eye, Pencil } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Eye, Pencil } from 'lucide-react'
 import { createEvent, getEvent, updateEvent, type EventInput, type EventLevel, type EventVisibility, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import LocationPicker, { type PickedLocation } from '@/components/map/LocationPicker'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
-import { LEVELS, SPORTS, levelLabel, sportLabel } from '@/constants/sports'
+import { LEVELS, SPORTS, levelLabel, sportColor, sportLabel } from '@/constants/sports'
+import SportIcon from '@/components/ui/SportIcon'
+import { DateTile } from '@/components/ui/DataPieces'
 import { browserTimeZone, formatEventDate, fromLocalInputs, toLocalInputs } from '@/utils/format'
 import { useAuthContext } from '@/store/AuthContext'
 import './EventFormPage.css'
@@ -61,6 +63,20 @@ function computeTimes(f: FormState) {
     endAt = new Date(new Date(endAt).getTime() + 24 * 3600 * 1000).toISOString()
   }
   return { startAt, endAt }
+}
+
+/** Error summary targets (WCAG 3.3.1: errors identified and reachable). */
+const FIELD_LINKS: Record<string, { id: string; label: string }> = {
+  sport: { id: 'ev-sport', label: 'Sportart' },
+  title: { id: 'ev-title', label: 'Titel' },
+  description: { id: 'ev-desc', label: 'Beschreibung' },
+  startAt: { id: 'ev-date', label: 'Datum / Beginn' },
+  endAt: { id: 'ev-end', label: 'Ende' },
+  maxParticipants: { id: 'ev-max', label: 'Maximale Teilnehmende' },
+  'location.placeName': { id: 'loc-place', label: 'Treffpunkt' },
+  'location.address': { id: 'loc-address', label: 'Adresse' },
+  'location.city': { id: 'loc-city', label: 'Stadt' },
+  'location.lat': { id: 'loc-search', label: 'Ort auf der Karte' },
 }
 
 export function validateForm(f: FormState, now = new Date()): Record<string, string> {
@@ -181,8 +197,8 @@ export default function EventFormPage() {
     const v = validateForm(form)
     setErrors(v)
     if (Object.keys(v).length) {
-      const first = document.querySelector<HTMLElement>('[aria-invalid="true"]')
-      first?.focus()
+      // Wait for the error state to render, then move focus to the first invalid field.
+      setTimeout(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 0)
       return
     }
     setStep('preview')
@@ -227,17 +243,29 @@ export default function EventFormPage() {
     const input = toInput(form)
     const { day, time } = formatEventDate(input.startAt, input.endAt, input.timezone)
     return (
-      <div className="page event-form">
-        <h1 className="page-title">Vorschau</h1>
-        <p className="page-subtitle">So sehen andere dein Event. Passt alles?</p>
+      <div className="page page--narrow event-form">
+        <div className="page-head">
+          <div>
+            <h1 className="page-title">Vorschau</h1>
+            <p className="page-subtitle">So sehen andere dein Event. Passt alles?</p>
+          </div>
+        </div>
         {materialChange && (
           <p className="notice notice-warning">
+            <AlertTriangle size={18} aria-hidden="true" />
             Du änderst Zeit oder Ort. Angemeldete sehen auf der Eventseite einen Hinweis auf die Änderung.
           </p>
         )}
-        <div className="card preview-card">
-          <p className="preview-sport">{sportLabel(input.sport)}</p>
-          <h2>{input.title}</h2>
+        <div className="card preview-card" style={{ ['--sport-color' as string]: sportColor(input.sport) }}>
+          <div className="preview-head">
+            <DateTile iso={input.startAt} timeZone={input.timezone} size="lg" />
+            <div>
+              <p className="preview-sport">
+                <SportIcon sport={input.sport} size={16} /> {sportLabel(input.sport)}
+              </p>
+              <h2>{input.title}</h2>
+            </div>
+          </div>
           <dl>
             <dt>Wann</dt>
             <dd>
@@ -258,6 +286,7 @@ export default function EventFormPage() {
         </div>
         {submitError && (
           <p className="notice notice-danger" role="alert">
+            <AlertTriangle size={18} aria-hidden="true" />
             {submitError}
           </p>
         )}
@@ -274,15 +303,20 @@ export default function EventFormPage() {
   }
 
   return (
-    <div className="page event-form">
-      <Link to={isEdit && original ? `/events/${original._id}` : '/'} className="btn btn-ghost btn-sm">
+    <div className="page page--narrow event-form">
+      <Link to={isEdit && original ? `/events/${original._id}` : '/entdecken'} className="btn btn-ghost btn-sm back-link">
         <ArrowLeft size={16} aria-hidden="true" /> Abbrechen
       </Link>
-      <h1 className="page-title">{isEdit ? 'Event bearbeiten' : 'Event erstellen'}</h1>
-      <p className="page-subtitle">Kostenlos und offen für alle. Pflichtfelder sind mit * markiert.</p>
+      <div className="page-head">
+        <div>
+          <h1 className="page-title">{isEdit ? 'Event bearbeiten' : 'Event erstellen'}</h1>
+          <p className="page-subtitle">Kostenlos und offen für alle. Pflichtfelder sind mit * markiert.</p>
+        </div>
+      </div>
 
       {submitError && (
         <p className="notice notice-danger" role="alert">
+          <AlertTriangle size={18} aria-hidden="true" />
           {submitError}
         </p>
       )}
@@ -380,9 +414,29 @@ export default function EventFormPage() {
         </section>
 
         {Object.keys(errors).length > 0 && (
-          <p className="notice notice-danger" role="alert">
-            Bitte prüfe die markierten Felder.
-          </p>
+          <div className="notice notice-danger error-summary" role="alert">
+            <AlertTriangle size={18} aria-hidden="true" />
+            <div>
+              <p>Bitte prüfe die markierten Felder.</p>
+              <ul>
+                {Object.keys(errors)
+                  .filter((k) => FIELD_LINKS[k])
+                  .map((k) => (
+                    <li key={k}>
+                      <a
+                        href={`#${FIELD_LINKS[k].id}`}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById(FIELD_LINKS[k].id)?.focus()
+                        }}
+                      >
+                        {FIELD_LINKS[k].label}
+                      </a>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          </div>
         )}
 
         <div className="form-actions">

@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { AlertTriangle } from 'lucide-react'
+import './legal.css'
 
 /**
  * Datenschutz describes what this codebase actually does.
@@ -7,9 +9,10 @@ import { Link } from 'react-router-dom'
  */
 export function PrivacyPage() {
   return (
-    <div className="page legal">
+    <div className="page page--narrow legal">
       <h1 className="page-title">Datenschutz</h1>
       <p className="notice notice-warning">
+        <AlertTriangle size={18} aria-hidden="true" />
         Entwurf: Verantwortliche Stelle und Kontaktdaten müssen vom Betreiber vor dem öffentlichen Start ergänzt und
         rechtlich geprüft werden.
       </p>
@@ -52,9 +55,10 @@ export function PrivacyPage() {
 
 export function ImprintPage() {
   return (
-    <div className="page legal">
+    <div className="page page--narrow legal">
       <h1 className="page-title">Impressum</h1>
       <p className="notice notice-warning">
+        <AlertTriangle size={18} aria-hidden="true" />
         Die Angaben nach § 5 DDG (Name, Anschrift, Kontakt des Betreibers) sind noch nicht hinterlegt und müssen vor
         dem öffentlichen Start ergänzt werden.
       </p>
@@ -64,7 +68,7 @@ export function ImprintPage() {
 
 export function AboutPage() {
   return (
-    <div className="page legal">
+    <div className="page page--narrow legal">
       <h1 className="page-title">Über Hobbook</h1>
       <p>
         Hobbook hilft dir, Sport in deiner Nähe zu finden: Sieh auf Liste und Karte, wo etwas los ist, mach mit – oder
@@ -74,7 +78,7 @@ export function AboutPage() {
         Hobbook ist ein Community-Projekt. Es verkauft keine Plätze und vermittelt keine kostenpflichtigen Buchungen.
       </p>
       <p>
-        <Link to="/" className="btn btn-primary">Events entdecken</Link>
+        <Link to="/entdecken" className="btn btn-primary">Events entdecken</Link>
       </p>
     </div>
   )
