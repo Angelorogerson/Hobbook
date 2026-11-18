@@ -50,14 +50,24 @@ export function ThemeChoice() {
   ]
   return (
     <div className="theme-choice" role="radiogroup" aria-label="Farbschema">
-      {options.map(({ key, icon: Icon }) => (
+      {options.map(({ key, icon: Icon }, i) => (
         <button
           key={key}
           type="button"
           role="radio"
           aria-checked={preference === key}
+          tabIndex={preference === key ? 0 : -1}
           className={`chip${preference === key ? ' is-on' : ''}`}
           onClick={() => setPreference(key)}
+          onKeyDown={(e) => {
+            const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0
+            if (!step) return
+            e.preventDefault()
+            const next = options[(i + step + options.length) % options.length].key
+            setPreference(next)
+            const group = e.currentTarget.parentElement
+            requestAnimationFrame(() => group?.querySelector<HTMLElement>('[aria-checked="true"]')?.focus())
+          }}
         >
           <Icon size={16} aria-hidden="true" /> {LABEL[key]}
         </button>

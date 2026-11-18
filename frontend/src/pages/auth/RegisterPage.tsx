@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, Info } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
 import { apiError } from '@/api/axiosInstance'
-import { Logo } from '@/components/ui/Brand'
 import { INTENT_TEXT, resumeState } from './LoginPage'
 import './auth.css'
 
@@ -54,9 +53,6 @@ export default function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
-        <Link to="/" className="auth-brand">
-          <Logo /> Hobbook
-        </Link>
         <h1>Konto erstellen</h1>
         {state.intent && INTENT_TEXT[state.intent] && (
           <p className="notice notice-info" role="status">

@@ -12,6 +12,12 @@ import './MyEventsPage.css'
 
 type Tab = 'created' | 'joined' | 'saved'
 
+const TABS: { key: Tab; label: string }[] = [
+  { key: 'created', label: 'Erstellt' },
+  { key: 'joined', label: 'Dabei' },
+  { key: 'saved', label: 'Gemerkt' },
+]
+
 const isUpcoming = (e: SportEvent) => e.status === 'open' || e.status === 'full'
 
 export default function MyEventsPage() {
@@ -109,16 +115,34 @@ export default function MyEventsPage() {
         </Link>
       </div>
 
-      <div className="tabs" role="tablist" aria-label="Meine Events">
-        <button type="button" role="tab" className="tab" aria-selected={tab === 'created'} onClick={() => setTab('created')}>
-          Erstellt ({data?.created.length ?? 0})
-        </button>
-        <button type="button" role="tab" className="tab" aria-selected={tab === 'joined'} onClick={() => setTab('joined')}>
-          Dabei ({data?.joined.length ?? 0})
-        </button>
-        <button type="button" role="tab" className="tab" aria-selected={tab === 'saved'} onClick={() => setTab('saved')}>
-          Gemerkt ({data?.saved.length ?? 0})
-        </button>
+      <div
+        className="tabs"
+        role="tablist"
+        aria-label="Meine Events"
+        onKeyDown={(e) => {
+          const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+          if (!step) return
+          e.preventDefault()
+          const next = TABS[(TABS.findIndex((t) => t.key === tab) + step + TABS.length) % TABS.length].key
+          setTab(next)
+          document.getElementById(`my-tab-${next}`)?.focus()
+        }}
+      >
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            id={`my-tab-${t.key}`}
+            type="button"
+            role="tab"
+            className="tab"
+            aria-selected={tab === t.key}
+            aria-controls="my-panel"
+            tabIndex={tab === t.key ? 0 : -1}
+            onClick={() => setTab(t.key)}
+          >
+            {t.label} ({data?.[t.key].length ?? 0})
+          </button>
+        ))}
       </div>
 
       {error && (
@@ -139,7 +163,7 @@ export default function MyEventsPage() {
         </p>
       )}
 
-      <div role="tabpanel">
+      <div role="tabpanel" id="my-panel" aria-labelledby={`my-tab-${tab}`}>
         {data && list.length === 0 && (
           tab === 'created' ? (
             <EmptyState

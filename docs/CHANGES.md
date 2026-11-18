@@ -59,3 +59,27 @@ The bundled Playwright Chromium could not start on this Windows machine (Windows
 - **Cold start:** a city-agnostic map will be empty in most cities at launch. Empty states invite people to create events, but this is a product risk.
 - **Not built:** no notifications (email/push) for changes or cancellations (participants see a notice on the event page), no password reset, no lazy-loading of the map bundle.
 - **No deployment config, monitoring or backups yet.**
+
+# Changes: UX redesign v2 (2026-11-18)
+
+Branch `redesign/ux-v2`. Design system: [DESIGN.md](DESIGN.md).
+
+## What changed
+- **Flows:** event cards open the event on tap; joining, reporting or saving as a guest continues by itself after sign-in; the join button is a fixed bar on phones; publishing an event confirms and offers sharing.
+- **Identity:** new tokens (warm neutrals, court blue, volt lime, Bricolage Grotesque), pill buttons, new brand mark; toast, avatar and confirm-dialog components; dialogs trap focus.
+- **Navigation:** Start · Entdecken · Meine Events · Profil in both the top bar and the tab bar; `/karte` is the map view of Discover; personal home for signed-in users; new `/regeln`; "So funktioniert Hobbook" with FAQ.
+- **Discover:** one-tap filter chips, "Plätze frei" (`?frei=1`), distance on cards, last searched place remembered on the device.
+- **Events:** saved events ("Gemerkt"), optional "Mitbringen", Route button, organizer line with member year and events hosted, quiet safety and report line.
+- **Map:** clustering, own-position dot and recenter, loading and empty hints, preview card on phones.
+- **Create:** three numbered sections with sport grid, day and duration shortcuts, suggested title, participant stepper, optional fields under "Mehr Optionen", live preview, one publish button.
+- **Landing:** rewritten around real events with the "Der Ball rollt" motion concept.
+
+## Backend (additive only)
+- `ConnectEvent.bring` (optional, ≤200 characters) in model, validation and payload.
+- `User.savedEvents`; `POST` / `DELETE /api/events/:id/save`; `saved` per viewer on every event; `saved` list in `GET /api/events/me`. Bookmarks are private and removed when an event is deleted.
+- Detail view only: `organizer.memberSince` (year) and `organizer.eventsHosted`.
+- No existing field, route or response was renamed or removed.
+
+## Not built
+- Notifications, password reset and e-mail verification (all need an e-mail service).
+- Organizer profile pages, event photos, chat, an English translation.

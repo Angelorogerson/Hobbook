@@ -96,6 +96,7 @@ export default function DiscoverPage({ initialView }: Props) {
         </div>
 
         <div className="discover-list">
+          <h2 className="sr-only">Ergebnisse</h2>
           {d.loading && d.events.length === 0 && (
             <div className="discover-cards" aria-hidden="true">
               <EventCardSkeleton />
