@@ -42,6 +42,8 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    // Events the user bookmarked ("Gemerkt"). Private: never exposed to others.
+    savedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ConnectEvent' }],
     // Set at sign-up: the person confirmed they are at least 16 years old.
     ageConfirmedAt: { type: Date },
   },

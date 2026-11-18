@@ -16,6 +16,9 @@ export interface EventLocation {
 export interface PublicPerson {
   _id: string | null
   displayName: string
+  /** Detail view only: year the organizer joined and events they have run. */
+  memberSince?: number
+  eventsHosted?: number
 }
 
 export interface SportEvent {
@@ -23,6 +26,8 @@ export interface SportEvent {
   title: string
   sport: string
   description: string
+  /** Optional one-liner: what to bring. */
+  bring?: string
   location: EventLocation
   startAt: string
   endAt: string
@@ -37,6 +42,8 @@ export interface SportEvent {
   changedAt: string | null
   organizer: PublicPerson
   joined: boolean
+  /** Bookmarked by the viewer (private). */
+  saved?: boolean
   isOrganizer: boolean
   participants?: PublicPerson[]
   createdAt: string
@@ -47,6 +54,7 @@ export interface EventInput {
   title: string
   sport: string
   description?: string
+  bring?: string
   startAt: string
   endAt: string
   timezone?: string
@@ -122,9 +130,17 @@ export async function getEvent(id: string): Promise<SportEvent> {
   return data.event
 }
 
-export async function getMyEvents(): Promise<{ created: SportEvent[]; joined: SportEvent[] }> {
+export async function getMyEvents(): Promise<{ created: SportEvent[]; joined: SportEvent[]; saved: SportEvent[] }> {
   const { data } = await api.get('/events/me')
-  return data
+  return { created: data.created || [], joined: data.joined || [], saved: data.saved || [] }
+}
+
+export async function saveEvent(id: string): Promise<void> {
+  await api.post(`/events/${id}/save`)
+}
+
+export async function unsaveEvent(id: string): Promise<void> {
+  await api.delete(`/events/${id}/save`)
 }
 
 export async function createEvent(input: EventInput): Promise<SportEvent> {

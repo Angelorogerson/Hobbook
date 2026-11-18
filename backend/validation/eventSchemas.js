@@ -53,6 +53,7 @@ const baseEventFields = {
   title: text(3, 100, 'Titel'),
   sport: z.enum(SPORT_KEYS, { errorMap: () => ({ message: 'Sportart ist ungültig' }) }),
   description: text(0, 2000, 'Beschreibung').optional(),
+  bring: text(0, 200, 'Mitbringen').optional(),
   startAt: isoDate('Startzeit'),
   endAt: isoDate('Endzeit'),
   timezone: timezone.optional(),

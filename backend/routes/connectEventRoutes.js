@@ -9,6 +9,8 @@ import {
   deleteEvent,
   joinEvent,
   leaveEvent,
+  saveEvent,
+  unsaveEvent,
   getAllEventsAdmin,
 } from '../controllers/connectEventController.js';
 import protect from '../middleware/auth.js';
@@ -41,5 +43,7 @@ router.post('/:id/cancel', validateObjectId(), protect, writeLimiter, validate(c
 router.delete('/:id', validateObjectId(), protect, writeLimiter, deleteEvent);
 router.post('/:id/join', validateObjectId(), protect, writeLimiter, joinEvent);
 router.post('/:id/leave', validateObjectId(), protect, writeLimiter, leaveEvent);
+router.post('/:id/save', validateObjectId(), protect, writeLimiter, saveEvent);
+router.delete('/:id/save', validateObjectId(), protect, writeLimiter, unsaveEvent);
 
 export default router;

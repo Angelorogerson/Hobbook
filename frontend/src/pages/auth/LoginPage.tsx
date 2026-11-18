@@ -16,6 +16,7 @@ export const INTENT_TEXT: Record<string, string> = {
   report: 'Melde dich an, um dieses Event zu melden.',
   create: 'Melde dich an, um ein Event zu erstellen.',
   mine: 'Melde dich an, um deine Events zu sehen.',
+  save: 'Melde dich an, um Events zu merken.',
 }
 
 /** After signing in, the target page finishes what the visitor started (e.g. joining). */

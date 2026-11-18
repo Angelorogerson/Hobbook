@@ -72,6 +72,11 @@ export function PrivacyPage() {
         Dein Standort wird nur abgefragt, wenn du „In meiner Nähe“ antippst und dein Browser es erlaubt. Für die Suche
         wird die Position auf etwa einen Kilometer gerundet an unseren Server gesendet und dort nicht gespeichert.
       </p>
+      <h2>Gemerkte Events</h2>
+      <p>
+        Wenn du dir Events merkst, speichern wir diese Liste in deinem Konto. Sie ist nur für dich sichtbar und wird mit
+        deinem Konto gelöscht.
+      </p>
       <h2>Hosting und Dienste Dritter</h2>
       <ul>
         <li>
@@ -87,12 +92,18 @@ export function PrivacyPage() {
           Die Ortssuche läuft über unseren Server zum Nominatim-Dienst von OpenStreetMap. Dein Browser kontaktiert
           Nominatim nicht direkt; übertragen wird nur der Suchbegriff bzw. die Koordinate.
         </li>
+        <li>
+          „Route“ bei einem Event ist ein Link zu Google Maps. Erst wenn du ihn antippst, öffnet sich Google Maps und
+          erhält den Treffpunkt des Events.
+        </li>
         <li>Schriften werden von unserem eigenen Server geladen, nicht von Google.</li>
       </ul>
       <h2>Speicherung im Browser</h2>
       <p>
         Nach der Anmeldung wird ein Sitzungs-Token im lokalen Speicher deines Browsers abgelegt, außerdem deine Wahl
-        für das helle oder dunkle Farbschema. Wir verwenden keine Tracking- oder Werbe-Cookies.
+        für das helle oder dunkle Farbschema. Damit du beim nächsten Besuch dort weitermachst, wo du gesucht hast, merkt
+        sich dein Browser außerdem die zuletzt gesuchte Stadt oder deinen auf etwa einen Kilometer gerundeten Standort;
+        mit „Zurücksetzen“ in der Suche löschst du das wieder. Wir verwenden keine Tracking- oder Werbe-Cookies.
       </p>
       <h2>Löschung</h2>
       <p>

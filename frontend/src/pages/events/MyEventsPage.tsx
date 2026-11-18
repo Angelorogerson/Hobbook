@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
+import { AlertTriangle, Bookmark, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
 import { EmptyState } from '@/components/ui/DataPieces'
 import { deleteEvent, getMyEvents, leaveEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
@@ -10,13 +10,13 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import './MyEventsPage.css'
 
-type Tab = 'created' | 'joined'
+type Tab = 'created' | 'joined' | 'saved'
 
 const isUpcoming = (e: SportEvent) => e.status === 'open' || e.status === 'full'
 
 export default function MyEventsPage() {
   const [tab, setTab] = useState<Tab>('created')
-  const [data, setData] = useState<{ created: SportEvent[]; joined: SportEvent[] } | null>(null)
+  const [data, setData] = useState<{ created: SportEvent[]; joined: SportEvent[]; saved: SportEvent[] } | null>(null)
   const [error, setError] = useState('')
   const [message, setMessageState] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null)
   const setMessage = (text: string, tone: 'success' | 'danger' = 'success') => setMessageState(text ? { text, tone } : null)
@@ -54,7 +54,7 @@ export default function MyEventsPage() {
   }
 
   const renderActions = (e: SportEvent) => {
-    if (!isUpcoming(e)) return null
+    if (!isUpcoming(e) || tab === 'saved') return null
     if (tab === 'created') {
       const others = e.participantCount - 1
       return (
@@ -89,7 +89,7 @@ export default function MyEventsPage() {
         <ul className="my-list">
           {events.map((e) => (
             <li key={e._id}>
-              <EventCard event={e} />
+              <EventCard event={e} onSavedChange={load} />
               {renderActions(e)}
             </li>
           ))}
@@ -102,7 +102,7 @@ export default function MyEventsPage() {
       <div className="page-head">
         <div>
           <h1 className="page-title">Meine Events</h1>
-          <p className="page-subtitle">Alles, was du organisierst oder wo du mitmachst.</p>
+          <p className="page-subtitle">Alles, was du organisierst, wo du mitmachst und was du dir gemerkt hast.</p>
         </div>
         <Link to="/events/neu" className="btn btn-primary">
           <Plus size={18} aria-hidden="true" /> Event erstellen
@@ -115,6 +115,9 @@ export default function MyEventsPage() {
         </button>
         <button type="button" role="tab" className="tab" aria-selected={tab === 'joined'} onClick={() => setTab('joined')}>
           Dabei ({data?.joined.length ?? 0})
+        </button>
+        <button type="button" role="tab" className="tab" aria-selected={tab === 'saved'} onClick={() => setTab('saved')}>
+          Gemerkt ({data?.saved.length ?? 0})
         </button>
       </div>
 
@@ -149,6 +152,18 @@ export default function MyEventsPage() {
               }
             >
               Leg ein Datum und einen Treffpunkt fest – andere finden dein Event dann in Liste und Karte.
+            </EmptyState>
+          ) : tab === 'saved' ? (
+            <EmptyState
+              icon={<Bookmark size={24} aria-hidden="true" />}
+              title="Du hast dir noch nichts gemerkt."
+              action={
+                <Link to="/entdecken" className="btn btn-primary">
+                  Events entdecken
+                </Link>
+              }
+            >
+              Tippe bei einem Event auf das Lesezeichen, um es dir für später zu merken.
             </EmptyState>
           ) : (
             <EmptyState

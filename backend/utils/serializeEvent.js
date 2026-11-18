@@ -18,21 +18,26 @@ export function effectiveStatus(event, now = new Date()) {
  * @param {object} [opts]
  * @param {object} [opts.viewer]  req.user or undefined
  * @param {boolean} [opts.detail] include participant list when allowed
+ * @param {{ eventsHosted: number }} [opts.organizerStats] detail view only
  */
-export function serializeEvent(event, { viewer, detail = false } = {}) {
+export function serializeEvent(event, { viewer, detail = false, organizerStats } = {}) {
   const viewerId = viewer ? viewer._id.toString() : null;
   const creatorId = idOf(event.creator);
   const participantIds = (event.participants || []).map(idOf);
   const isOrganizer = !!viewerId && viewerId === creatorId;
   const joined = !!viewerId && participantIds.includes(viewerId);
   const isAdmin = viewer?.role === 'admin';
+  const eventId = event._id.toString();
+  // Private to the viewer: whether they bookmarked this event.
+  const saved = !!viewer && (viewer.savedEvents || []).some((id) => id.toString() === eventId);
   const point = event.location?.point?.coordinates;
 
   const out = {
-    _id: event._id.toString(),
+    _id: eventId,
     title: event.title,
     sport: event.sport,
     description: event.description || '',
+    bring: event.bring || '',
     location: {
       placeName: event.location?.placeName || '',
       address: event.location?.address || '',
@@ -57,10 +62,19 @@ export function serializeEvent(event, { viewer, detail = false } = {}) {
       displayName: event.creator && event.creator.name ? displayName(event.creator.name) : 'Organisator',
     },
     joined,
+    saved,
     isOrganizer,
     createdAt: event.createdAt,
     updatedAt: event.updatedAt,
   };
+
+  // Lightweight trust signals for the detail view: year of sign-up and events organised.
+  if (detail) {
+    if (event.creator && event.creator.createdAt) {
+      out.organizer.memberSince = new Date(event.creator.createdAt).getUTCFullYear();
+    }
+    if (organizerStats) out.organizer.eventsHosted = organizerStats.eventsHosted;
+  }
 
   if (detail && (isOrganizer || joined || isAdmin)) {
     out.participants = (event.participants || []).map((p) => ({

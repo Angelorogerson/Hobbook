@@ -42,6 +42,8 @@ const connectEventSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true, maxlength: 100 },
     sport: { type: String, enum: SPORT_KEYS, required: true },
     description: { type: String, trim: true, maxlength: 2000, default: '' },
+    // Optional one-liner: what participants should bring ("Hallenschuhe, Wasser").
+    bring: { type: String, trim: true, maxlength: 200, default: '' },
     location: { type: locationSchema, required: true },
     startAt: { type: Date, required: true },
     endAt: { type: Date, required: true },

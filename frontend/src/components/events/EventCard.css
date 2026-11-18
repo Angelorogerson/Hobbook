@@ -139,3 +139,14 @@
   font-weight: var(--weight-semibold);
   white-space: nowrap;
 }
+
+/* Bookmark sits above the stretched link, in the top-right corner */
+.event-card-save {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  z-index: 1;
+}
+.event-card:has(.event-card-save) .event-card-top {
+  padding-right: var(--space-8);
+}

@@ -46,3 +46,25 @@ test('full events cannot be joined', async ({ page }) => {
   await page.getByRole('link', { name: 'Volleyball am Isarstrand' }).click()
   await expect(page.getByRole('button', { name: 'Event ist voll' })).toBeDisabled()
 })
+
+test('save an event and find it under "Gemerkt"', async ({ page }) => {
+  await page.goto('/entdecken?stadt=Berlin')
+  // Guests are asked to sign in, then land back on the list
+  await page.getByRole('button', { name: 'Merken: Streetball 3 gegen 3' }).click()
+  await expect(page.getByText('Melde dich an, um Events zu merken.')).toBeVisible()
+  await login(page, PLAYER)
+  await expect(page).toHaveURL(/stadt=Berlin/)
+
+  const save = page.getByRole('button', { name: 'Merken: Streetball 3 gegen 3' })
+  await save.click()
+  await expect(save).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText(/Gemerkt – du findest es/)).toBeVisible()
+
+  await page.goto('/meine-events')
+  await page.getByRole('tab', { name: /Gemerkt \(1\)/ }).click()
+  await expect(page.getByRole('link', { name: 'Streetball 3 gegen 3' })).toBeVisible()
+
+  // Removing the bookmark empties the tab again
+  await page.getByRole('button', { name: 'Merken: Streetball 3 gegen 3' }).click()
+  await expect(page.getByText('Du hast dir noch nichts gemerkt.')).toBeVisible()
+})

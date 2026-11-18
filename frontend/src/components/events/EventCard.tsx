@@ -8,6 +8,7 @@ import { formatDistance } from '@/utils/geo'
 import SportIcon from '@/components/ui/SportIcon'
 import { CapacityMeter, DateTile } from '@/components/ui/DataPieces'
 import StatusBadge from './StatusBadge'
+import SaveButton from './SaveButton'
 import './EventCard.css'
 
 interface Props {
@@ -16,13 +17,15 @@ interface Props {
   /** Distance from the viewer, when their position is known. */
   distanceKm?: number
   onShowOnMap?: (id: string) => void
+  /** Called after the viewer bookmarked or un-bookmarked the event. */
+  onSavedChange?: (saved: boolean) => void
 }
 
 /**
  * Data-forward event card: date tile, sport, title, time/place and a capacity
  * meter. The title link is stretched over the whole card, so a tap anywhere opens the event.
  */
-const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, distanceKm, onShowOnMap }, ref) {
+const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, distanceKm, onShowOnMap, onSavedChange }, ref) {
   const { time } = formatEventDate(event.startAt, event.endAt, event.timezone)
   const mappable = event.location.lat !== null && event.location.lng !== null
 
@@ -35,6 +38,11 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
       data-testid="event-card"
     >
       <DateTile iso={event.startAt} timeZone={event.timezone} />
+      {!event.isOrganizer && (
+        <span className="event-card-save">
+          <SaveButton event={event} onChange={onSavedChange} />
+        </span>
+      )}
 
       <div className="event-card-body">
         <div className="event-card-top">

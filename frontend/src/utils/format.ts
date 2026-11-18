@@ -99,5 +99,8 @@ export function downloadIcs(event: SportEvent) {
 export const osmLink = (lat: number, lng: number) =>
   `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=18/${lat}/${lng}`
 
+/** Opens the phone's maps app (or Google Maps in the browser) with directions to the meeting point. */
+export const routeLink = (lat: number, lng: number) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+
 export const spotsText = (e: Pick<SportEvent, 'participantCount' | 'maxParticipants'>) =>
   `${e.participantCount} / ${e.maxParticipants} dabei`

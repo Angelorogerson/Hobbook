@@ -1,8 +1,9 @@
-import { ConnectEvent, Report } from '../models/index.js';
+import { ConnectEvent, Report, User } from '../models/index.js';
 import { serializeEvent } from '../utils/serializeEvent.js';
 import { cityKey, escapeRegex } from '../utils/text.js';
 
 const CREATOR_FIELDS = 'name';
+const CREATOR_DETAIL_FIELDS = 'name createdAt';
 const PARTICIPANT_FIELDS = 'name';
 
 const notFound = (res) => res.status(404).json({ message: 'Event nicht gefunden' });
@@ -23,7 +24,7 @@ function toLocationDoc(loc) {
 
 async function loadForResponse(id) {
   return ConnectEvent.findById(id)
-    .populate('creator', CREATOR_FIELDS)
+    .populate('creator', CREATOR_DETAIL_FIELDS)
     .populate('participants', PARTICIPANT_FIELDS)
     .lean();
 }
@@ -94,9 +95,15 @@ export const getMyEvents = async (req, res) => {
       .populate('creator', CREATOR_FIELDS)
       .lean(),
   ]);
+  // Bookmarked events in the order they start; deleted events simply drop out.
+  const savedIds = req.user.savedEvents || [];
+  const saved = savedIds.length
+    ? await ConnectEvent.find({ _id: { $in: savedIds } }).sort({ startAt: 1 }).populate('creator', CREATOR_FIELDS).lean()
+    : [];
   res.json({
     created: created.map((e) => serializeEvent(e, { viewer: req.user })),
     joined: joined.map((e) => serializeEvent(e, { viewer: req.user })),
+    saved: saved.map((e) => serializeEvent(e, { viewer: req.user })),
   });
 };
 
@@ -104,7 +111,33 @@ export const getMyEvents = async (req, res) => {
 export const getEventById = async (req, res) => {
   const event = await loadForResponse(req.params.id);
   if (!event) return notFound(res);
-  res.json({ event: serializeEvent(event, { viewer: req.user, detail: true }) });
+  const creatorId = event.creator?._id || event.creator;
+  const eventsHosted = creatorId
+    ? await ConnectEvent.countDocuments({ creator: creatorId, status: { $ne: 'cancelled' } })
+    : 0;
+  res.json({ event: serializeEvent(event, { viewer: req.user, detail: true, organizerStats: { eventsHosted } }) });
+};
+
+/** POST /api/events/:id/save — bookmark an event (idempotent). */
+export const saveEvent = async (req, res) => {
+  const event = await loadForResponse(req.params.id);
+  if (!event) return notFound(res);
+  await User.updateOne({ _id: req.user._id }, { $addToSet: { savedEvents: event._id } });
+  const viewer = { _id: req.user._id, role: req.user.role, savedEvents: [...(req.user.savedEvents || []), event._id] };
+  res.json({ event: serializeEvent(event, { viewer, detail: true }) });
+};
+
+/** DELETE /api/events/:id/save — remove the bookmark (idempotent, also for deleted events). */
+export const unsaveEvent = async (req, res) => {
+  await User.updateOne({ _id: req.user._id }, { $pull: { savedEvents: req.params.id } });
+  const event = await loadForResponse(req.params.id);
+  if (!event) return res.json({ event: null });
+  const viewer = {
+    _id: req.user._id,
+    role: req.user.role,
+    savedEvents: (req.user.savedEvents || []).filter((id) => id.toString() !== req.params.id),
+  };
+  res.json({ event: serializeEvent(event, { viewer, detail: true }) });
 };
 
 /** POST /api/events */
@@ -114,6 +147,7 @@ export const createEvent = async (req, res) => {
     title: body.title,
     sport: body.sport,
     description: body.description || '',
+    bring: body.bring || '',
     location: toLocationDoc(body.location),
     startAt: body.startAt,
     endAt: body.endAt,
@@ -154,7 +188,7 @@ export const updateEvent = async (req, res) => {
   }
 
   const set = {};
-  for (const key of ['title', 'sport', 'description', 'timezone', 'level', 'visibility']) {
+  for (const key of ['title', 'sport', 'description', 'bring', 'timezone', 'level', 'visibility']) {
     if (body[key] !== undefined) set[key] = body[key];
   }
   if (body.startAt) set.startAt = body.startAt;
@@ -236,6 +270,7 @@ export const deleteEvent = async (req, res) => {
     });
   }
   await ConnectEvent.deleteOne({ _id: event._id });
+  await User.updateMany({ savedEvents: event._id }, { $pull: { savedEvents: event._id } });
   await Report.updateMany({ event: event._id, status: 'open' }, { $set: { status: 'resolved', note: 'Event gelöscht' } });
   res.json({ message: 'Event gelöscht' });
 };

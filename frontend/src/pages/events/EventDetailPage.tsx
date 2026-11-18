@@ -12,6 +12,11 @@ import {
   Users,
   XCircle,
   ExternalLink,
+  Gift,
+  Navigation,
+  Backpack,
+  ShieldCheck,
+  Check,
   AlertTriangle,
   CheckCircle2,
 } from 'lucide-react'
@@ -26,7 +31,10 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { levelLabel, sportColor, sportLabel } from '@/constants/sports'
 import SportIcon from '@/components/ui/SportIcon'
 import { CapacityMeter, DateTile, EmptyState } from '@/components/ui/DataPieces'
-import { downloadIcs, formatEventDate, formatLongDate, formatDateTime, osmLink } from '@/utils/format'
+import { downloadIcs, formatEventDate, formatLongDate, formatDateTime, osmLink, routeLink } from '@/utils/format'
+import SaveButton from '@/components/events/SaveButton'
+import { Avatar } from '@/components/ui/Avatar'
+import { useToast } from '@/components/ui/Toast'
 import './EventDetailPage.css'
 
 export default function EventDetailPage() {
@@ -42,6 +50,8 @@ export default function EventDetailPage() {
   const [actionError, setActionError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [dialog, setDialog] = useState<'cancel' | 'report' | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const toast = useToast()
 
   useEffect(() => {
     if (!id) return
@@ -140,7 +150,7 @@ export default function EventDetailPage() {
         await navigator.share({ title: event.title, text: `${event.title} – ${day}, ${time}`, url })
       } else {
         await navigator.clipboard.writeText(url)
-        setFeedback('Link kopiert')
+        toast('Link kopiert')
       }
     } catch {
       /* user dismissed share sheet */
@@ -166,7 +176,20 @@ export default function EventDetailPage() {
                 {event.visibility === 'unlisted' && <span className="badge badge-neutral">Nur per Link</span>}
               </div>
               <h1 className="page-title">{event.title}</h1>
-              <p className="event-detail-organizer">Organisiert von {event.organizer.displayName}</p>
+              <p className="event-detail-organizer">
+                <Avatar name={event.organizer.displayName} size="sm" />
+                <span>
+                  Organisiert von <strong>{event.organizer.displayName}</strong>
+                  {(event.organizer.memberSince || event.organizer.eventsHosted) && (
+                    <span className="event-detail-organizer-meta">
+                      {event.organizer.memberSince ? ` · dabei seit ${event.organizer.memberSince}` : ''}
+                      {event.organizer.eventsHosted
+                        ? ` · ${event.organizer.eventsHosted} ${event.organizer.eventsHosted === 1 ? 'Event' : 'Events'} organisiert`
+                        : ''}
+                    </span>
+                  )}
+                </span>
+              </p>
             </div>
           </header>
 
@@ -217,12 +240,19 @@ export default function EventDetailPage() {
                 {event.location.address}
                 {event.location.city && !event.location.address.includes(event.location.city) ? `, ${event.location.city}` : ''}
                 {hasCoords && (
-                  <>
-                    <br />
+                  <span className="event-facts-links">
+                    <a
+                      href={routeLink(event.location.lat!, event.location.lng!)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-secondary btn-sm"
+                    >
+                      <Navigation size={14} aria-hidden="true" /> Route
+                    </a>
                     <a href={osmLink(event.location.lat!, event.location.lng!)} target="_blank" rel="noreferrer">
                       In OpenStreetMap öffnen <ExternalLink size={12} aria-hidden="true" />
                     </a>
-                  </>
+                  </span>
                 )}
               </dd>
             </div>
@@ -241,12 +271,31 @@ export default function EventDetailPage() {
               </dt>
               <dd>{levelLabel(event.level)}</dd>
             </div>
+            <div>
+              <dt>
+                <Gift size={18} aria-hidden="true" /> Kosten
+              </dt>
+              <dd>Kostenlos</dd>
+            </div>
+            {event.bring && (
+              <div>
+                <dt>
+                  <Backpack size={18} aria-hidden="true" /> Mitbringen
+                </dt>
+                <dd>{event.bring}</dd>
+              </div>
+            )}
           </dl>
 
           {event.description && (
             <section className="event-description">
               <h2>Beschreibung</h2>
-              <p>{event.description}</p>
+              <p className={event.description.length > 420 && !showAll ? 'is-clamped' : undefined}>{event.description}</p>
+              {event.description.length > 420 && (
+                <button type="button" className="btn btn-ghost btn-sm" aria-expanded={showAll} onClick={() => setShowAll((v) => !v)}>
+                  {showAll ? 'Weniger anzeigen' : 'Mehr anzeigen'}
+                </button>
+              )}
             </section>
           )}
 
@@ -255,7 +304,9 @@ export default function EventDetailPage() {
               <h2>Wer ist dabei</h2>
               <ul>
                 {event.participants.map((p) => (
-                  <li key={p._id || p.displayName}>{p.displayName}</li>
+                  <li key={p._id || p.displayName}>
+                    <Avatar name={p.displayName} size="sm" /> {p.displayName}
+                  </li>
                 ))}
               </ul>
             </section>
@@ -298,7 +349,9 @@ export default function EventDetailPage() {
             )}
             {isActive && event.joined && !event.isOrganizer && (
               <>
-                <p className="joined-note">Du bist angemeldet.</p>
+                <p className="joined-note">
+                  <Check size={18} aria-hidden="true" /> Du bist angemeldet.
+                </p>
                 <button
                   type="button"
                   className="btn btn-secondary btn-block"
@@ -321,25 +374,30 @@ export default function EventDetailPage() {
             )}
 
             <div className="secondary-actions">
+              {!event.isOrganizer && <SaveButton event={event} variant="label" onChange={(saved) => setEvent({ ...event, saved })} />}
+              <button type="button" className="btn btn-ghost btn-sm" onClick={share}>
+                <Share2 size={16} aria-hidden="true" /> Teilen
+              </button>
               {isActive && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadIcs(event)}>
                   <CalendarPlus size={16} aria-hidden="true" /> In Kalender
                 </button>
               )}
-              <button type="button" className="btn btn-ghost btn-sm" onClick={share}>
-                <Share2 size={16} aria-hidden="true" /> Teilen
-              </button>
-              {!event.isOrganizer && (
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => (authState.isLoggedIn ? setDialog('report') : requireLogin('report'))}
-                >
-                  <Flag size={16} aria-hidden="true" /> Melden
-                </button>
-              )}
             </div>
           </div>
+
+          {!event.isOrganizer && (
+            <p className="event-trust">
+              <ShieldCheck size={18} aria-hidden="true" />
+              <span>
+                Triff dich an öffentlichen Orten. <Link to="/regeln">Community-Regeln</Link>
+                {' · '}
+                <button type="button" className="link-btn" onClick={() => (authState.isLoggedIn ? setDialog('report') : requireLogin('report'))}>
+                  <Flag size={14} aria-hidden="true" /> Event melden
+                </button>
+              </span>
+            </p>
+          )}
 
           {hasCoords ? (
             <EventMap events={[event]} selectedId={event._id} compact fitKey={event._id} label={`Karte: ${event.location.placeName}`} />

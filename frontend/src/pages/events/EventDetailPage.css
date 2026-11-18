@@ -102,8 +102,7 @@
   margin-bottom: 0;
 }
 .joined-note {
-  font-weight: var(--weight-semibold);
-  color: var(--c-success);
+  font-weight: var(--weight-bold);
 }
 .manage-actions {
   display: grid;
@@ -174,5 +173,92 @@
   }
   .join-bar .btn {
     flex: 1;
+  }
+}
+
+.event-detail-organizer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.event-detail-organizer strong {
+  color: var(--c-text);
+}
+.event-detail-organizer-meta {
+  font-size: var(--text-sm);
+}
+.event-facts-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-top: var(--space-2);
+}
+.event-facts-links a.btn {
+  margin-top: 0;
+  text-decoration: none;
+}
+.event-description p.is-clamped {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  overflow: hidden;
+}
+.event-description .btn {
+  margin: var(--space-1) 0 0 calc(-1 * var(--space-3));
+}
+.event-participants li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+}
+.joined-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  border-radius: var(--radius-pill);
+  background: var(--c-hl);
+  color: var(--c-on-hl);
+  animation: joined-in var(--dur-slow) var(--ease-spring);
+}
+@keyframes joined-in {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+}
+/* Quiet trust line: present, never louder than the join action */
+.event-trust {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  font-size: var(--text-sm);
+  color: var(--c-text-muted);
+}
+.event-trust > svg {
+  margin-top: 1px;
+  color: var(--c-success);
+}
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--c-link);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (pointer: coarse) {
+  .event-trust a,
+  .link-btn {
+    min-height: var(--control-h);
+    display: inline-flex;
+    align-items: center;
   }
 }
