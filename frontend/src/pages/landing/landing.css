@@ -46,6 +46,8 @@
 }
 .lp-hero-inner {
   display: grid;
+  /* minmax(0, 1fr): the column is the screen width, never wider than its content's default size */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
   justify-items: start;
 }
@@ -191,6 +193,9 @@
 }
 .city-search-input {
   flex: 1;
+  /* Inputs have a built-in default width (~20 characters); without this the search bar
+     can push the whole hero wider than a phone screen. */
+  width: 100%;
   min-width: 0;
   min-height: var(--control-h);
   border: none;
@@ -892,12 +897,24 @@
   .lp-mock-route {
     height: 36px;
   }
+  /* On a phone the pinned scene must leave most of the screen to the step text,
+     otherwise each heading slides under it while you read. Drop the decorative
+     filter row and draw the mock-up smaller (zoom also shrinks its layout height). */
+  .lp-phone-chips {
+    display: none;
+  }
+  .lp-phone {
+    zoom: 0.82;
+  }
   /* The pinned scene covers the top of the screen: each step's text sits low in its
      slot, so the step that is active (middle of the screen) is always readable */
   .lp-step {
     min-height: 62vh;
     align-content: end;
     padding-bottom: var(--space-6);
+  }
+  .lp-step p {
+    font-size: var(--text-base);
   }
   .lp-host-inner {
     grid-template-columns: 1fr;

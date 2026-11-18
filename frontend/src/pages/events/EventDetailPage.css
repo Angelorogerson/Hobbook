@@ -173,6 +173,11 @@
   }
   .join-bar .btn {
     flex: 1;
+    /* On narrow phones (320px) the label may wrap instead of pushing the button off-screen */
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: var(--leading-tight);
   }
 }
 
