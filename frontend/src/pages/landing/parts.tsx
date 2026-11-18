@@ -1,13 +1,13 @@
-import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { listEvents, type SportEvent } from '@/api/eventApi'
-import { sportColor } from '@/constants/sports'
-import SportIcon from '@/components/ui/SportIcon'
 
 export const DISCOVER = '/entdecken'
 
-/** Real upcoming public events for the story (never invented). */
+const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+/** Real upcoming public events for the landing page (never invented). */
 export function useLandingEvents() {
   const [events, setEvents] = useState<SportEvent[] | null>(null)
   const [failed, setFailed] = useState(false)
@@ -27,7 +27,7 @@ export function useLandingEvents() {
 }
 
 /** City search that hands off to Discover with the city filter set. */
-export function CitySearch({ id, tone = 'stage' }: { id: string; tone?: 'stage' | 'plain' }) {
+export function CitySearch({ id, tone = 'plain' }: { id: string; tone?: 'stage' | 'plain' }) {
   const navigate = useNavigate()
   const [city, setCity] = useState('')
   const submit = (e: FormEvent) => {
@@ -62,54 +62,85 @@ export function CitySearch({ id, tone = 'stage' }: { id: string; tone?: 'stage' 
 }
 
 /**
- * Night-pitch line art: a full pitch with a basketball key on the right.
- * Purely decorative; strokes draw in once on load (CSS, reduced-motion safe).
+ * One word at a time, rolling upwards like a scoreboard. Decorative: screen
+ * readers get the static sentence next to it, reduced motion gets the first word.
  */
-export function PitchLines({ className = '' }: { className?: string }) {
+export function WordRoller({ words, every = 2200 }: { words: string[]; every?: number }) {
+  const [index, setIndex] = useState(0)
+  useEffect(() => {
+    if (prefersReducedMotion() || words.length < 2) return
+    const t = window.setInterval(() => setIndex((i) => (i + 1) % words.length), every)
+    return () => window.clearInterval(t)
+  }, [words.length, every])
   return (
-    <svg className={`pitch ${className}`} viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-      <g className="pitch-lines" fill="none" strokeWidth="2" vectorEffect="non-scaling-stroke">
-        <rect className="pl pl-1" x="60" y="80" width="1480" height="740" rx="6" pathLength={1} />
-        <path className="pl pl-2" d="M800 80v740" pathLength={1} />
-        <circle className="pl pl-3" cx="800" cy="450" r="120" pathLength={1} />
-        <circle className="pl-dot" cx="800" cy="450" r="5" />
-        <rect className="pl pl-4" x="60" y="250" width="200" height="400" pathLength={1} />
-        <rect className="pl pl-5" x="60" y="360" width="70" height="180" pathLength={1} />
-        <path className="pl pl-6" d="M260 380a120 120 0 0 1 0 140" pathLength={1} />
-        {/* basketball key + three-point arc on the right half */}
-        <rect className="pl pl-7" x="1360" y="370" width="180" height="160" pathLength={1} />
-        <path className="pl pl-8" d="M1360 390a60 60 0 0 0 0 120" pathLength={1} />
-        <path className="pl pl-9" d="M1540 180a270 270 0 0 0 0 540" pathLength={1} />
-      </g>
-    </svg>
-  )
-}
-
-/** A map pin with the sport glyph, coloured like the app's map markers. */
-export function Pin({ sport, active = false, style }: { sport: string; active?: boolean; style?: CSSProperties }) {
-  return (
-    <span
-      className={`lp-pin${active ? ' is-active' : ''}`}
-      style={{ ...style, ['--pin-color' as string]: sportColor(sport) }}
-      aria-hidden="true"
-    >
-      <SportIcon sport={sport} size={16} />
+    <span className="roller" aria-hidden="true">
+      <span className="roller-track" style={{ transform: `translateY(${-index * 1.35}em)` }}>
+        {words.map((w) => (
+          <span key={w} className="roller-word">
+            {w}
+          </span>
+        ))}
+      </span>
     </span>
   )
 }
 
-/** Project real coordinates into a box (with padding); falls back to a centred layout. */
-export function projectPins(events: SportEvent[], w: number, h: number, pad = 0.14) {
-  const pts = events.filter((e) => e.location.lat !== null && e.location.lng !== null)
-  if (pts.length === 0) return []
-  const lats = pts.map((e) => e.location.lat!)
-  const lngs = pts.map((e) => e.location.lng!)
-  const [minLat, maxLat, minLng, maxLng] = [Math.min(...lats), Math.max(...lats), Math.min(...lngs), Math.max(...lngs)]
-  const spanLat = maxLat - minLat || 1
-  const spanLng = maxLng - minLng || 1
-  return pts.map((e) => ({
-    event: e,
-    x: pts.length === 1 ? w / 2 : (pad + ((e.location.lng! - minLng) / spanLng) * (1 - 2 * pad)) * w,
-    y: pts.length === 1 ? h / 2 : (pad + ((maxLat - e.location.lat!) / spanLat) * (1 - 2 * pad)) * h,
-  }))
+/**
+ * Nudges a horizontal rail once ("there is more this way") and brings it back
+ * to the start. Cancelled by the first touch, hover, focus or manual scroll,
+ * and never runs with reduced motion.
+ */
+export function useDrift<T extends HTMLElement>(active: boolean) {
+  const ref = useRef<T>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || !active || prefersReducedMotion()) return
+    let raf = 0
+    let stopped = false
+    let startTime = 0
+    const stop = () => {
+      stopped = true
+      cancelAnimationFrame(raf)
+    }
+    const DURATION = 2600
+    const tick = (now: number) => {
+      if (stopped) return
+      if (!startTime) startTime = now
+      const t = Math.min(1, (now - startTime) / DURATION)
+      const reach = Math.min(160, el.scrollWidth - el.clientWidth)
+      // Out and back on one smooth curve
+      el.scrollLeft = reach > 8 ? Math.sin(t * Math.PI) * reach : 0
+      if (t < 1) raf = requestAnimationFrame(tick)
+    }
+    const names = ['pointerdown', 'wheel', 'touchstart', 'focusin', 'mouseenter'] as const
+    names.forEach((n) => el.addEventListener(n, stop, { passive: true, once: true }))
+    const timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), 1600)
+    return () => {
+      stop()
+      window.clearTimeout(timer)
+      names.forEach((n) => el.removeEventListener(n, stop))
+    }
+  }, [active])
+  return ref
+}
+
+/** Which of several stacked steps is currently in the middle of the viewport. */
+export function useActiveStep(count: number) {
+  const refs = useRef<(HTMLElement | null)[]>([])
+  const [active, setActive] = useState(0)
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.step))
+        }
+      },
+      // A thin band around the middle of the screen decides which step is "on".
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 }
+    )
+    refs.current.slice(0, count).forEach((el) => el && io.observe(el))
+    return () => io.disconnect()
+  }, [count])
+  return { active, setRef: (i: number) => (el: HTMLElement | null) => void (refs.current[i] = el) }
 }

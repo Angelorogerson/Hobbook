@@ -16,7 +16,6 @@ vi.mock('@/api/eventApi', async (orig) => ({
 }))
 
 import LandingPage from './LandingPage'
-import { projectPins } from './parts'
 
 function Where() {
   const loc = useLocation()
@@ -43,10 +42,14 @@ describe('LandingPage', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Finde dein nächstes Spiel.')
     expect(screen.getAllByRole('link', { name: /Events entdecken/ })[0]).toHaveAttribute('href', '/entdecken')
     expect(screen.getAllByRole('link', { name: /Event erstellen/ })[0]).toHaveAttribute('href', '/events/neu')
-    // Story sections, each with its own heading
-    for (const name of [/Liste und Karte/, /Alles Wichtige/, /Mitmachen/, /Starte deins/, /Wo spielst du als Nächstes/]) {
+    // Each section has its own heading; the three steps are spelled out as text
+    for (const name of [/Das läuft gerade/, /Worauf hast du Lust/, /In drei Schritten/, /Starte dein eigenes Event/, /Wo spielst du als Nächstes/]) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
     }
+    for (const name of ['Finden', 'Mitmachen', 'Hingehen']) {
+      expect(screen.getByRole('heading', { level: 3, name })).toBeInTheDocument()
+    }
+    await screen.findByText('Noch keine Events.')
   })
 
   it('shows real upcoming events as real cards', async () => {
@@ -57,9 +60,9 @@ describe('LandingPage', () => {
       limit: 6,
     })
     renderLanding()
-    const fan = await screen.findByRole('list', { name: 'Aktuelle Events' })
-    expect(within(fan).getAllByTestId('event-card')).toHaveLength(2)
-    expect(within(fan).getByRole('link', { name: 'Echtes Event A' })).toHaveAttribute('href', '/events/a')
+    const rail = await screen.findByRole('list', { name: 'Aktuelle Events' })
+    expect(within(rail).getAllByTestId('event-card')).toHaveLength(2)
+    expect(within(rail).getByRole('link', { name: 'Echtes Event A' })).toHaveAttribute('href', '/events/a')
     expect(listEvents).toHaveBeenCalledWith({ limit: 6 }, expect.anything())
   })
 
@@ -70,10 +73,11 @@ describe('LandingPage', () => {
     expect(screen.queryAllByTestId('event-card')).toHaveLength(0)
   })
 
-  it('stays usable when the API is unreachable', async () => {
+  it('says so when events cannot be loaded, and stays usable', async () => {
     listEvents.mockReturnValue(() => Promise.reject(new Error('offline')))
     renderLanding()
-    expect(await screen.findByText('Noch keine Events.')).toBeInTheDocument()
+    expect(await screen.findByText('Events konnten gerade nicht geladen werden.')).toBeInTheDocument()
+    expect(screen.queryByText('Noch keine Events.')).not.toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Events entdecken/ }).length).toBeGreaterThan(0)
   })
 
@@ -94,18 +98,6 @@ describe('LandingPage', () => {
     const links = within(sports).getAllByRole('link')
     expect(links).toHaveLength(12)
     expect(within(sports).getByRole('link', { name: 'Basketball' })).toHaveAttribute('href', '/entdecken?sport=basketball')
-  })
-})
-
-describe('projectPins', () => {
-  it('maps real coordinates into the box and keeps north up', () => {
-    const north = makeEvent({ _id: 'n', location: { placeName: 'N', address: '', city: 'Hamburg', lat: 53.55, lng: 10 } })
-    const south = makeEvent({ _id: 's', location: { placeName: 'S', address: '', city: 'München', lat: 48.14, lng: 11.58 } })
-    const noGeo = makeEvent({ _id: 'x', location: { placeName: 'X', address: '', city: 'X', lat: null, lng: null } })
-    const pins = projectPins([north, south, noGeo], 100, 100)
-    expect(pins).toHaveLength(2)
-    const [n, s] = pins
-    expect(n.y).toBeLessThan(s.y)
-    expect(n.x).toBeLessThan(s.x)
+    await screen.findByText('Noch keine Events.')
   })
 })

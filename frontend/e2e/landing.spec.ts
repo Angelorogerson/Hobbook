@@ -5,15 +5,15 @@ const noHorizontalOverflow = async (page: Page) =>
   page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
 
 test.describe('public landing page', () => {
-  test('guests see the story with real events and clear actions', async ({ page }) => {
+  test('guests see real events first and clear actions', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Finde dein nächstes Spiel/i)
     // Real seeded events, rendered with the real event cards
     const live = page.getByRole('list', { name: 'Aktuelle Events' })
     await expect(live.getByTestId('event-card').first()).toBeVisible()
     await expect(live.getByRole('link', { name: 'Feierabend-Kick im Park' })).toBeVisible()
-    // Every story section is present
-    for (const name of [/Liste und Karte/i, /Alles Wichtige/i, /Mitmachen/i, /Starte deins/i, /Wo spielst du als Nächstes/i]) {
+    // Every section is present
+    for (const name of [/Das läuft gerade/i, /Worauf hast du Lust/i, /In drei Schritten/i, /Starte dein eigenes Event/i, /Wo spielst du als Nächstes/i]) {
       await expect(page.getByRole('heading', { level: 2, name })).toBeAttached()
     }
     expect(await noHorizontalOverflow(page)).toBeLessThanOrEqual(0)
@@ -54,7 +54,7 @@ test.describe('public landing page', () => {
     const context = await browser.newContext({ reducedMotion: 'reduce' })
     const page = await context.newPage()
     await page.goto('/')
-    const h2 = page.getByRole('heading', { level: 2, name: /Starte deins/i })
+    const h2 = page.getByRole('heading', { level: 2, name: /Starte dein eigenes Event/i })
     await h2.scrollIntoViewIfNeeded()
     await expect(h2).toBeVisible()
     const opacity = await h2.evaluate((el) => getComputedStyle(el).opacity)
