@@ -168,12 +168,14 @@ export default function DiscoverPage({ initialView }: Props) {
           selectedId={selectedId}
           onSelect={(id) => {
             setSelectSource('map')
-            setSelectedId(id)
+            setSelectedId(id || null)
           }}
           onOpen={(id) => navigate(`/events/${id}`)}
           onSearchArea={d.setArea}
           fitKey={fitKey}
           focus={d.filters.near}
+          position={d.position}
+          loading={d.loading}
         />
       </section>
 

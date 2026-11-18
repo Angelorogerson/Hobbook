@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import maplibregl, { Map as MlMap, Marker, Popup } from 'maplibre-gl'
-import { Box, Search } from 'lucide-react'
+import { Box, ChevronRight, LocateFixed, Search, X } from 'lucide-react'
 import type { BBox, SportEvent } from '@/api/eventApi'
 import { sportColor, sportLabel } from '@/constants/sports'
 import { formatEventDate, spotsText } from '@/utils/format'
@@ -24,6 +24,28 @@ interface Props {
   onOpen?: (id: string) => void
   /** Centre used when a position search returns no mappable events. */
   focus?: { lat: number; lng: number } | null
+  /** The viewer's (coarse) position: shown as a dot with a recenter button. */
+  position?: { lat: number; lng: number } | null
+  /** Results are being fetched: show a small hint instead of an empty map. */
+  loading?: boolean
+}
+
+/** Markers closer than this on screen are merged into one count bubble. */
+const CLUSTER_RADIUS_PX = 46
+/** From this zoom level on every event keeps its own pin. */
+const CLUSTER_MAX_ZOOM = 15
+
+const PHONE_QUERY = '(max-width: 860px)'
+function useIsPhone() {
+  const [phone, setPhone] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.(PHONE_QUERY).matches)
+  useEffect(() => {
+    const mq = window.matchMedia?.(PHONE_QUERY)
+    if (!mq) return
+    const onChange = () => setPhone(mq.matches)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [])
+  return phone
 }
 
 const mappable = (e: SportEvent) => e.location.lat !== null && e.location.lng !== null
@@ -52,10 +74,26 @@ function popupContent(e: SportEvent, onOpen?: (id: string) => void) {
   return root
 }
 
-export default function EventMap({ events, selectedId, onSelect, onSearchArea, fitKey, compact, label, onOpen, focus }: Props) {
+export default function EventMap({
+  events,
+  selectedId,
+  onSelect,
+  onSearchArea,
+  fitKey,
+  compact,
+  label,
+  onOpen,
+  focus,
+  position,
+  loading,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
-  const markersRef = useRef<Map<string, { marker: Marker; el: HTMLButtonElement }>>(new Map())
+  const markersRef = useRef<Map<string, { marker: Marker; el: HTMLButtonElement; onMap: boolean }>>(new Map())
+  const clustersRef = useRef<Marker[]>([])
+  const meRef = useRef<Marker | null>(null)
+  const layoutRef = useRef<() => void>(() => {})
+  const isPhone = useIsPhone()
   const popupRef = useRef<Popup | null>(null)
   const noteId = useId()
   const onSelectRef = useRef(onSelect)
@@ -97,6 +135,7 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
       }
     })
     map.on('zoomend', () => setZoom(map.getZoom()))
+    map.on('moveend', () => layoutRef.current())
     map.on('moveend', (ev) => {
       // Only user-initiated moves offer "search this area".
       if ((ev as { originalEvent?: unknown }).originalEvent) setMoved(true)
@@ -109,6 +148,10 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
       ro.disconnect()
       markers.forEach(({ marker }) => marker.remove())
       markers.clear()
+      clustersRef.current.forEach((m) => m.remove())
+      clustersRef.current = []
+      meRef.current?.remove()
+      meRef.current = null
       popupRef.current?.remove()
       map.remove()
       mapRef.current = null
@@ -158,12 +201,87 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
         ev.stopPropagation()
         onSelectRef.current?.(e._id)
       })
-      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([e.location.lng!, e.location.lat!])
-        .addTo(map)
-      markers.set(e._id, { marker, el })
+      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([e.location.lng!, e.location.lat!])
+      markers.set(e._id, { marker, el, onMap: false })
     }
+    layoutRef.current()
   }, [events, loaded])
+
+  // Declutter: pins that would overlap on screen merge into one count bubble.
+  // Runs after every move/zoom and whenever results or the selection change.
+  layoutRef.current = () => {
+    const map = mapRef.current
+    if (!map) return
+    const markers = markersRef.current
+    clustersRef.current.forEach((m) => m.remove())
+    clustersRef.current = []
+
+    const show = (id: string, on: boolean) => {
+      const m = markers.get(id)
+      if (!m || m.onMap === on) return
+      if (on) m.marker.addTo(map)
+      else m.marker.remove()
+      m.onMap = on
+    }
+
+    const pts = events.filter(mappable)
+    if (compact || map.getZoom() >= CLUSTER_MAX_ZOOM) {
+      pts.forEach((e) => show(e._id, true))
+      return
+    }
+
+    const groups: { x: number; y: number; items: SportEvent[] }[] = []
+    for (const e of pts) {
+      // The selected event always keeps its own pin so its preview has an anchor.
+      if (e._id === selectedId) {
+        show(e._id, true)
+        continue
+      }
+      const p = map.project([e.location.lng!, e.location.lat!])
+      const g = groups.find((c) => Math.hypot(c.x - p.x, c.y - p.y) < CLUSTER_RADIUS_PX)
+      if (g) {
+        g.x = (g.x * g.items.length + p.x) / (g.items.length + 1)
+        g.y = (g.y * g.items.length + p.y) / (g.items.length + 1)
+        g.items.push(e)
+      } else groups.push({ x: p.x, y: p.y, items: [e] })
+    }
+
+    for (const g of groups) {
+      if (g.items.length === 1) {
+        show(g.items[0]._id, true)
+        continue
+      }
+      g.items.forEach((e) => show(e._id, false))
+      const el = document.createElement('button')
+      el.type = 'button'
+      el.className = 'map-cluster'
+      el.tabIndex = -1
+      el.setAttribute('aria-hidden', 'true')
+      el.textContent = String(g.items.length)
+      el.title = `${g.items.length} Events – zum Vergrößern antippen`
+      el.addEventListener('click', (ev) => {
+        ev.stopPropagation()
+        // Zooming into a group replaces whatever preview was open
+        onSelectRef.current?.('')
+        const b = new maplibregl.LngLatBounds()
+        g.items.forEach((e) => b.extend([e.location.lng!, e.location.lat!]))
+        map.fitBounds(b, { padding: 80, maxZoom: CLUSTER_MAX_ZOOM, duration: 400 })
+      })
+      clustersRef.current.push(new maplibregl.Marker({ element: el }).setLngLat(map.unproject([g.x, g.y])).addTo(map))
+    }
+  }
+
+  // The viewer's own (coarse) position
+  useEffect(() => {
+    const map = mapRef.current
+    meRef.current?.remove()
+    meRef.current = null
+    if (!map || !loaded || !position || compact) return
+    const el = document.createElement('div')
+    el.className = 'map-me'
+    el.title = 'Dein ungefährer Standort'
+    meRef.current = new maplibregl.Marker({ element: el }).setLngLat([position.lng, position.lat]).addTo(map)
+  }, [position, loaded, compact])
 
   // Fit to results when filters change
   useEffect(() => {
@@ -191,27 +309,32 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
     const map = mapRef.current
     if (!map) return
     markersRef.current.forEach(({ el }, id) => el.classList.toggle('is-selected', id === selectedId))
+    layoutRef.current()
     popupRef.current?.remove()
     popupRef.current = null
     if (!selectedId || compact) return
     const ev = events.find((e) => e._id === selectedId)
     const entry = markersRef.current.get(selectedId)
     if (!ev || !entry) return
-    popupRef.current = new maplibregl.Popup({ offset: 28, closeButton: true, maxWidth: '260px' })
-      .setLngLat(entry.marker.getLngLat())
-      .setDOMContent(popupContent(ev, onOpenRef.current))
-      .addTo(map)
+    // Phones get a preview card at the bottom (see render); a popup is too fiddly for thumbs.
+    if (!isPhone) {
+      popupRef.current = new maplibregl.Popup({ offset: 28, closeButton: true, maxWidth: '260px' })
+        .setLngLat(entry.marker.getLngLat())
+        .setDOMContent(popupContent(ev, onOpenRef.current))
+        .addTo(map)
+    }
     if (!map.getBounds().contains(entry.marker.getLngLat())) {
       map.easeTo({ center: entry.marker.getLngLat(), duration: 400 })
     }
-  }, [selectedId, events, compact, loaded])
+  }, [selectedId, events, compact, loaded, isPhone])
 
   if (failed) return <MapFallback events={events} />
 
   const mappableCount = events.filter(mappable).length
+  const preview = isPhone && !compact && selectedId ? events.find((e) => e._id === selectedId && mappable(e)) : undefined
 
   return (
-    <div className={`event-map${compact ? ' event-map--compact' : ''}`}>
+    <div className={`event-map${compact ? ' event-map--compact' : ''}${loaded ? '' : ' is-loading'}`}>
       <div
         ref={containerRef}
         className="event-map-canvas"
@@ -222,6 +345,56 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
       <p id={noteId} className="sr-only">
         Kartenansicht mit {mappableCount} Markierungen. Alle Events sind auch in der Liste verfügbar.
       </p>
+
+      {!compact && loaded && (loading || mappableCount === 0) && (
+        <p className="map-status" role="status">
+          {loading ? 'Events werden geladen …' : 'Hier ist gerade nichts los. Verschiebe die Karte oder zoome heraus.'}
+        </p>
+      )}
+
+      {position && !compact && loaded && (
+        <button
+          type="button"
+          className="map-tool-btn map-recenter"
+          aria-label="Karte auf meinen Standort zentrieren"
+          title="Zu meinem Standort"
+          onClick={() => mapRef.current?.easeTo({ center: [position.lng, position.lat], zoom: Math.max(mapRef.current.getZoom(), 12), duration: 500 })}
+        >
+          <LocateFixed size={18} aria-hidden="true" />
+        </button>
+      )}
+
+      {preview && (
+        <div className="map-preview">
+          <a
+            className="map-preview-link"
+            href={`/events/${preview._id}`}
+            onClick={(ev) => {
+              if (!onOpen) return
+              ev.preventDefault()
+              onOpen(preview._id)
+            }}
+          >
+            <span className="map-preview-sport" style={{ color: sportColor(preview.sport) }}>
+              {sportLabel(preview.sport)}
+            </span>
+            <strong className="map-preview-title">{preview.title}</strong>
+            <span className="map-preview-meta">
+              {(() => {
+                const { day, time } = formatEventDate(preview.startAt, preview.endAt, preview.timezone)
+                return `${day}, ${time}`
+              })()}
+            </span>
+            <span className="map-preview-meta">
+              {preview.location.placeName} · {spotsText(preview)}
+            </span>
+            <ChevronRight size={20} aria-hidden="true" className="map-preview-go" />
+          </a>
+          <button type="button" className="map-preview-close" aria-label="Vorschau schließen" onClick={() => onSelect?.('')}>
+            <X size={18} aria-hidden="true" />
+          </button>
+        </div>
+      )}
 
       {can3d && (
         <div className="map-tools">
