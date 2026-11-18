@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthContext } from '@/store/AuthContext'
 import { changePassword, deleteAccount } from '@/api/userApi'
 import { apiError } from '@/api/axiosInstance'
@@ -134,6 +134,29 @@ export default function ProfilePage() {
           „System“ folgt der Einstellung deines Geräts.
         </p>
         <ThemeChoice />
+      </section>
+
+      <section className="card profile-section">
+        <h2>Mehr</h2>
+        <ul className="profile-links">
+          {authState.user?.role === 'admin' && (
+            <li>
+              <Link to="/admin">Moderation</Link>
+            </li>
+          )}
+          <li>
+            <Link to="/ueber">So funktioniert Hobbook</Link>
+          </li>
+          <li>
+            <Link to="/regeln">Community-Regeln</Link>
+          </li>
+          <li>
+            <Link to="/datenschutz">Datenschutz</Link>
+          </li>
+          <li>
+            <Link to="/impressum">Impressum</Link>
+          </li>
+        </ul>
       </section>
 
       <section className="card profile-section">

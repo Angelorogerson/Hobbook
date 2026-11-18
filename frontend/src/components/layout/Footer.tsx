@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Heart } from 'lucide-react'
-import { Logo } from '../ui/Brand'
+import { Logo, ThemeToggle } from '../ui/Brand'
 
 // Only https links are accepted, so a misconfigured value can never become a script URL.
 const rawSupportUrl = import.meta.env.VITE_SUPPORT_URL || ''
@@ -19,9 +19,11 @@ export default function Footer() {
               <Heart size={16} aria-hidden="true" /> Hobbook unterstützen
             </a>
           )}
-          <Link to="/ueber">Über Hobbook</Link>
+          <Link to="/ueber">So funktioniert’s</Link>
+          <Link to="/regeln">Regeln</Link>
           <Link to="/datenschutz">Datenschutz</Link>
           <Link to="/impressum">Impressum</Link>
+          <ThemeToggle />
         </nav>
       </div>
     </footer>

@@ -16,3 +16,41 @@
   line-height: 1.6;
   margin-bottom: var(--space-3);
 }
+
+.legal h3 {
+  font-size: var(--text-md);
+  margin: var(--space-4) 0 var(--space-1);
+}
+.legal-steps {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+.legal-steps li {
+  counter-increment: step;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  max-width: none;
+  padding: var(--space-4);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+}
+.legal-steps li::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--c-hl);
+  color: var(--c-on-hl);
+  font-weight: var(--weight-bold);
+}
+.legal-steps li > strong {
+  display: contents;
+}

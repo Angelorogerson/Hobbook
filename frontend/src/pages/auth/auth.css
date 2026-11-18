@@ -47,3 +47,13 @@
   display: inline-block;
   padding: var(--space-3) var(--space-1);
 }
+
+.auth-more {
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--c-border);
+  font-size: var(--text-sm);
+  color: var(--c-text-subtle);
+  text-align: center;
+  line-height: 2;
+}

@@ -13,8 +13,8 @@ export async function login(page: Page, who: { email: string; password: string }
 export async function loginFromStart(page: Page, who: { email: string; password: string }) {
   await page.goto('/login')
   await login(page, who)
-  // '/' sends signed-in users straight into the app
-  await expect(page).toHaveURL(/\/entdecken$/)
+  // '/' is the personal start page for signed-in users
+  await expect(page.getByRole('heading', { name: 'Deine nächsten Events' })).toBeVisible()
 }
 
 /** Stub the backend geocoding proxy so tests never call Nominatim. */

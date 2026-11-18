@@ -127,16 +127,75 @@ export function ImprintPage() {
 export function AboutPage() {
   return (
     <div className="page page--narrow legal">
-      <h1 className="page-title">Über Hobbook</h1>
+      <h1 className="page-title">So funktioniert Hobbook</h1>
       <p>
-        Hobbook hilft dir, Sport in deiner Nähe zu finden: Sieh auf Liste und Karte, wo etwas los ist, mach mit – oder
-        starte selbst ein Event. Alle Events sind kostenlos und werden von der Community organisiert.
+        Hobbook hilft dir, Sport in deiner Nähe zu finden und Leute dafür zu treffen. Alle Events sind kostenlos und
+        werden von der Community organisiert – Hobbook verkauft keine Plätze und vermittelt keine Buchungen.
       </p>
+
+      <ol className="legal-steps">
+        <li>
+          <strong>Entdecken.</strong> Sieh in Liste und Karte, was in deiner Stadt oder direkt um dich herum läuft.
+        </li>
+        <li>
+          <strong>Mitmachen.</strong> Ein Tipp auf „Mitmachen“ reserviert deinen Platz. Kommt etwas dazwischen, trittst
+          du genauso schnell wieder aus.
+        </li>
+        <li>
+          <strong>Hingehen.</strong> Treffpunkt, Uhrzeit und Route stehen im Event – auf Wunsch auch in deinem Kalender.
+        </li>
+      </ol>
+
+      <h2>Häufige Fragen</h2>
+      <h3>Kostet das etwas?</h3>
+      <p>Nein. Hobbook und alle Events sind kostenlos.</p>
+      <h3>Brauche ich ein Konto?</h3>
+      <p>Zum Stöbern nicht. Erst wenn du mitmachen oder selbst ein Event starten willst, legst du ein Konto an.</p>
+      <h3>Wer sieht meinen Namen?</h3>
       <p>
-        Hobbook ist ein Community-Projekt. Es verkauft keine Plätze und vermittelt keine kostenpflichtigen Buchungen.
+        Öffentlich erscheint nur „Vorname N.“. Wer bei einem Event dabei ist, sehen nur die Teilnehmenden und der
+        Organisator. Mehr dazu in den <Link to="/datenschutz">Datenschutzhinweisen</Link>.
+      </p>
+      <h3>Was, wenn ein Event abgesagt oder geändert wird?</h3>
+      <p>Abgesagte Events bleiben mit Grund sichtbar. Ändern sich Termin oder Ort, steht das deutlich im Event.</p>
+      <h3>Mir kommt ein Event komisch vor.</h3>
+      <p>
+        Nutze „Melden“ im Event – wir sehen uns das an. Was wir voneinander erwarten, steht in den{' '}
+        <Link to="/regeln">Community-Regeln</Link>.
       </p>
       <p>
         <Link to="/entdecken" className="btn btn-primary">Events entdecken</Link>
+      </p>
+    </div>
+  )
+}
+
+export function RulesPage() {
+  return (
+    <div className="page page--narrow legal">
+      <h1 className="page-title">Community-Regeln</h1>
+      <p>Hobbook lebt davon, dass Leute sich aufeinander verlassen können. Ein paar einfache Regeln:</p>
+      <h2>Miteinander</h2>
+      <ul>
+        <li>Sei fair und freundlich – auf dem Platz und daneben. Alle Niveaus sind willkommen, wenn das Event es sagt.</li>
+        <li>Wer zusagt, kommt. Wenn es nicht klappt, tritt rechtzeitig aus, damit der Platz frei wird.</li>
+        <li>Als Organisator: Halte Angaben aktuell und sage ab, statt einfach nicht zu erscheinen.</li>
+      </ul>
+      <h2>Sicher treffen</h2>
+      <ul>
+        <li>Triff dich an öffentlichen Orten und sag jemandem Bescheid, wohin du gehst.</li>
+        <li>Du machst auf eigene Verantwortung mit. Achte auf dich, deine Ausrüstung und das Wetter.</li>
+        <li>Events sind kostenlos. Zahle nichts im Voraus und gib keine privaten Daten heraus.</li>
+        <li>Wer unter 18 ist, spricht die Teilnahme am besten mit den Eltern ab.</li>
+      </ul>
+      <h2>Nicht erlaubt</h2>
+      <ul>
+        <li>Werbung, kommerzielle Angebote und Spam.</li>
+        <li>Beleidigungen, Diskriminierung oder Belästigung.</li>
+        <li>Falsche Angaben zu Ort, Zeit oder Art des Events.</li>
+      </ul>
+      <p>
+        Fällt dir etwas auf, nutze „Melden“ im Event. Gemeldete Events werden geprüft und können entfernt werden.
       </p>
     </div>
   )

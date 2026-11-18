@@ -89,6 +89,10 @@ export default function LoginPage() {
             Kostenlos registrieren
           </Link>
         </p>
+        <p className="auth-more">
+          <Link to="/ueber">So funktioniert’s</Link> · <Link to="/regeln">Regeln</Link> · <Link to="/datenschutz">Datenschutz</Link> ·{' '}
+          <Link to="/impressum">Impressum</Link>
+        </p>
       </div>
     </div>
   )

@@ -43,12 +43,11 @@ test.describe('public landing page', () => {
     await expect(page).toHaveURL(/\/entdecken$/)
   })
 
-  test('signed-in users skip the landing page', async ({ page }) => {
+  test('signed-in users get their personal start page instead of the landing page', async ({ page }) => {
     await page.goto('/login')
     await login(page, PLAYER)
-    await expect(page).toHaveURL(/\/entdecken$/)
-    await page.goto('/')
-    await expect(page).toHaveURL(/\/entdecken$/)
+    await expect(page.getByRole('heading', { name: 'Deine nächsten Events' })).toBeVisible()
+    await expect(page.getByRole('link', { name: 'Events entdecken' }).first()).toBeVisible()
   })
 
   test('content is fully visible with reduced motion', async ({ browser }) => {
