@@ -104,3 +104,33 @@ describe('formatting', () => {
     expect(ics).toContain('GEO:52.5;13.4')
   })
 })
+
+import { distanceKm, formatDistance, loadPlace, savePlace } from '@/utils/geo'
+
+describe('geo helpers', () => {
+  it('measures distance between two points', () => {
+    // Berlin Alexanderplatz → Brandenburger Tor is roughly 2.2 km
+    const d = distanceKm({ lat: 52.5219, lng: 13.4132 }, { lat: 52.5163, lng: 13.3777 })
+    expect(d).toBeGreaterThan(2)
+    expect(d).toBeLessThan(2.6)
+  })
+
+  it('formats distances the way people say them', () => {
+    expect(formatDistance(0.3)).toBe('ca. 1 km')
+    expect(formatDistance(2.44)).toBe('2,4 km')
+    expect(formatDistance(12.6)).toBe('13 km')
+  })
+
+  it('remembers the last place coarsely and ignores broken storage', () => {
+    localStorage.clear()
+    expect(loadPlace()).toBeNull()
+    savePlace({ near: { lat: 52.520008, lng: 13.404954 } })
+    expect(loadPlace()).toEqual({ near: { lat: 52.52, lng: 13.4 } })
+    savePlace({ city: 'Köln' })
+    expect(loadPlace()).toEqual({ city: 'Köln' })
+    localStorage.setItem('hobbook_place', '{broken')
+    expect(loadPlace()).toBeNull()
+    savePlace(null)
+    expect(localStorage.getItem('hobbook_place')).toBeNull()
+  })
+})

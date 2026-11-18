@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { listEvents, type BBox, type EventQuery, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
+import { loadPlace, savePlace } from '@/utils/geo'
 
 export type WhenFilter = 'all' | 'today' | 'tomorrow' | 'weekend' | 'week'
 
@@ -10,7 +11,7 @@ export const WHEN_OPTIONS: { key: WhenFilter; label: string }[] = [
   { key: 'today', label: 'Heute' },
   { key: 'tomorrow', label: 'Morgen' },
   { key: 'weekend', label: 'Wochenende' },
-  { key: 'week', label: 'Nächste 7 Tage' },
+  { key: 'week', label: '7 Tage' },
 ]
 
 export interface DiscoveryFilters {
@@ -18,8 +19,10 @@ export interface DiscoveryFilters {
   sport: string
   when: WhenFilter
   area: BBox | null
-  /** Search around the viewer's position. Kept in memory only, never in the URL. */
+  /** Search around the viewer's position. Never in the URL; remembered coarsely on this device. */
   near: { lat: number; lng: number } | null
+  /** Only events that still have a spot (filtered in the browser). */
+  freeOnly: boolean
 }
 
 const PAGE_SIZE = 200 // map + list share one result set; the API caps at 200
@@ -89,7 +92,12 @@ const serializeArea = (b: BBox) => [b.minLng, b.minLat, b.maxLng, b.maxLat].map(
  */
 export function useEventDiscovery() {
   const [params, setParams] = useSearchParams()
-  const [near, setNear] = useState<{ lat: number; lng: number } | null>(null)
+  // Returning visitors start where they searched last: the remembered position
+  // applies directly, a remembered city goes into the URL (see effect below).
+  const remembered = useRef(loadPlace())
+  const [near, setNear] = useState<{ lat: number; lng: number } | null>(
+    remembered.current && 'near' in remembered.current ? remembered.current.near : null
+  )
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState<string | null>(null)
 
@@ -103,6 +111,7 @@ export function useEventDiscovery() {
       area,
       // A city or map area is the more specific choice and wins over the position.
       near: city || area ? null : near,
+      freeOnly: params.get('frei') === '1',
     }
   }, [params, near])
 
@@ -122,7 +131,8 @@ export function useEventDiscovery() {
       ...rangeFor(filters.when),
       limit: PAGE_SIZE,
     }),
-    [filters]
+    // freeOnly is applied in the browser and must not trigger a new request
+    [filters.area, filters.city, filters.sport, filters.near, filters.when]
   )
 
   useEffect(() => {
@@ -145,7 +155,7 @@ export function useEventDiscovery() {
   }, [query, reloadKey])
 
   const update = useCallback(
-    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich', string | null>>) => {
+    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich' | 'frei', string | null>>) => {
       setParams(
         (prev) => {
           const next = new URLSearchParams(prev)
@@ -161,14 +171,32 @@ export function useEventDiscovery() {
     [setParams]
   )
 
+  // A plain /entdecken (no place in the link) reopens the last searched city.
+  useEffect(() => {
+    const place = remembered.current
+    if (place && 'city' in place && !params.get('stadt') && !params.get('bereich')) update({ stadt: place.city })
+    // once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const visible = useMemo(() => (filters.freeOnly ? events.filter((e) => e.spotsLeft > 0) : events), [events, filters.freeOnly])
+
   return {
     filters,
-    events,
-    total,
+    events: visible,
+    /** The viewer's coarse position when known, also while a city or map area is the active filter. */
+    position: near,
+    total: filters.freeOnly ? visible.length : total,
+    hiddenFull: events.length - visible.length,
     loading,
     error,
     retry: () => setReloadKey((k) => k + 1),
-    setCity: (city: string) => update({ stadt: city.trim() || null, bereich: null }),
+    setCity: (city: string) => {
+      const c = city.trim()
+      savePlace(c ? { city: c } : near ? { near } : null)
+      update({ stadt: c || null, bereich: null })
+    },
+    setFreeOnly: (on: boolean) => update({ frei: on ? '1' : null }),
     setSport: (sport: string) => update({ sport: sport || null }),
     setWhen: (when: WhenFilter) => update({ wann: when === 'all' ? null : when }),
     setArea: (area: BBox) => update({ bereich: serializeArea(area), stadt: null }),
@@ -179,7 +207,9 @@ export function useEventDiscovery() {
       setLocating(true)
       setLocateError(null)
       try {
-        setNear(await currentPosition())
+        const pos = await currentPosition()
+        setNear(pos)
+        savePlace({ near: pos })
         update({ stadt: null, bereich: null })
       } catch (err) {
         setLocateError(err instanceof Error ? err.message : 'Dein Standort konnte nicht ermittelt werden.')
@@ -187,9 +217,13 @@ export function useEventDiscovery() {
         setLocating(false)
       }
     },
-    clearNear: () => setNear(null),
+    clearNear: () => {
+      setNear(null)
+      savePlace(null)
+    },
     reset: () => {
       setNear(null)
+      savePlace(null)
       setLocateError(null)
       setParams(new URLSearchParams(), { replace: true })
     },

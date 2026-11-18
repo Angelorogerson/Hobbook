@@ -133,3 +133,9 @@
     font-size: var(--text-lg);
   }
 }
+
+.event-card-distance {
+  color: var(--c-text);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}

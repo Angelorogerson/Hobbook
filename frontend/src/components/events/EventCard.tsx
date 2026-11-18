@@ -4,6 +4,7 @@ import { Clock, MapPin, Crosshair } from 'lucide-react'
 import type { SportEvent } from '@/api/eventApi'
 import { sportLabel, levelLabel } from '@/constants/sports'
 import { formatEventDate } from '@/utils/format'
+import { formatDistance } from '@/utils/geo'
 import SportIcon from '@/components/ui/SportIcon'
 import { CapacityMeter, DateTile } from '@/components/ui/DataPieces'
 import StatusBadge from './StatusBadge'
@@ -12,6 +13,8 @@ import './EventCard.css'
 interface Props {
   event: SportEvent
   selected?: boolean
+  /** Distance from the viewer, when their position is known. */
+  distanceKm?: number
   onShowOnMap?: (id: string) => void
 }
 
@@ -19,7 +22,7 @@ interface Props {
  * Data-forward event card: date tile, sport, title, time/place and a capacity
  * meter. The title link is stretched over the whole card, so a tap anywhere opens the event.
  */
-const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, onShowOnMap }, ref) {
+const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, distanceKm, onShowOnMap }, ref) {
   const { time } = formatEventDate(event.startAt, event.endAt, event.timezone)
   const mappable = event.location.lat !== null && event.location.lng !== null
 
@@ -63,6 +66,7 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
             <span>
               {event.location.placeName}
               {event.location.city ? `, ${event.location.city}` : ''}
+              {distanceKm !== undefined && <span className="event-card-distance num"> · {formatDistance(distanceKm)}</span>}
             </span>
           </li>
         </ul>

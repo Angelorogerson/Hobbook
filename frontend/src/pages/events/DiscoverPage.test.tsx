@@ -54,7 +54,10 @@ const renderPage = (url = '/') =>
   )
 
 describe('DiscoverPage', () => {
-  beforeEach(() => listEvents.mockReset())
+  beforeEach(() => {
+    listEvents.mockReset()
+    localStorage.clear()
+  })
 
   it('list and map render the same result set and stay in sync', async () => {
     const a = makeEvent({ _id: 'a', title: 'Fußball A' })
@@ -154,6 +157,28 @@ describe('DiscoverPage', () => {
     renderPage()
     await user.click(await screen.findByRole('button', { name: 'In meiner Nähe' }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/nicht erlaubt/)
+  })
+
+  it('hides full events with one tap and reopens the last searched city', async () => {
+    const open = makeEvent({ _id: 'a', title: 'Offen A' })
+    const full = makeEvent({ _id: 'b', title: 'Voll B', status: 'full', participantCount: 10, spotsLeft: 0 })
+    listEvents.mockResolvedValue({ events: [open, full], total: 2, page: 1, limit: 200 })
+    const user = userEvent.setup()
+    const first = renderPage()
+    expect(await screen.findAllByTestId('event-card')).toHaveLength(2)
+
+    await user.click(screen.getByRole('button', { name: 'Plätze frei' }))
+    expect(screen.getAllByTestId('event-card')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Plätze frei' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('location').textContent).toContain('frei=1')
+
+    await user.type(screen.getByLabelText('Stadt oder Gebiet'), 'Köln')
+    await user.click(screen.getByRole('button', { name: 'Stadt suchen' }))
+    first.unmount()
+
+    // A later visit without a place in the link starts in the remembered city
+    renderPage()
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('stadt=K%C3%B6ln'))
   })
 
   it('shows an error with retry', async () => {

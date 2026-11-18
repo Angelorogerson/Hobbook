@@ -22,7 +22,7 @@
   font-size: var(--text-2xl);
   line-height: 1.15;
   letter-spacing: var(--tracking-display);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 .discover-count {
   font-size: var(--text-sm);
@@ -65,9 +65,6 @@
   .discover-title {
     font-size: var(--text-2xl);
   }
-  .discover-head .filterbar-row {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* Phone: one view at a time, toggle above the tab bar */
@@ -98,8 +95,14 @@
   .discover--map .discover-panel {
     flex: none;
   }
-  .discover--map .discover-title {
+  /* Map view: keep the quick filters, drop the heading, search and count to give the map room */
+  .discover--map .discover-title,
+  .discover--map .filterbar-search,
+  .discover--map .discover-count {
     display: none;
+  }
+  .discover--map .discover-head {
+    padding: var(--space-2) var(--space-4);
   }
   .discover-toggle {
     display: inline-flex;

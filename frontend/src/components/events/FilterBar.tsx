@@ -9,6 +9,7 @@ interface Props {
   onCity: (city: string) => void
   onSport: (sport: string) => void
   onWhen: (when: WhenFilter) => void
+  onFreeOnly: (on: boolean) => void
   onClearArea: () => void
   onReset: () => void
   /** Search around the viewer's position (asks the browser for permission). */
@@ -18,11 +19,16 @@ interface Props {
   locateError?: string | null
 }
 
+/**
+ * Where (search + "In meiner Nähe") on top, then one swipeable row of quick
+ * filters. Every filter is a single tap; nothing hides behind a menu.
+ */
 export default function FilterBar({
   filters,
   onCity,
   onSport,
   onWhen,
+  onFreeOnly,
   onClearArea,
   onReset,
   onNearMe,
@@ -33,7 +39,7 @@ export default function FilterBar({
   const [city, setCity] = useState(filters.city)
   useEffect(() => setCity(filters.city), [filters.city])
 
-  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near)
+  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near || filters.freeOnly)
 
   return (
     <div className="filterbar">
@@ -64,22 +70,39 @@ export default function FilterBar({
         </button>
       </form>
 
-      {onNearMe && !filters.near && (
-        <button type="button" className="btn btn-ghost btn-sm filterbar-near" onClick={onNearMe} disabled={locating}>
-          <LocateFixed size={16} aria-hidden="true" /> {locating ? 'Standort wird ermittelt …' : 'In meiner Nähe'}
-        </button>
-      )}
-      {locateError && (
-        <p className="filterbar-near-error" role="alert">
-          {locateError}
-        </p>
-      )}
+      <div className="filterbar-chips" role="group" aria-label="Filter">
+        {onNearMe && (
+          <button
+            type="button"
+            className="chip"
+            aria-pressed={!!filters.near}
+            disabled={locating}
+            onClick={() => (filters.near ? onClearNear?.() : onNearMe())}
+          >
+            <LocateFixed size={16} aria-hidden="true" /> {locating ? 'Standort wird ermittelt …' : 'In meiner Nähe'}
+          </button>
+        )}
+        {WHEN_OPTIONS.filter((o) => o.key !== 'all').map((o) => (
+          <button
+            key={o.key}
+            type="button"
+            className="chip"
+            aria-pressed={filters.when === o.key}
+            onClick={() => onWhen(filters.when === o.key ? 'all' : o.key)}
+          >
+            {o.label}
+          </button>
+        ))}
 
-      <div className="filterbar-row">
         <label htmlFor="filter-sport" className="sr-only">
           Sportart
         </label>
-        <select id="filter-sport" className="select" value={filters.sport} onChange={(e) => onSport(e.target.value)}>
+        <select
+          id="filter-sport"
+          className={`select chip-select${filters.sport ? ' is-on' : ''}`}
+          value={filters.sport}
+          onChange={(e) => onSport(e.target.value)}
+        >
           <option value="">Alle Sportarten</option>
           {SPORTS.map((s) => (
             <option key={s.key} value={s.key}>
@@ -88,39 +111,27 @@ export default function FilterBar({
           ))}
         </select>
 
-        <label htmlFor="filter-when" className="sr-only">
-          Zeitraum
-        </label>
-        <select
-          id="filter-when"
-          className="select"
-          value={filters.when}
-          onChange={(e) => onWhen(e.target.value as WhenFilter)}
-        >
-          {WHEN_OPTIONS.map((o) => (
-            <option key={o.key} value={o.key}>
-              {o.label}
-            </option>
-          ))}
-        </select>
+        <button type="button" className="chip" aria-pressed={filters.freeOnly} onClick={() => onFreeOnly(!filters.freeOnly)}>
+          Plätze frei
+        </button>
+
+        {filters.area && (
+          <button type="button" className="chip is-on" onClick={onClearArea}>
+            Kartenausschnitt <X size={14} aria-hidden="true" />
+            <span className="sr-only">entfernen</span>
+          </button>
+        )}
+        {active && (
+          <button type="button" className="btn btn-ghost btn-sm filterbar-reset" onClick={onReset}>
+            Zurücksetzen
+          </button>
+        )}
       </div>
 
-      {active && (
-        <div className="filterbar-chips">
-          {filters.area && (
-            <button type="button" className="chip is-on" onClick={onClearArea}>
-              Kartenausschnitt <X size={14} aria-label="entfernen" />
-            </button>
-          )}
-          {filters.near && (
-            <button type="button" className="chip is-on" onClick={onClearNear}>
-              In meiner Nähe <X size={14} aria-label="entfernen" />
-            </button>
-          )}
-          <button type="button" className="btn btn-ghost btn-sm" onClick={onReset}>
-            Filter zurücksetzen
-          </button>
-        </div>
+      {locateError && (
+        <p className="filterbar-near-error" role="alert">
+          {locateError}
+        </p>
       )}
     </div>
   )

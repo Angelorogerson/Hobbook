@@ -7,6 +7,7 @@ import FilterBar from '@/components/events/FilterBar'
 import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
 import { NEAR_RADIUS_KM, useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
+import { distanceKm } from '@/utils/geo'
 import './DiscoverPage.css'
 
 interface Props {
@@ -45,8 +46,8 @@ export default function DiscoverPage({ initialView }: Props) {
     () =>
       areaActive
         ? 'area'
-        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.loading ? 'l' : 'r'].join('|'),
-    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.loading]
+        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.filters.freeOnly ? 'f' : '', d.loading ? 'l' : 'r'].join('|'),
+    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.filters.freeOnly, d.loading]
   )
   const unmappable = d.events.filter((e) => e.location.lat === null).length
 
@@ -58,7 +59,7 @@ export default function DiscoverPage({ initialView }: Props) {
         ? `in ${d.filters.city}`
         : d.filters.near
           ? `in deiner Nähe (${NEAR_RADIUS_KM} km)`
-          : 'in deiner Nähe und überall',
+          : 'überall',
   ].join(' ')
 
   return (
@@ -73,6 +74,7 @@ export default function DiscoverPage({ initialView }: Props) {
             onCity={d.setCity}
             onSport={d.setSport}
             onWhen={d.setWhen}
+            onFreeOnly={d.setFreeOnly}
             onClearArea={d.clearArea}
             onReset={d.reset}
             onNearMe={d.locate}
@@ -86,7 +88,9 @@ export default function DiscoverPage({ initialView }: Props) {
               : d.error
                 ? ''
                 : d.total === 0
-                  ? 'Keine Events gefunden'
+                  ? d.hiddenFull > 0
+                    ? 'Keine Events mit freien Plätzen'
+                    : 'Keine Events gefunden'
                   : `${d.total} ${d.total === 1 ? 'Event' : 'Events'}${d.total > d.events.length ? ` (die ersten ${d.events.length} werden angezeigt)` : ''}${unmappable ? ` · ${unmappable} ohne Kartenposition` : ''}`}
           </p>
         </div>
@@ -122,9 +126,11 @@ export default function DiscoverPage({ initialView }: Props) {
                 </Link>
               }
             >
-              {areaActive || d.filters.city
-                ? 'Für diesen Ort und diese Filter gibt es gerade keine offenen Events.'
-                : 'Es gibt gerade keine offenen Events.'}{' '}
+              {d.hiddenFull > 0
+                ? 'Alle passenden Events sind gerade voll.'
+                : areaActive || d.filters.city || d.filters.near || d.filters.sport || d.filters.when !== 'all'
+                  ? 'Für diesen Ort und diese Filter gibt es gerade keine offenen Events.'
+                  : 'Es gibt gerade keine offenen Events.'}{' '}
               Starte das erste – andere können es dann hier und auf der Karte finden.
             </EmptyState>
           )}
@@ -139,6 +145,11 @@ export default function DiscoverPage({ initialView }: Props) {
                   }}
                   event={e}
                   selected={e._id === selectedId}
+                  distanceKm={
+                    d.position && e.location.lat !== null && e.location.lng !== null
+                      ? distanceKm(d.position, { lat: e.location.lat, lng: e.location.lng })
+                      : undefined
+                  }
                   onShowOnMap={(id) => {
                     setSelectSource('list')
                     setSelectedId(id)
