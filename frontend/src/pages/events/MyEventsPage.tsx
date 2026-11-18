@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, CalendarPlus, Compass, Info, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
+import { AlertTriangle, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
 import { EmptyState } from '@/components/ui/DataPieces'
 import { deleteEvent, getMyEvents, leaveEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
@@ -18,7 +18,8 @@ export default function MyEventsPage() {
   const [tab, setTab] = useState<Tab>('created')
   const [data, setData] = useState<{ created: SportEvent[]; joined: SportEvent[] } | null>(null)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
+  const [message, setMessageState] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null)
+  const setMessage = (text: string, tone: 'success' | 'danger' = 'success') => setMessageState(text ? { text, tone } : null)
   const [cancelling, setCancelling] = useState<SportEvent | null>(null)
   const [deleting, setDeleting] = useState<SportEvent | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
@@ -46,7 +47,7 @@ export default function MyEventsPage() {
       setMessage(`Du bist aus „${e.title}“ ausgetreten.`)
       load()
     } catch (err) {
-      setMessage(apiError(err).message)
+      setMessage(apiError(err).message, 'danger')
     } finally {
       setBusyId(null)
     }
@@ -129,9 +130,9 @@ export default function MyEventsPage() {
         </div>
       )}
       {message && (
-        <p className="notice notice-info" role="status">
-          <Info size={18} aria-hidden="true" />
-          {message}
+        <p className={`notice notice-${message.tone}`} role={message.tone === 'danger' ? 'alert' : 'status'}>
+          {message.tone === 'danger' ? <AlertTriangle size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
+          {message.text}
         </p>
       )}
 
@@ -195,7 +196,7 @@ export default function MyEventsPage() {
                   await deleteEvent(ev._id)
                   setMessage(`„${ev.title}“ wurde gelöscht.`)
                 } catch (err) {
-                  setMessage(apiError(err).message)
+                  setMessage(apiError(err).message, 'danger')
                 }
                 load()
               }}

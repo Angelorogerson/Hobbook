@@ -14,7 +14,12 @@ interface FromState {
 export const INTENT_TEXT: Record<string, string> = {
   join: 'Melde dich an, um bei diesem Event mitzumachen.',
   report: 'Melde dich an, um dieses Event zu melden.',
+  create: 'Melde dich an, um ein Event zu erstellen.',
+  mine: 'Melde dich an, um deine Events zu sehen.',
 }
+
+/** After signing in, the target page finishes what the visitor started (e.g. joining). */
+export const resumeState = (intent?: string) => (intent === 'join' || intent === 'report' ? { resume: intent } : undefined)
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -52,7 +57,7 @@ export default function LoginPage() {
             setBusy(true)
             try {
               await login(email.trim(), password)
-              navigate(from, { replace: true })
+              navigate(from, { replace: true, state: resumeState(state.intent) })
             } catch (err) {
               setError(apiError(err, 'Anmeldung fehlgeschlagen.').message)
               setBusy(false)

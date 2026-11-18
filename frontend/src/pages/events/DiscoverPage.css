@@ -48,11 +48,6 @@
 .discover-toggle {
   display: none;
 }
-.notice-body {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: start;
-}
 
 /* Large desktop: a wider list column */
 @media (min-width: 1440px) {

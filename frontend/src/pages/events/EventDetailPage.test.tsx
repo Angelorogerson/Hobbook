@@ -23,9 +23,9 @@ vi.mock('@/store/AuthContext', () => ({
 
 import EventDetailPage from './EventDetailPage'
 
-const renderPage = () =>
+const renderPage = (state?: unknown) =>
   render(
-    <MemoryRouter initialEntries={['/events/e1']}>
+    <MemoryRouter initialEntries={[{ pathname: '/events/e1', state }]}>
       <Routes>
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/login" element={<p>LOGIN PAGE</p>} />
@@ -47,6 +47,15 @@ describe('EventDetailPage join/leave', () => {
     expect(screen.getByText('Volkspark')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Anmelden & mitmachen' }))
     expect(await screen.findByText('LOGIN PAGE')).toBeInTheDocument()
+  })
+
+  it('finishes the join by itself after the visitor signed in for it', async () => {
+    loggedIn = true
+    api.getEvent.mockResolvedValue(makeEvent())
+    api.joinEvent.mockResolvedValue(makeEvent({ joined: true, participantCount: 4, spotsLeft: 6 }))
+    renderPage({ resume: 'join' })
+    expect(await screen.findByText('Du bist dabei!')).toBeInTheDocument()
+    expect(api.joinEvent).toHaveBeenCalledTimes(1)
   })
 
   it('updates only after the server confirmed the join', async () => {

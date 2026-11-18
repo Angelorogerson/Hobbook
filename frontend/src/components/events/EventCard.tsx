@@ -12,15 +12,14 @@ import './EventCard.css'
 interface Props {
   event: SportEvent
   selected?: boolean
-  onSelect?: (id: string) => void
   onShowOnMap?: (id: string) => void
 }
 
 /**
  * Data-forward event card: date tile, sport, title, time/place and a capacity
- * meter. The title link is the primary action; the card body selects it on the map.
+ * meter. The title link is stretched over the whole card, so a tap anywhere opens the event.
  */
-const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, onSelect, onShowOnMap }, ref) {
+const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, selected, onShowOnMap }, ref) {
   const { time } = formatEventDate(event.startAt, event.endAt, event.timezone)
   const mappable = event.location.lat !== null && event.location.lng !== null
 
@@ -29,7 +28,6 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
       ref={ref}
       className={`event-card${selected ? ' is-selected' : ''}`}
       style={{ ['--sport-color' as string]: `var(--sport-${event.sport}, var(--sport-other))` }}
-      onClick={() => onSelect?.(event._id)}
       aria-current={selected ? 'true' : undefined}
       data-testid="event-card"
     >
@@ -50,7 +48,7 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
         </div>
 
         <h3 className="event-card-title">
-          <Link to={`/events/${event._id}`} onClick={(e) => e.stopPropagation()}>
+          <Link to={`/events/${event._id}`}>
             {event.title}
           </Link>
         </h3>
@@ -76,10 +74,7 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
               <button
                 type="button"
                 className="btn btn-ghost btn-sm event-card-map"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onShowOnMap(event._id)
-                }}
+                onClick={() => onShowOnMap(event._id)}
                 // Starts with the visible text so voice control ("Auf Karte") finds the button.
                 aria-label={`Auf Karte zeigen: ${event.title}`}
               >

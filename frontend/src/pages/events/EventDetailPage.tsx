@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -57,6 +57,32 @@ export default function EventDetailPage() {
     }
     // Reload when auth changes so joined/organizer flags are correct.
   }, [id, authState.isLoggedIn])
+
+  // Finish what a guest started before signing in (join or report), exactly once.
+  const resume = (location.state as { resume?: string } | null)?.resume
+  const resumed = useRef(false)
+  useEffect(() => {
+    if (!resume || resumed.current || !event || !authState.isLoggedIn) return
+    resumed.current = true
+    navigate(location.pathname, { replace: true, state: null })
+    if (resume === 'report') {
+      if (!event.isOrganizer) setDialog('report')
+      return
+    }
+    if (event.joined || event.isOrganizer) return
+    if (event.status !== 'open') {
+      if (event.status === 'full') setActionError('Dieses Event ist leider voll.')
+      return
+    }
+    setBusy(true)
+    joinEvent(event._id)
+      .then((e) => {
+        setEvent(e)
+        setFeedback('Du bist dabei!')
+      })
+      .catch((err) => setActionError(apiError(err).message))
+      .finally(() => setBusy(false))
+  }, [resume, event, authState.isLoggedIn, navigate, location.pathname])
 
   if (loading) return <LoadingSpinner fullScreen />
 
@@ -253,6 +279,11 @@ export default function EventDetailPage() {
             )}
 
             {isActive && !event.isOrganizer && !event.joined && (
+              <div className="join-bar">
+                <p className="join-bar-info" aria-hidden="true">
+                  <strong>{event.spotsLeft === 0 ? 'Voll' : `${event.spotsLeft} ${event.spotsLeft === 1 ? 'Platz' : 'Plätze'} frei`}</strong>
+                  <span>Kostenlos</span>
+                </p>
               <button
                 type="button"
                 className="btn btn-primary btn-block"
@@ -263,6 +294,7 @@ export default function EventDetailPage() {
               >
                 {event.status === 'full' ? 'Event ist voll' : busy ? 'Wird gespeichert …' : authState.isLoggedIn ? 'Mitmachen' : 'Anmelden & mitmachen'}
               </button>
+              </div>
             )}
             {isActive && event.joined && !event.isOrganizer && (
               <>

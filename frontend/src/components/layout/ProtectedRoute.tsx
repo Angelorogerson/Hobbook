@@ -14,7 +14,8 @@ export default function ProtectedRoute({ adminOnly = false }: Props) {
   if (authState.isLoading) return <LoadingSpinner fullScreen />
 
   if (!authState.isLoggedIn) {
-    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
+    const intent = location.pathname.startsWith('/events/') ? 'create' : location.pathname === '/meine-events' ? 'mine' : undefined
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search, intent }} />
   }
 
   if (adminOnly && authState.user?.role !== 'admin') return <Navigate to="/entdecken" replace />

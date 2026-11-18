@@ -139,10 +139,6 @@ export default function DiscoverPage({ initialView }: Props) {
                   }}
                   event={e}
                   selected={e._id === selectedId}
-                  onSelect={(id) => {
-                    setSelectSource('list')
-                    setSelectedId(id)
-                  }}
                   onShowOnMap={(id) => {
                     setSelectSource('list')
                     setSelectedId(id)

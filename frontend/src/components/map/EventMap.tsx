@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import maplibregl, { Map as MlMap, Marker, Popup } from 'maplibre-gl'
 import { Box, Search } from 'lucide-react'
 import type { BBox, SportEvent } from '@/api/eventApi'
@@ -57,6 +57,7 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
   const mapRef = useRef<MlMap | null>(null)
   const markersRef = useRef<Map<string, { marker: Marker; el: HTMLButtonElement }>>(new Map())
   const popupRef = useRef<Popup | null>(null)
+  const noteId = useId()
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
   const onOpenRef = useRef(onOpen)
@@ -216,9 +217,9 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
         className="event-map-canvas"
         role="region"
         aria-label={label || 'Karte der Events'}
-        aria-describedby="map-a11y-note"
+        aria-describedby={noteId}
       />
-      <p id="map-a11y-note" className="sr-only">
+      <p id={noteId} className="sr-only">
         Kartenansicht mit {mappableCount} Markierungen. Alle Events sind auch in der Liste verfügbar.
       </p>
 

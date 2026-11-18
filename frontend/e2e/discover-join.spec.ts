@@ -22,14 +22,14 @@ test('Discover → Detail → Join (sign in only when joining)', async ({ page }
   await expect(page.getByText('Bolzplatz Volkspark')).toBeVisible()
   await expect(page.getByText('1 von 10')).toBeVisible()
 
-  // Join requires login, then returns to the event
+  // Join requires login, then returns to the event and finishes the join
   await page.getByRole('button', { name: 'Anmelden & mitmachen' }).click()
   await expect(page).toHaveURL(/\/login/)
   await expect(page.getByText('Melde dich an, um bei diesem Event mitzumachen.')).toBeVisible()
   await login(page, PLAYER)
   await expect(page.getByRole('heading', { name: 'Feierabend-Kick im Park' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Mitmachen' }).click()
+  // The join the visitor asked for completes by itself after signing in
   await expect(page.getByText('Du bist dabei!')).toBeVisible()
   await expect(page.getByText('2 von 10')).toBeVisible()
 

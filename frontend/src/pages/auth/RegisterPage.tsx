@@ -4,7 +4,7 @@ import { AlertTriangle, Info } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
 import { apiError } from '@/api/axiosInstance'
 import { Logo } from '@/components/ui/Brand'
-import { INTENT_TEXT } from './LoginPage'
+import { INTENT_TEXT, resumeState } from './LoginPage'
 import './auth.css'
 
 export function validateRegistration(v: { name: string; email: string; password: string; confirm: string; age: boolean }) {
@@ -59,7 +59,7 @@ export default function RegisterPage() {
         </Link>
         <h1>Konto erstellen</h1>
         {state.intent && INTENT_TEXT[state.intent] && (
-          <p className="notice notice-info">
+          <p className="notice notice-info" role="status">
             <Info size={18} aria-hidden="true" />
             {INTENT_TEXT[state.intent]}
           </p>
@@ -75,7 +75,7 @@ export default function RegisterPage() {
             setBusy(true)
             try {
               await register({ name: v.name.trim(), email: v.email.trim(), password: v.password, ageConfirmed: true })
-              navigate(from, { replace: true })
+              navigate(from, { replace: true, state: resumeState(state.intent) })
             } catch (err) {
               const info = apiError(err, 'Registrierung fehlgeschlagen.')
               setError(info.message)

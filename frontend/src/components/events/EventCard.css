@@ -5,6 +5,7 @@
   padding: var(--space-4);
   background: var(--c-surface);
   border: 1px solid var(--c-border);
+  position: relative;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition:
@@ -77,8 +78,19 @@
   padding: 11px 0;
   margin: -11px 0;
 }
+/* Stretched link: the whole card is the tap target for the event */
+.event-card-title a::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
 .event-card-title a:focus-visible {
-  outline-offset: 0;
+  outline: none;
+}
+.event-card-title a:focus-visible::after {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
 }
 .event-card-foot {
   display: flex;
@@ -92,6 +104,8 @@
 }
 .event-card-map {
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 .event-card-nomap {
   flex-shrink: 0;
