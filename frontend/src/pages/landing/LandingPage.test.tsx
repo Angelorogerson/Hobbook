@@ -43,7 +43,7 @@ describe('LandingPage', () => {
     expect(screen.getAllByRole('link', { name: /Events entdecken/ })[0]).toHaveAttribute('href', '/entdecken')
     expect(screen.getAllByRole('link', { name: /Event erstellen/ })[0]).toHaveAttribute('href', '/events/neu')
     // Each section has its own heading; the three steps are spelled out as text
-    for (const name of [/Das läuft gerade/, /Worauf hast du Lust/, /In drei Schritten/, /Starte dein eigenes Event/, /Wo spielst du als Nächstes/]) {
+    for (const name of [/Das läuft gerade/, /In drei Schritten/, /Worauf hast du Lust/, /Starte dein eigenes Event/, /Fair und sicher dabei/, /Wo spielst du als Nächstes/]) {
       expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument()
     }
     for (const name of ['Finden', 'Mitmachen', 'Hingehen']) {

@@ -7,6 +7,8 @@ import { formatEventDate, spotsText } from '@/utils/format'
 import { BUILDINGS_MIN_ZOOM, boundsToBBox, createMap, has3dBuildings, set3d, sportIconSvg, webglSupported } from './mapSetup'
 import { useTheme } from '@/store/ThemeContext'
 import MapFallback from './MapFallback'
+import { Presence } from '@/hooks/usePresence'
+import { MOTION } from '@/utils/motion'
 import './EventMap.css'
 
 interface Props {
@@ -265,7 +267,7 @@ export default function EventMap({
         onSelectRef.current?.('')
         const b = new maplibregl.LngLatBounds()
         g.items.forEach((e) => b.extend([e.location.lng!, e.location.lat!]))
-        map.fitBounds(b, { padding: 80, maxZoom: CLUSTER_MAX_ZOOM, duration: 400 })
+        map.fitBounds(b, { padding: 80, maxZoom: CLUSTER_MAX_ZOOM, duration: MOTION.camera })
       })
       clustersRef.current.push(new maplibregl.Marker({ element: el }).setLngLat(map.unproject([g.x, g.y])).addTo(map))
     }
@@ -324,7 +326,7 @@ export default function EventMap({
         .addTo(map)
     }
     if (!map.getBounds().contains(entry.marker.getLngLat())) {
-      map.easeTo({ center: entry.marker.getLngLat(), duration: 400 })
+      map.easeTo({ center: entry.marker.getLngLat(), duration: MOTION.camera })
     }
   }, [selectedId, events, compact, loaded, isPhone])
 
@@ -358,43 +360,46 @@ export default function EventMap({
           className="map-tool-btn map-recenter"
           aria-label="Karte auf meinen Standort zentrieren"
           title="Zu meinem Standort"
-          onClick={() => mapRef.current?.easeTo({ center: [position.lng, position.lat], zoom: Math.max(mapRef.current.getZoom(), 12), duration: 500 })}
+          onClick={() => mapRef.current?.easeTo({ center: [position.lng, position.lat], zoom: Math.max(mapRef.current.getZoom(), 12), duration: MOTION.cameraLarge })}
         >
           <LocateFixed size={18} aria-hidden="true" />
         </button>
       )}
 
-      {preview && (
-        <div className="map-preview">
-          <a
-            className="map-preview-link"
-            href={`/events/${preview._id}`}
-            onClick={(ev) => {
-              if (!onOpen) return
-              ev.preventDefault()
-              onOpen(preview._id)
-            }}
-          >
-            <span className="map-preview-sport" style={{ color: sportColor(preview.sport) }}>
-              {sportLabel(preview.sport)}
-            </span>
-            <strong className="map-preview-title">{preview.title}</strong>
-            <span className="map-preview-meta">
-              {(() => {
-                const { day, time } = formatEventDate(preview.startAt, preview.endAt, preview.timezone)
-                return `${day}, ${time}`
-              })()}
-            </span>
-            <span className="map-preview-meta">
-              {preview.location.placeName} · {spotsText(preview)}
-            </span>
-            <ChevronRight size={20} aria-hidden="true" className="map-preview-go" />
-          </a>
-          <button type="button" className="map-preview-close" aria-label="Vorschau schließen" onClick={() => onSelect?.('')}>
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
-      )}
+      <Presence show={!!preview}>
+        {preview && (
+          <div className="map-preview">
+            <a
+              key={preview._id}
+              className="map-preview-link"
+              href={`/events/${preview._id}`}
+              onClick={(ev) => {
+                if (!onOpen) return
+                ev.preventDefault()
+                onOpen(preview._id)
+              }}
+            >
+              <span className="map-preview-sport" style={{ color: sportColor(preview.sport) }}>
+                {sportLabel(preview.sport)}
+              </span>
+              <strong className="map-preview-title">{preview.title}</strong>
+              <span className="map-preview-meta">
+                {(() => {
+                  const { day, time } = formatEventDate(preview.startAt, preview.endAt, preview.timezone)
+                  return `${day}, ${time}`
+                })()}
+              </span>
+              <span className="map-preview-meta">
+                {preview.location.placeName} · {spotsText(preview)}
+              </span>
+              <ChevronRight size={20} aria-hidden="true" className="map-preview-go" />
+            </a>
+            <button type="button" className="map-preview-close" aria-label="Vorschau schließen" onClick={() => onSelect?.('')}>
+              <X size={18} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </Presence>
 
       {can3d && (
         <div className="map-tools">

@@ -62,14 +62,38 @@
   --z-overlay: 100;
   --z-toast: 110;
 
-  /* ── Motion (state changes only, 150–250ms) ───────── */
-  --dur-fast: 150ms;
-  --dur-base: 200ms;
-  --dur-slow: 250ms;
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* ── Motion ───────────────────────────────────────────
+     One language for the whole product (see docs/DESIGN.md §Motion).
+     App tier: --dur-1…4, --move-1…2. Story tier (landing page and the three
+     success moments): --dur-5…7, --move-3…4, --stagger.
+     Exits are ~0.7× their enter. Only transform and opacity move. */
+  --dur-1: 100ms; /* press, hover */
+  --dur-2: 150ms; /* fades, toggles, colour */
+  --dur-3: 200ms; /* popovers, toasts, notices, small enters */
+  --dur-4: 250ms; /* dialogs, sheets, page enter */
+  --dur-5: 400ms; /* story: section reveals, scene changes */
+  --dur-6: 600ms; /* story: hero sequence */
+  --dur-7: 900ms; /* story: one-off draws (ball roll, route line) */
+  --dur-3-out: 140ms;
+  --dur-4-out: 180ms;
+  --dur-loop: 1400ms; /* loading indicators */
+
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1); /* arriving */
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15); /* leaving */
+  --ease-move: cubic-bezier(0.2, 0, 0, 1); /* changing in place */
+  --ease-linear: linear; /* loaders only */
+  /* Confirmations only (join, save, toast): a small spring overshoot */
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --move-1: 4px;
+  --move-2: 8px;
+  --move-3: 16px;
+  --move-4: 24px;
+  --scale-press: 0.97;
+  --scale-enter: 0.96; /* the subtle zoom-in */
+  --scale-pop: 1.04; /* one-off emphasis */
+  --stagger: 50ms;
+
 
   /* ── Color: light (default) ───────────────────────── */
   color-scheme: light;
@@ -216,5 +240,33 @@
 @media (max-width: 860px) {
   :root {
     --header-h: 56px;
+    /* Shorter travel on small screens */
+    --move-4: 16px;
+  }
+}
+
+/* Spring as a real spring where linear() is supported */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(0, 0.18 7%, 0.6 16%, 0.95 26%, 1.08 34%, 1.1 40%, 1.06 50%, 1.01 62%, 0.99 74%, 1);
+  }
+}
+
+/* Reduced motion: no travel, no zoom, no stagger, long durations become fades.
+   Feedback stays (colour and opacity still change). */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --move-1: 0px;
+    --move-2: 0px;
+    --move-3: 0px;
+    --move-4: 0px;
+    --scale-press: 1;
+    --scale-enter: 1;
+    --scale-pop: 1;
+    --stagger: 0ms;
+    --dur-5: var(--dur-2);
+    --dur-6: var(--dur-2);
+    --dur-7: var(--dur-2);
+    --ease-spring: var(--ease-move);
   }
 }

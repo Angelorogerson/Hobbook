@@ -7,6 +7,7 @@ import Modal from '@/components/common/Modal'
 import { SPORTS } from '@/constants/sports'
 import { ThemeChoice } from '@/components/ui/Brand'
 import './ProfilePage.css'
+import { Presence } from '@/hooks/usePresence'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -178,45 +179,47 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {showDelete && (
-        <Modal title="Konto endgültig löschen?" onClose={() => setShowDelete(false)}>
-          <p style={{ marginBottom: 12 }}>
-            Dein Konto und deine Profildaten werden gelöscht. Deine anstehenden Events mit Anmeldungen werden abgesagt,
-            Events ohne weitere Teilnehmende werden entfernt, und du wirst aus allen Events ausgetragen.
-          </p>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault()
-              setDeleteErr('')
-              try {
-                await deleteAccount(deletePw)
-                logout()
-                navigate('/', { replace: true })
-              } catch (err) {
-                setDeleteErr(apiError(err).message)
-              }
-            }}
-          >
-            <div className="field">
-              <label htmlFor="p-del">Zur Bestätigung dein Passwort</label>
-              <input id="p-del" type="password" className="input" autoComplete="current-password" value={deletePw} onChange={(e) => setDeletePw(e.target.value)} required />
-            </div>
-            {deleteErr && (
-              <p className="error" role="alert">
-                {deleteErr}
-              </p>
-            )}
-            <div className="modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={() => setShowDelete(false)}>
-                Abbrechen
-              </button>
-              <button type="submit" className="btn btn-danger">
-                Endgültig löschen
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      <Presence show={!!showDelete}>
+        {showDelete && (
+          <Modal title="Konto endgültig löschen?" onClose={() => setShowDelete(false)}>
+            <p style={{ marginBottom: 12 }}>
+              Dein Konto und deine Profildaten werden gelöscht. Deine anstehenden Events mit Anmeldungen werden abgesagt,
+              Events ohne weitere Teilnehmende werden entfernt, und du wirst aus allen Events ausgetragen.
+            </p>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setDeleteErr('')
+                try {
+                  await deleteAccount(deletePw)
+                  logout()
+                  navigate('/', { replace: true })
+                } catch (err) {
+                  setDeleteErr(apiError(err).message)
+                }
+              }}
+            >
+              <div className="field">
+                <label htmlFor="p-del">Zur Bestätigung dein Passwort</label>
+                <input id="p-del" type="password" className="input" autoComplete="current-password" value={deletePw} onChange={(e) => setDeletePw(e.target.value)} required />
+              </div>
+              {deleteErr && (
+                <p className="error" role="alert">
+                  {deleteErr}
+                </p>
+              )}
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowDelete(false)}>
+                  Abbrechen
+                </button>
+                <button type="submit" className="btn btn-danger">
+                  Endgültig löschen
+                </button>
+              </div>
+            </form>
+          </Modal>
+        )}
+      </Presence>
     </div>
   )
 }

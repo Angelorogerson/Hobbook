@@ -2,6 +2,7 @@ import maplibregl, { Map as MlMap } from 'maplibre-gl'
 import type { BBox } from '@/api/eventApi'
 import type { ResolvedTheme } from '@/store/ThemeContext'
 import { SPORT_ICON_PATHS } from '@/components/ui/SportIcon'
+import { MOTION } from '@/utils/motion'
 
 /**
  * OpenFreeMap styles (keyless, OpenStreetMap data), verified 2026-11-16:
@@ -82,7 +83,7 @@ export function set3d(map: MlMap, on: boolean) {
   if (has3dBuildings(map)) {
     map.setLayoutProperty(BUILDING_3D_LAYER, 'visibility', on ? 'visible' : 'none')
   }
-  map.easeTo({ pitch: on ? 60 : 0, bearing: on ? map.getBearing() : 0, duration: 600 })
+  map.easeTo({ pitch: on ? 60 : 0, bearing: on ? map.getBearing() : 0, duration: MOTION.cameraLarge })
 }
 
 export function boundsToBBox(map: MlMap): BBox {

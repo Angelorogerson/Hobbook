@@ -8,6 +8,14 @@ import { ORGANIZER, loginFromStart } from './helpers'
  * The WebGL map canvas is third-party and has a list alternative, so it is excluded.
  */
 async function seriousViolations(page: Page) {
+  // Measure the settled page: wait until every finite animation (page fade,
+  // entrances) has finished. Endless loaders are ignored.
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+      .every((a) => a.playState !== 'running')
+  )
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .exclude('.maplibregl-map')
@@ -18,7 +26,7 @@ async function seriousViolations(page: Page) {
 }
 
 test.describe('accessibility', () => {
-  // Entrance animations fade content in; measuring contrast mid-fade gives false alarms.
+  // Audit the reduced-motion experience (it must be complete on its own).
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
   })

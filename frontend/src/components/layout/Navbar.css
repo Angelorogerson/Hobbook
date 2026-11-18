@@ -50,18 +50,26 @@
   font-weight: var(--weight-semibold);
   font-size: var(--text-sm);
   text-decoration: none;
-  transition: color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  transition:
+    color var(--dur-2) var(--ease-move),
+    background-color var(--dur-2) var(--ease-move),
+    transform var(--dur-1) var(--ease-move);
 }
-.nav-link:hover {
-  color: var(--c-text);
-  background: var(--c-surface-2);
-  text-decoration: none;
+@media (hover: hover) {
+  .nav-link:hover {
+    color: var(--c-text);
+    background: var(--c-surface-2);
+    text-decoration: none;
+  }
+}
+.nav-link:active {
+  transform: scale(var(--scale-press));
 }
 .nav-link.active {
   color: var(--c-text);
 }
-/* Active marker: a short accent bar under the item (state, not decoration) */
-.topnav .nav-link.active::after {
+/* Active marker: a short accent bar that grows in under the new item */
+.topnav .nav-link::after {
   content: '';
   position: absolute;
   left: var(--space-3);
@@ -70,6 +78,11 @@
   height: 3px;
   border-radius: 3px 3px 0 0;
   background: var(--c-accent);
+  transform: scaleX(0);
+  transition: transform var(--dur-3) var(--ease-move);
+}
+.topnav .nav-link.active::after {
+  transform: scaleX(1);
 }
 .topbar-actions {
   display: flex;
@@ -121,7 +134,16 @@
     box-sizing: content-box;
     padding: 3px var(--space-4);
     border-radius: var(--radius-pill);
-    transition: background-color var(--dur-fast) var(--ease-out);
+    transition:
+      background-color var(--dur-3) var(--ease-move),
+      color var(--dur-3) var(--ease-move),
+      transform var(--dur-1) var(--ease-move);
+  }
+  .bottomnav .nav-link:active svg {
+    transform: scale(var(--scale-press));
+  }
+  .bottomnav .nav-link:active {
+    transform: none;
   }
   /* Active tab: a filled pill behind the icon plus bold label (not colour alone) */
   .bottomnav .nav-link.active {
@@ -142,10 +164,10 @@
     background: var(--c-accent);
     color: var(--c-on-accent);
     box-shadow: var(--shadow-2);
-    transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+    transition: transform var(--dur-1) var(--ease-move), background-color var(--dur-2) var(--ease-move);
   }
   .bottomnav-create:active {
-    transform: scale(0.96);
+    transform: scale(var(--scale-press));
   }
   .bottomnav-create.active {
     background: var(--c-accent-hover);

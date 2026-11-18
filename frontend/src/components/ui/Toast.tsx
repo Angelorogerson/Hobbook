@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { MOTION } from '@/utils/motion'
 import './Toast.css'
 
 type Tone = 'success' | 'danger'
@@ -7,6 +8,7 @@ interface ToastItem {
   id: number
   text: string
   tone: Tone
+  leaving?: boolean
 }
 
 const ToastContext = createContext<(text: string, tone?: Tone) => void>(() => {})
@@ -18,9 +20,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const show = useCallback((text: string, tone: Tone = 'success') => {
     const id = nextId.current++
-    // One toast at a time keeps the message readable and the screen calm.
-    setItems([{ id, text, tone }])
-    window.setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), tone === 'danger' ? 6000 : 3500)
+    // One toast at a time keeps the message readable: a new one replaces the old,
+    // which leaves underneath it.
+    setItems((list) => [...list.filter((t) => !t.leaving).map((t) => ({ ...t, leaving: true })), { id, text, tone }])
+    window.setTimeout(() => setItems((list) => list.filter((t) => t.id === id || !t.leaving)), MOTION.dur3Out)
+    const remove = (ms: number) => window.setTimeout(() => setItems((list) => list.filter((t) => t.id !== id)), ms)
+    window.setTimeout(() => {
+      setItems((list) => list.map((t) => (t.id === id ? { ...t, leaving: true } : t)))
+      remove(MOTION.dur3Out)
+    }, tone === 'danger' ? MOTION.toastError : MOTION.toastSuccess)
   }, [])
 
   const value = useMemo(() => show, [show])
@@ -30,7 +38,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toast-region" role="status" aria-live="polite">
         {items.map((t) => (
-          <p key={t.id} className={`toast toast-${t.tone}`}>
+          <p key={t.id} className={`toast toast-${t.tone}${t.leaving ? ' is-leaving' : ''}`} aria-hidden={t.leaving || undefined}>
             {t.tone === 'danger' ? <AlertTriangle size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
             {t.text}
           </p>

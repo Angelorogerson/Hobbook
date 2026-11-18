@@ -36,7 +36,9 @@ function Layout() {
       <Navbar />
       <main id="main" className="app-main">
         <Suspense fallback={<LoadingSpinner />}>
-          <Outlet />
+          <div key={pathname} className="route">
+            <Outlet />
+          </div>
         </Suspense>
       </main>
       {!fullBleed && <Footer />}

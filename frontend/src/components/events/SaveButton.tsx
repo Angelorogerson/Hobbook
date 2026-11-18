@@ -31,6 +31,8 @@ export default function SaveButton({ event, variant = 'icon', onChange }: Props)
   const toast = useToast()
   const [saved, setSaved] = useState(!!event.saved)
   const [busy, setBusy] = useState(false)
+  // The confirmation pop plays for the tap only, never when a saved card first renders.
+  const [justSaved, setJustSaved] = useState(false)
 
   useEffect(() => setSaved(!!event.saved), [event.saved])
 
@@ -41,6 +43,7 @@ export default function SaveButton({ event, variant = 'icon', onChange }: Props)
     }
     const next = !saved
     setSaved(next)
+    setJustSaved(next)
     setBusy(true)
     try {
       await (next ? saveEvent(event._id) : unsaveEvent(event._id))
@@ -48,6 +51,7 @@ export default function SaveButton({ event, variant = 'icon', onChange }: Props)
       onChange?.(next)
     } catch (err) {
       setSaved(!next)
+      setJustSaved(false)
       toast(apiError(err, 'Das hat nicht geklappt. Bitte versuch es noch einmal.').message, 'danger')
     } finally {
       setBusy(false)
@@ -58,7 +62,7 @@ export default function SaveButton({ event, variant = 'icon', onChange }: Props)
   return (
     <button
       type="button"
-      className={variant === 'icon' ? `save-btn${saved ? ' is-saved' : ''}` : `btn btn-ghost btn-sm save-btn-label${saved ? ' is-saved' : ''}`}
+      className={variant === 'icon' ? `save-btn${saved ? ' is-saved' : ''}${justSaved ? ' just-saved' : ''}` : `btn btn-ghost btn-sm save-btn-label${saved ? ' is-saved' : ''}${justSaved ? ' just-saved' : ''}`}
       aria-pressed={saved}
       aria-label={variant === 'icon' ? `Merken: ${event.title}` : undefined}
       title={variant === 'icon' ? label : undefined}

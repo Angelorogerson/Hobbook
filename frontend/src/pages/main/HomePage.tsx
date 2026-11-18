@@ -112,7 +112,7 @@ export default function HomePage() {
           </EmptyState>
         )}
         {mine && mine.length > 0 && (
-          <ul className="home-grid">
+          <ul className="home-grid m-fade-in">
             {mine.slice(0, 4).map((e) => (
               <li key={e._id}>
                 <EventCard event={e} />
@@ -157,7 +157,7 @@ export default function HomePage() {
           </EmptyState>
         )}
         {nearby && nearby.length > 0 && (
-          <ul className="home-grid">
+          <ul className="home-grid m-fade-in">
             {nearby.map((e) => (
               <li key={e._id}>
                 <EventCard event={e} />

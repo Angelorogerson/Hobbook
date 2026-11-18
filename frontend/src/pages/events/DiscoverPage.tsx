@@ -8,6 +8,7 @@ import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
 import { NEAR_RADIUS_KM, useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
 import { distanceKm } from '@/utils/geo'
+import { scrollBehavior } from '@/utils/motion'
 import './DiscoverPage.css'
 
 interface Props {
@@ -36,7 +37,7 @@ export default function DiscoverPage({ initialView }: Props) {
   // Selecting a marker scrolls its card into view.
   useEffect(() => {
     if (!selectedId || selectSource !== 'map') return
-    cardRefs.current.get(selectedId)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    cardRefs.current.get(selectedId)?.scrollIntoView({ block: 'nearest', behavior: scrollBehavior() })
   }, [selectedId, selectSource])
 
   // Re-fit the map whenever non-viewport filters change.
@@ -136,7 +137,11 @@ export default function DiscoverPage({ initialView }: Props) {
             </EmptyState>
           )}
 
-          <ol className="discover-cards" aria-label="Gefundene Events">
+          <ol
+            key={`${d.events.length}-${d.events[0]?._id ?? ''}-${d.events[d.events.length - 1]?._id ?? ''}`}
+            className="discover-cards m-fade-in"
+            aria-label="Gefundene Events"
+          >
             {d.events.map((e) => (
               <li key={e._id}>
                 <EventCard

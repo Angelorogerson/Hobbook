@@ -9,6 +9,7 @@ import CancelEventDialog from '@/components/events/CancelEventDialog'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import './MyEventsPage.css'
+import { Presence } from '@/hooks/usePresence'
 
 type Tab = 'created' | 'joined' | 'saved'
 
@@ -157,13 +158,13 @@ export default function MyEventsPage() {
         </div>
       )}
       {message && (
-        <p className={`notice notice-${message.tone}`} role={message.tone === 'danger' ? 'alert' : 'status'}>
+        <p key={message.text} className={`notice notice-${message.tone}`} role={message.tone === 'danger' ? 'alert' : 'status'}>
           {message.tone === 'danger' ? <AlertTriangle size={18} aria-hidden="true" /> : <CheckCircle2 size={18} aria-hidden="true" />}
           {message.text}
         </p>
       )}
 
-      <div role="tabpanel" id="my-panel" aria-labelledby={`my-tab-${tab}`}>
+      <div key={tab} role="tabpanel" id="my-panel" aria-labelledby={`my-tab-${tab}`} className="m-fade-in">
         {data && list.length === 0 && (
           tab === 'created' ? (
             <EmptyState
@@ -207,37 +208,41 @@ export default function MyEventsPage() {
         {section('Vergangen & abgesagt', past)}
       </div>
 
-      {cancelling && (
-        <CancelEventDialog
-          event={cancelling}
-          onClose={() => setCancelling(null)}
-          onCancelled={(e) => {
-            setCancelling(null)
-            setMessage(`„${e.title}“ wurde abgesagt.`)
-            load()
-          }}
-        />
-      )}
-      {deleting && (
-        <ConfirmDialog
-          title="Event löschen?"
-          confirmLabel="Endgültig löschen"
-          onClose={() => setDeleting(null)}
-          onConfirm={async () => {
-            const ev = deleting
-            try {
-              await deleteEvent(ev._id)
-              setMessage(`„${ev.title}“ wurde gelöscht.`)
-            } catch (err) {
-              setMessage(apiError(err).message, 'danger')
-            }
-            setDeleting(null)
-            load()
-          }}
-        >
-          <p>„{deleting.title}“ wird endgültig gelöscht. Es hat sich noch niemand angemeldet.</p>
-        </ConfirmDialog>
-      )}
+      <Presence show={!!cancelling}>
+        {cancelling && (
+          <CancelEventDialog
+            event={cancelling}
+            onClose={() => setCancelling(null)}
+            onCancelled={(e) => {
+              setCancelling(null)
+              setMessage(`„${e.title}“ wurde abgesagt.`)
+              load()
+            }}
+          />
+        )}
+      </Presence>
+      <Presence show={!!deleting}>
+        {deleting && (
+          <ConfirmDialog
+            title="Event löschen?"
+            confirmLabel="Endgültig löschen"
+            onClose={() => setDeleting(null)}
+            onConfirm={async () => {
+              const ev = deleting
+              try {
+                await deleteEvent(ev._id)
+                setMessage(`„${ev.title}“ wurde gelöscht.`)
+              } catch (err) {
+                setMessage(apiError(err).message, 'danger')
+              }
+              setDeleting(null)
+              load()
+            }}
+          >
+            <p>„{deleting.title}“ wird endgültig gelöscht. Es hat sich noch niemand angemeldet.</p>
+          </ConfirmDialog>
+        )}
+      </Presence>
     </div>
   )
 }

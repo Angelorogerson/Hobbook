@@ -9,7 +9,7 @@
 3. **Data as design.** Date, spots, distance and status are visual elements (date tile, capacity meter, badges), always with words, never colour alone.
 4. **Colour means something.** Blue = what you can do. Lime = you did it / it is selected ("Du bist dabei", active tab, step numbers). Sport colours = which sport.
 5. **One vocabulary.** One button family, one field family, one chip, one card, one badge, one notice, one toast, one confirm dialog, one empty state.
-6. **Motion explains.** In the app, motion only marks a state change (150–250 ms). The landing page may tell a story with motion, but stays fully readable without it. `prefers-reduced-motion` turns it all off.
+6. **Motion is directed, not decorative.** One motion language for the whole product (section 9). The app is calm and fast; the landing page tells the story. Every animation guides attention, explains a change, keeps spatial context, gives feedback or carries the story — otherwise it is removed. With `prefers-reduced-motion` movement becomes a fade and nothing is lost.
 7. **Light and dark are equal.** The theme follows the system with a manual override (profile, footer) and is resolved before first paint.
 
 ## 2. Tokens
@@ -24,7 +24,7 @@
 **Elevation:** `--shadow-1` (raised card) and `--shadow-2` (popovers, sheets, floating controls).
 **Size:** `--control-h` 44px (every touch target), `--control-h-sm` 36px (fine pointers only; 44 under `pointer: coarse`), `--control-h-lg` 52px (hero and publish buttons).
 **Layers:** `--z-map-ui` 5 · `--z-sticky` 40 · `--z-nav` 50 · `--z-overlay` 100 · `--z-toast` 110.
-**Motion:** `--dur-fast` 150 · `--dur-base` 200 · `--dur-slow` 250 · `--ease-out`, `--ease-expo`, `--ease-spring` (small confirmations: save, join, toast).
+**Motion:** see section 9.
 
 ### Colour roles (light / dark)
 | Role | Light | Dark | Use |
@@ -182,18 +182,68 @@ All pairs pass.
 
 ## 8. Landing page ("Der Ball rollt", `/`)
 - **Role:** the public entry door for guests. Signed-in users see their personal home at `/` instead. Discover stays public, so guests can look around without an account.
-- **Order:** hero (headline, city search, two actions) → live rail of real events → sport chips → pinned scene "In drei Schritten auf dem Platz" → organize → dark closing band with a second search.
+- **Story order:** promise (hero) → the real product (live rail) → how it works (pinned scene) → variety (sports) → the other side (organising) → trust → action (closing search).
+- **The thread is the ball:** it rolls into the headline, travels down the step line to the current step, and drops onto the closing search, whose button nods once on arrival.
 - **Truthfulness:**
   - Every event shown is real data from `GET /api/events?limit=6`.
   - With no events the page says so; when loading fails it says that instead.
   - The phone in the scroll scene is an illustration (`aria-hidden`) built from the first real event; the three steps beside it carry the meaning.
-  - No counts, testimonials, ratings or invented features.
-- **Motion:**
-  - Load: the ball rolls in, the highlight sweeps behind "Spiel.", hero content rises in sequence.
-  - A scoreboard-style roller names sports (decorative; a static sentence is read to screen readers).
-  - The live rail nudges once and returns; any touch, hover, focus or scroll cancels it.
-  - Sport chips scatter in when they enter the viewport.
-  - The pinned scene changes with the step in the middle of the screen: found → "Du bist dabei" → route drawn.
-  - Hidden start states only apply under `.reveal-ready` (IntersectionObserver available and no reduced motion). CSS, IntersectionObserver and requestAnimationFrame only.
+  - The trust section only states what the product really does (free, "Vorname N.", report button, rules). No counts, testimonials or ratings.
+- **Motion** (story tier, section 9):
+  - Hero: kicker, headline, sentence, search and actions arrive in sequence (`--stagger`); the ball rolls in (`--dur-7`); the highlight follows it over "Spiel.".
+  - The word roller names three sports and settles on "Sport" after about four seconds (no endless loop, WCAG 2.2.2).
+  - Live rail: real cards arrive with the subtle zoom; the "live" dot pulses three times; the rail nudges once, cancelled by any touch, hover, focus or scroll.
+  - Sections reveal once as they enter (`data-reveal`); the phone mock settles with a scroll-linked zoom where the browser supports it.
+  - Pinned scene: found → "Du bist dabei" → route drawn; the step line fills and the ball follows.
+  - On phones each step's text sits low in its slot, so the active step is never under the pinned scene.
 - **Performance:** markup and inline SVG only; map pages are code-split and the Discover chunk is prefetched two seconds after load.
-- **Responsive:** on phones the scene's stage pins under the header while the steps scroll past; actions are full width; E2E checks no horizontal overflow at 390, 768, 1024, 1440 and 1920.
+- **Responsive:** actions are full width on phones; E2E checks the section order and no horizontal overflow at 390, 768, 1024, 1440 and 1920.
+
+## 9. Motion
+
+One motion language, written as tokens (`styles/tokens.css`), primitives (`styles/motion.css`) and three hooks (`hooks/usePresence.ts`, `hooks/useReveal.ts`, `utils/motion.ts`). Nothing outside `tokens.css` uses a raw duration, delay or curve.
+
+**Principles** (from Material 3, IBM Carbon, Atlassian, Apple HIG, Nielsen Norman Group, WCAG and web.dev):
+1. **Purpose first.** Guide attention, explain a change, keep spatial context, give feedback, or carry the story. If removing it loses nothing, it goes.
+2. **Frequency sets the budget.** What people see often is short and quiet; expressive motion is for one-off moments (landing, joined, saved, published).
+3. **Never block.** Content and controls work from the first frame; nothing loops endlessly; scrolling is never hijacked.
+4. **Cheap.** Only `transform` and `opacity` move. Colours and borders may fade.
+5. **Exits are faster than enters** and leave the way they came.
+6. **Reduced motion keeps the feedback.** Travel, zoom and stagger become zero; fades remain; nothing waits on a delay.
+
+**Tokens**
+
+| Token | Value | Use |
+|---|---|---|
+| `--dur-1` | 100 ms | press, hover |
+| `--dur-2` | 150 ms | fades, toggles, colour, list/map and tab switches |
+| `--dur-3` | 200 ms | toasts, notices, popovers, small enters |
+| `--dur-4` | 250 ms | dialogs, sheets, page fade |
+| `--dur-5` / `--dur-6` / `--dur-7` | 400 / 600 / 900 ms | story only: reveals and scene changes / hero sequence / one-off draws |
+| `--dur-3-out` / `--dur-4-out` | 140 / 180 ms | exits |
+| `--ease-enter` | `cubic-bezier(0.05, 0.7, 0.1, 1)` | arriving |
+| `--ease-exit` | `cubic-bezier(0.3, 0, 0.8, 0.15)` | leaving |
+| `--ease-move` | `cubic-bezier(0.2, 0, 0, 1)` | changing in place |
+| `--ease-spring` | `linear()` spring (cubic fallback) | confirmations only: join, save, toast, selected pin |
+| `--move-1…4` | 4 / 8 / 16 / 24 px (24 → 16 on phones) | travel; app uses 1–2, story 3–4 |
+| `--scale-press` / `--scale-enter` / `--scale-pop` | 0.97 / 0.96 / 1.04 | press, subtle zoom-in, one-off emphasis |
+| `--stagger` | 50 ms (max six steps) | sequences |
+
+`utils/motion.ts` mirrors the numbers for JavaScript (map camera 400/600 ms, toast lifetimes 3.5/6 s) and provides `useReducedMotion()` and `scrollBehavior()`.
+
+**Three levels**
+
+| Level | Where | What moves |
+|---|---|---|
+| Micro | every control | Press: `--scale-press` in `--dur-1` on buttons, chips, tabs, nav items, map tools, sport tiles, cards (touch). Hover only under `@media (hover: hover)`: card and pin lift by 2px, arrows lean `--move-1`. Selected markers grow in (`::after` scaleX on tabs and top nav). Focus rings never animate. |
+| Component | app | Dialogs fade + zoom in, leave faster (`Presence`); on phones the sheet rises from the bottom and goes back down. Toasts spring in and drop out. Map preview enters, leaves and crossfades between pins. Live notices rise 4px. Join turns into "Du bist angemeldet" with a spring, saving pops the bookmark — both only right after the tap. New result sets, tab panels, list ↔ map and the page itself fade in (`--dur-2`/`--dur-4`; pages use opacity only so fixed bars are not captured). |
+| Story | landing page, success moments | See section 8. |
+
+**Reduced motion**
+- `tokens.css` zeroes `--move-*`, sets `--scale-*` to 1 and `--stagger` to 0, and turns `--dur-5…7` into `--dur-2`.
+- `base.css` removes every animation and transition delay and smooth scrolling.
+- Story entrances only exist under `html.reveal-ready`, which is never set with reduced motion; everything is visible from the first frame.
+- Loaders breathe (opacity) instead of spinning or shimmering. The map camera jumps (MapLibre honours the setting).
+- The preference is read live (`useReducedMotion`), so changing it while the page is open takes effect.
+
+**Not used:** parallax, scroll-jacking, blur, 3D tilt, cursor effects, endless decorative loops, animation libraries, and a shared-element morph from card to detail (needs React Router's data router; revisit later).

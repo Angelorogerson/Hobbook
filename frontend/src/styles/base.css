@@ -29,7 +29,7 @@ body {
   color: var(--c-text);
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'cv11', 'ss01';
-  transition: background-color var(--dur-base) var(--ease-in-out), color var(--dur-base) var(--ease-in-out);
+  transition: background-color var(--dur-3) var(--ease-move), color var(--dur-3) var(--ease-move);
 }
 
 ::selection {
@@ -54,6 +54,9 @@ a {
   color: var(--c-link);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
+  transition:
+    color var(--dur-2) var(--ease-move),
+    text-decoration-color var(--dur-2) var(--ease-move);
 }
 a:hover {
   text-decoration-thickness: 2px;
@@ -149,13 +152,15 @@ svg {
   }
 }
 
+/* Reduced motion: the tokens already remove travel and zoom (tokens.css), so
+   feedback remains as fades. This safety net makes sure nothing waits on a
+   delay (no hidden-then-snapping content) and nothing scrolls smoothly. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
 }

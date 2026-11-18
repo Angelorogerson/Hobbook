@@ -39,7 +39,7 @@
   background: var(--marker-color, var(--c-accent));
   color: var(--c-surface);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-3) var(--ease-spring);
 }
 .map-marker-pin::after {
   content: '';
@@ -53,8 +53,10 @@
   border-right: 6px solid transparent;
   border-top: 8px solid var(--marker-color, var(--c-accent));
 }
-.map-marker:hover .map-marker-pin {
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .map-marker:hover .map-marker-pin {
+    transform: translateY(calc(-1 * var(--move-1) / 2));
+  }
 }
 .map-marker[data-status='full'] .map-marker-pin {
   opacity: 0.8;
@@ -68,7 +70,8 @@
   z-index: 2;
 }
 .map-marker.is-selected .map-marker-pin {
-  transform: scale(1.18);
+  /* The chosen pin grows: it is the anchor of the preview */
+  transform: scale(calc(1 + (var(--scale-pop) - 1) * 4.5));
   box-shadow: 0 0 0 3px var(--c-text), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
@@ -154,10 +157,19 @@
   font-weight: var(--weight-bold);
   font-size: var(--text-sm);
   box-shadow: var(--shadow-1);
-  transition: background-color var(--dur-fast) var(--ease-out);
+  transition:
+    background-color var(--dur-2) var(--ease-move),
+    color var(--dur-2) var(--ease-move),
+    border-color var(--dur-2) var(--ease-move),
+    transform var(--dur-1) var(--ease-move);
 }
-.map-tool-btn:hover {
-  background: var(--c-surface-2);
+@media (hover: hover) {
+  .map-tool-btn:hover {
+    background: var(--c-surface-2);
+  }
+}
+.map-tool-btn:active {
+  transform: scale(var(--scale-press));
 }
 .map-tool-btn[aria-pressed='true'] {
   background: var(--c-ink);
@@ -227,11 +239,11 @@
 .event-map.is-loading .event-map-canvas {
   background: linear-gradient(100deg, var(--map-bg) 40%, var(--c-surface-2) 50%, var(--map-bg) 60%);
   background-size: 200% 100%;
-  animation: map-shimmer 1.4s linear infinite;
+  animation: m-shimmer var(--dur-loop) var(--ease-linear) infinite;
 }
-@keyframes map-shimmer {
-  to {
-    background-position: -200% 0;
+@media (prefers-reduced-motion: reduce) {
+  .event-map.is-loading .event-map-canvas {
+    animation: m-breathe var(--dur-loop) var(--ease-move) infinite;
   }
 }
 
@@ -250,10 +262,15 @@
   font-variant-numeric: tabular-nums;
   box-shadow: var(--shadow-2);
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-1) var(--ease-move);
 }
-.map-cluster:hover {
-  transform: scale(1.08);
+@media (hover: hover) {
+  .map-cluster:hover {
+    transform: scale(calc(1 + (var(--scale-pop) - 1) * 2));
+  }
+}
+.map-cluster:active {
+  transform: scale(var(--scale-press));
 }
 
 /* ── The viewer's position ── */
@@ -308,13 +325,15 @@
   border-radius: var(--radius-md);
   background: var(--c-surface);
   box-shadow: var(--shadow-2);
-  animation: map-preview-in var(--dur-slow) var(--ease-out);
+  --m-move: var(--move-3);
+  animation: m-enter var(--dur-4) var(--ease-enter);
 }
-@keyframes map-preview-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
+[data-presence='exit'] .map-preview {
+  animation: m-exit var(--dur-4-out) var(--ease-exit) forwards;
+}
+/* Tapping another pin swaps the content in place */
+.map-preview-link {
+  animation: m-fade-in var(--dur-2) var(--ease-move);
 }
 .map-preview-link {
   position: relative;
@@ -350,6 +369,7 @@
   color: var(--c-text-subtle);
 }
 .map-preview-close {
+  transition: color var(--dur-2) var(--ease-move), transform var(--dur-1) var(--ease-move);
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -370,4 +390,8 @@
     width: var(--control-h);
     height: var(--control-h);
   }
+}
+
+.map-preview-close:active {
+  transform: scale(var(--scale-press));
 }

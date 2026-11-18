@@ -6,6 +6,7 @@ import { apiError } from '@/api/axiosInstance'
 import { createMap, webglSupported } from './mapSetup'
 import { useTheme } from '@/store/ThemeContext'
 import './LocationPicker.css'
+import { MOTION } from '@/utils/motion'
 
 export interface PickedLocation {
   placeName: string
@@ -60,7 +61,7 @@ export default function LocationPicker({ value, onChange, errors = {} }: Props) 
     } else {
       markerRef.current.setLngLat([lng, lat])
     }
-    if (fly) map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 16), duration: 500 })
+    if (fly) map.easeTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 16), duration: MOTION.cameraLarge })
   }
 
   /** User dropped/dragged the pin: keep exact coords, suggest address via reverse geocoding. */

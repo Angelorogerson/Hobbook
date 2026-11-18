@@ -12,10 +12,15 @@ test.describe('public landing page', () => {
     const live = page.getByRole('list', { name: 'Aktuelle Events' })
     await expect(live.getByTestId('event-card').first()).toBeVisible()
     await expect(live.getByRole('link', { name: 'Feierabend-Kick im Park' })).toBeVisible()
-    // Every section is present
-    for (const name of [/Das läuft gerade/i, /Worauf hast du Lust/i, /In drei Schritten/i, /Starte dein eigenes Event/i, /Wo spielst du als Nächstes/i]) {
-      await expect(page.getByRole('heading', { level: 2, name })).toBeAttached()
+    // The story in order: product → workflow → variety → organising → trust → action
+    const order = [/Das läuft gerade/i, /In drei Schritten/i, /Worauf hast du Lust/i, /Starte dein eigenes Event/i, /Fair und sicher dabei/i, /Wo spielst du als Nächstes/i]
+    const tops: number[] = []
+    for (const name of order) {
+      const h = page.getByRole('heading', { level: 2, name })
+      await expect(h).toBeAttached()
+      tops.push(await h.evaluate((el) => el.getBoundingClientRect().top + window.scrollY))
     }
+    expect([...tops].sort((a, b) => a - b)).toEqual(tops)
     expect(await noHorizontalOverflow(page)).toBeLessThanOrEqual(0)
   })
 
@@ -59,6 +64,12 @@ test.describe('public landing page', () => {
     await expect(h2).toBeVisible()
     const opacity = await h2.evaluate((el) => getComputedStyle(el).opacity)
     expect(opacity).toBe('1')
+    // Nothing waits hidden on a delay: hero headline and its highlight are fully there at once
+    await page.evaluate(() => window.scrollTo(0, 0))
+    for (const sel of ['.lp-h1', '.lp-h1-mark', '.lp-kicker']) {
+      expect(await page.locator(sel).evaluate((el) => getComputedStyle(el).opacity)).toBe('1')
+    }
+    expect(await page.locator('html').evaluate((el) => el.classList.contains('reveal-ready'))).toBe(false)
     await context.close()
   })
 

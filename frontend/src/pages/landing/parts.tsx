@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { listEvents, type SportEvent } from '@/api/eventApi'
+import { MOTION, prefersReducedMotion, useReducedMotion } from '@/utils/motion'
 
 export const DISCOVER = '/entdecken'
 
-const prefersReducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** Real upcoming public events for the landing page (never invented). */
 export function useLandingEvents() {
@@ -62,16 +62,29 @@ export function CitySearch({ id, tone = 'plain' }: { id: string; tone?: 'stage' 
 }
 
 /**
- * One word at a time, rolling upwards like a scoreboard. Decorative: screen
- * readers get the static sentence next to it, reduced motion gets the first word.
+ * Names a few sports like a scoreboard, then settles on the last word and
+ * stays there. The whole run is shorter than five seconds (WCAG 2.2.2), it
+ * never scrolls backwards, and with reduced motion only the last word shows.
+ * Decorative: screen readers read the static sentence next to it.
  */
-export function WordRoller({ words, every = 2200 }: { words: string[]; every?: number }) {
+export function WordRoller({ words, every = MOTION.dur5 * 3 }: { words: string[]; every?: number }) {
+  const reduced = useReducedMotion()
+  const last = words.length - 1
   const [index, setIndex] = useState(0)
   useEffect(() => {
-    if (prefersReducedMotion() || words.length < 2) return
-    const t = window.setInterval(() => setIndex((i) => (i + 1) % words.length), every)
+    if (reduced) {
+      setIndex(last)
+      return
+    }
+    if (last < 1) return
+    const t = window.setInterval(() => {
+      setIndex((i) => {
+        if (i + 1 >= last) window.clearInterval(t)
+        return Math.min(i + 1, last)
+      })
+    }, every)
     return () => window.clearInterval(t)
-  }, [words.length, every])
+  }, [reduced, last, every])
   return (
     <span className="roller" aria-hidden="true">
       <span className="roller-track" style={{ transform: `translateY(${-index * 1.35}em)` }}>
@@ -102,7 +115,7 @@ export function useDrift<T extends HTMLElement>(active: boolean) {
       stopped = true
       cancelAnimationFrame(raf)
     }
-    const DURATION = 2600
+    const DURATION = MOTION.dur7 * 3
     const tick = (now: number) => {
       if (stopped) return
       if (!startTime) startTime = now
@@ -114,7 +127,8 @@ export function useDrift<T extends HTMLElement>(active: boolean) {
     }
     const names = ['pointerdown', 'wheel', 'touchstart', 'focusin', 'mouseenter'] as const
     names.forEach((n) => el.addEventListener(n, stop, { passive: true, once: true }))
-    const timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), 1600)
+    // Starts once the hero sequence has settled
+    const timer = window.setTimeout(() => (raf = requestAnimationFrame(tick)), MOTION.dur6 + MOTION.dur7)
     return () => {
       stop()
       window.clearTimeout(timer)
@@ -128,6 +142,23 @@ export function useDrift<T extends HTMLElement>(active: boolean) {
 export function useActiveStep(count: number) {
   const refs = useRef<(HTMLElement | null)[]>([])
   const [active, setActive] = useState(0)
+  /** Vertical position of each step marker, for the ball that travels along the steps. */
+  const [marks, setMarks] = useState<number[]>([])
+  useEffect(() => {
+    const measure = () =>
+      setMarks(
+        refs.current.slice(0, count).map((el) => {
+          const n = el?.querySelector<HTMLElement>('.lp-step-n')
+          // Both offsets are relative to the positioned step list
+          return el && n ? n.offsetTop + n.offsetHeight / 2 : 0
+        })
+      )
+    measure()
+    if (!('ResizeObserver' in window)) return
+    const ro = new ResizeObserver(measure)
+    refs.current.slice(0, count).forEach((el) => el && ro.observe(el))
+    return () => ro.disconnect()
+  }, [count])
   useEffect(() => {
     if (!('IntersectionObserver' in window)) return
     const io = new IntersectionObserver(
@@ -142,5 +173,5 @@ export function useActiveStep(count: number) {
     refs.current.slice(0, count).forEach((el) => el && io.observe(el))
     return () => io.disconnect()
   }, [count])
-  return { active, setRef: (i: number) => (el: HTMLElement | null) => void (refs.current[i] = el) }
+  return { active, marks, setRef: (i: number) => (el: HTMLElement | null) => void (refs.current[i] = el) }
 }

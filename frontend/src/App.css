@@ -93,3 +93,11 @@
 .site-footer-support {
   gap: var(--space-1);
 }
+
+/* Page change: the incoming page fades in (opacity only, see App.tsx) */
+.route {
+  animation: m-fade-in var(--dur-4) var(--ease-move) backwards;
+}
+.app-shell--full .route {
+  height: 100%;
+}

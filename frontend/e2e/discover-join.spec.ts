@@ -59,6 +59,8 @@ test('save an event and find it under "Gemerkt"', async ({ page }) => {
   await save.click()
   await expect(save).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByText(/Gemerkt – du findest es/)).toBeVisible()
+  // Confirmations leave on their own
+  await expect(page.getByText(/Gemerkt – du findest es/)).toHaveCount(0, { timeout: 8000 })
 
   await page.goto('/meine-events')
   await page.getByRole('tab', { name: /Gemerkt \(1\)/ }).click()

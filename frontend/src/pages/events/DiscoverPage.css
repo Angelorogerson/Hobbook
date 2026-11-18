@@ -89,6 +89,11 @@
   .discover--map .discover-list {
     display: none;
   }
+  /* Switching list ↔ map: the incoming view fades in (replays when it reappears) */
+  .discover--list .discover-list,
+  .discover--map .discover-map {
+    animation: m-fade-in var(--dur-2) var(--ease-move);
+  }
   .discover--map {
     grid-template-rows: auto 1fr;
   }
@@ -117,6 +122,10 @@
     box-shadow: var(--shadow-2);
   }
   .discover-toggle button {
+    transition:
+      background-color var(--dur-2) var(--ease-move),
+      color var(--dur-2) var(--ease-move),
+      transform var(--dur-1) var(--ease-move);
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
@@ -132,4 +141,8 @@
     background: var(--c-surface);
     color: var(--c-text);
   }
+}
+
+.discover-toggle button:active {
+  transform: scale(var(--scale-press));
 }

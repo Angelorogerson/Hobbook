@@ -1,11 +1,11 @@
 /*
- * Landing page. Motion concept "Der Ball rollt":
- *  - on load the ball rolls in and the headline word gets its highlight
- *  - a scoreboard-style word roller names the sports
- *  - the rail of real events drifts until the visitor touches it
- *  - a pinned scene walks one event through find → join → go while you scroll
- * Everything is readable without motion: hidden start states only exist under
- * .reveal-ready (set when the visitor has not asked for reduced motion).
+ * Landing page — the expressive tier of the motion system (docs/DESIGN.md §Motion).
+ * Story: promise → the real product → how it works → variety → organising →
+ * trust → action. The ball is the thread: it rolls into the headline, travels
+ * along the three steps and lands on the final search.
+ * All values come from the motion tokens. Hidden start states exist only under
+ * html.reveal-ready (motion welcome, set before first paint), so with reduced
+ * motion everything is visible from the first frame.
  */
 .lp {
   overflow-x: clip;
@@ -49,6 +49,25 @@
   gap: var(--space-5);
   justify-items: start;
 }
+.lp-hero-search {
+  width: 100%;
+  max-width: 520px;
+}
+/* Hero sequence: kicker → headline → sub → search → actions, one after another */
+.reveal-ready .lp-in {
+  --m-move: var(--move-4);
+  animation: m-enter var(--dur-6) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+/* The ball rolls in, comes to rest, and the highlight follows it over "Spiel." */
+.reveal-ready .lp-ball {
+  animation: lp-roll var(--dur-7) var(--ease-enter) backwards;
+  animation-delay: calc(var(--stagger) * 2);
+}
+.reveal-ready .lp-h1-mark {
+  animation: lp-mark var(--dur-5) var(--ease-move) backwards;
+  animation-delay: calc(var(--dur-7) * 0.8);
+}
 .lp-kicker {
   display: inline-flex;
   align-items: center;
@@ -59,7 +78,6 @@
   color: var(--c-on-ink);
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
-  animation: lp-rise 0.6s var(--ease-out) both;
 }
 .lp-h1 {
   position: relative;
@@ -69,7 +87,6 @@
   line-height: 0.98;
   letter-spacing: -0.035em;
   max-width: 12ch;
-  animation: lp-rise 0.7s 0.08s var(--ease-out) both;
 }
 /* The highlight sweeps in behind the last word, as if the ball had painted it */
 .lp-h1-mark {
@@ -80,7 +97,6 @@
   background: linear-gradient(var(--c-hl), var(--c-hl)) no-repeat left center / 100% 100%;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-  animation: lp-mark 0.5s 0.95s var(--ease-out) both;
 }
 /* The ball: rolls in from the left and comes to rest after the headline */
 .lp-ball {
@@ -94,14 +110,12 @@
   background:
     linear-gradient(var(--c-text), var(--c-text)) center / 100% 0.04em no-repeat,
     linear-gradient(var(--c-text), var(--c-text)) center / 0.04em 100% no-repeat, var(--c-hl);
-  animation: lp-roll 1.25s 0.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .lp-sub {
   max-width: 36ch;
   font-size: clamp(var(--text-lg), 2.4vw, var(--text-2xl));
   line-height: 1.35;
   color: var(--c-text-muted);
-  animation: lp-rise 0.7s 0.18s var(--ease-out) both;
 }
 .lp-sub-roll {
   display: block;
@@ -119,7 +133,7 @@
 }
 .roller-track {
   display: grid;
-  transition: transform 0.6s var(--ease-expo);
+  transition: transform var(--dur-6) var(--ease-enter);
 }
 .roller-word {
   height: 1.35em;
@@ -129,13 +143,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-3);
-  animation: lp-rise 0.7s 0.34s var(--ease-out) both;
 }
 .lp-cta .btn svg {
-  transition: transform var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-3) var(--ease-move);
 }
-.lp-cta .btn:hover svg:last-child {
-  transform: translateX(4px);
+/* The arrow leans toward where the button goes */
+@media (hover: hover) {
+  .lp-cta .btn:hover svg:last-child {
+    transform: translateX(var(--move-1));
+  }
 }
 
 /* City search */
@@ -144,7 +160,6 @@
   max-width: 520px;
   display: grid;
   gap: var(--space-2);
-  animation: lp-rise 0.7s 0.26s var(--ease-out) both;
 }
 .city-search-label {
   font-weight: var(--weight-semibold);
@@ -161,10 +176,11 @@
   border-radius: var(--radius-pill);
   background: var(--c-surface);
   box-shadow: 0 4px 0 var(--c-text);
-  transition: box-shadow var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  transition: box-shadow var(--dur-2) var(--ease-move), transform var(--dur-2) var(--ease-move);
 }
+/* Focus presses the field down onto its shadow: "ready for input" */
 .city-search-row:focus-within {
-  transform: translateY(2px);
+  transform: translateY(calc(var(--move-1) / 2));
   box-shadow: 0 2px 0 var(--c-text), 0 0 0 4px color-mix(in srgb, var(--c-focus) 35%, transparent);
 }
 .city-search-icon {
@@ -200,16 +216,21 @@
   background: var(--c-accent);
   color: var(--c-on-accent);
   font-weight: var(--weight-semibold);
-  transition: background-color var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-2) var(--ease-move), transform var(--dur-1) var(--ease-move);
 }
-.city-search-btn:hover {
-  background: var(--c-accent-hover);
+.city-search-btn:active {
+  transform: scale(var(--scale-press));
 }
 .city-search-btn svg {
-  transition: transform var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-3) var(--ease-move);
 }
-.city-search-btn:hover svg {
-  transform: translateX(3px);
+@media (hover: hover) {
+  .city-search-btn:hover {
+    background: var(--c-accent-hover);
+  }
+  .city-search-btn:hover svg {
+    transform: translateX(var(--move-1));
+  }
 }
 .city-search--stage {
   margin: 0 auto;
@@ -259,12 +280,24 @@
   letter-spacing: var(--tracking-display);
 }
 .lp-live-dot {
+  position: relative;
   width: 10px;
   height: 10px;
   border-radius: 50%;
   background: var(--c-success);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--c-success) 60%, transparent);
-  animation: lp-pulse 2s ease-out infinite;
+}
+/* "Live": a ring pulses three times as the rail arrives, then rests */
+.lp-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--c-success);
+  opacity: 0;
+}
+.reveal-ready .lp-live-dot::after {
+  animation: lp-ring calc(var(--dur-7) * 2) var(--ease-enter) 3;
+  animation-delay: var(--dur-6);
 }
 .lp-more {
   display: inline-flex;
@@ -275,8 +308,16 @@
   font-weight: var(--weight-semibold);
   text-decoration: none;
 }
-.lp-more:hover {
-  text-decoration: underline;
+.lp-more svg {
+  transition: transform var(--dur-3) var(--ease-move);
+}
+@media (hover: hover) {
+  .lp-more:hover {
+    text-decoration: underline;
+  }
+  .lp-more:hover svg {
+    transform: translateX(var(--move-1));
+  }
 }
 .lp-rail {
   list-style: none;
@@ -291,7 +332,13 @@
 }
 .lp-rail-item {
   flex: 0 0 min(380px, 86vw);
-  animation: lp-rise 0.6s calc(0.4s + var(--i, 0) * 70ms) var(--ease-out) both;
+}
+/* Real events arrive one after another with the subtle zoom: "this is live data" */
+.reveal-ready .lp-card-in {
+  --m-move: var(--move-3);
+  --m-scale: var(--scale-enter);
+  animation: m-enter var(--dur-5) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
 }
 .lp-rail-item .event-card {
   height: 100%;
@@ -331,29 +378,26 @@
   font-weight: var(--weight-semibold);
   text-decoration: none;
   transition:
-    transform var(--dur-base) var(--ease-spring),
-    border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
+    transform var(--dur-3) var(--ease-spring),
+    border-color var(--dur-2) var(--ease-move),
+    background-color var(--dur-2) var(--ease-move);
 }
 .lp-sport svg {
   color: var(--sport-color);
 }
-.lp-sport:hover {
-  transform: translateY(-3px) rotate(-1.5deg);
-  border-color: var(--c-ink);
-  text-decoration: none;
+@media (hover: hover) {
+  .lp-sport:hover {
+    transform: translateY(calc(-1 * var(--move-1)));
+    border-color: var(--c-ink);
+    text-decoration: none;
+  }
 }
-/* Chips scatter in one after another */
-.reveal-ready .lp-sports li {
-  opacity: 0;
-  transform: translateY(18px) scale(0.7) rotate(-8deg);
+.lp-sport:active {
+  transform: scale(var(--scale-press));
 }
-.reveal-ready .lp-sports.is-in li {
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity 0.3s calc(var(--i) * 45ms) var(--ease-out),
-    transform 0.55s calc(var(--i) * 45ms) var(--ease-spring);
+/* Chips pop in with the subtle zoom (order from the shared group rule) */
+.reveal-ready .lp-sport-list:not(.is-in) > li {
+  transform: translateY(var(--move-3)) scale(var(--scale-enter));
 }
 
 /* ── How it works: pinned scene ───────────────────────── */
@@ -405,7 +449,7 @@
   background: var(--c-surface);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
-  transition: background-color var(--dur-slow) var(--ease-out), color var(--dur-slow) var(--ease-out);
+  transition: background-color var(--dur-4) var(--ease-move), color var(--dur-4) var(--ease-move);
 }
 .lp-stage[data-step='0'] .lp-chip--near {
   border-color: var(--c-ink);
@@ -419,10 +463,10 @@
   border: 1px solid var(--c-border);
   border-radius: var(--radius-md);
   background: var(--c-surface);
-  transition: transform 0.5s var(--ease-spring), box-shadow var(--dur-slow) var(--ease-out);
+  transition: transform var(--dur-5) var(--ease-spring), box-shadow var(--dur-4) var(--ease-move);
 }
 .lp-stage[data-step='0'] .lp-mock-card {
-  transform: scale(1.03);
+  transform: scale(var(--scale-pop));
   box-shadow: var(--shadow-2);
 }
 .lp-mock-body {
@@ -464,7 +508,7 @@
   height: 8px;
   border-radius: var(--radius-pill);
   background: var(--c-neutral-soft);
-  transition: background-color 0.4s var(--ease-out), transform 0.5s var(--ease-spring);
+  transition: background-color var(--dur-5) var(--ease-move), transform var(--dur-5) var(--ease-spring);
 }
 .lp-mock-dots i.is-taken {
   background: var(--c-success);
@@ -482,7 +526,7 @@
   color: var(--c-on-accent);
   font-weight: var(--weight-bold);
   overflow: hidden;
-  transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out), transform 0.5s var(--ease-spring);
+  transition: background-color var(--dur-5) var(--ease-move), color var(--dur-5) var(--ease-move), transform var(--dur-5) var(--ease-spring);
 }
 .lp-mock-join span {
   position: absolute;
@@ -491,14 +535,14 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  transition: transform 0.45s var(--ease-expo), opacity 0.3s var(--ease-out);
+  transition: transform var(--dur-5) var(--ease-enter), opacity var(--dur-3) var(--ease-move);
 }
 .lp-mock-join-b {
   transform: translateY(100%);
   opacity: 0;
 }
 .lp-stage[data-step='1'] .lp-mock-join {
-  transform: scale(1.04);
+  transform: scale(var(--scale-pop));
 }
 .lp-stage:not([data-step='0']) .lp-mock-join {
   background: var(--c-hl);
@@ -518,11 +562,11 @@
   gap: var(--space-2);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(8px);
+  transform: translateY(var(--move-2));
   transition:
-    opacity 0.4s var(--ease-out),
-    transform 0.5s var(--ease-spring),
-    visibility 0s 0.4s;
+    opacity var(--dur-5) var(--ease-move),
+    transform var(--dur-5) var(--ease-spring),
+    visibility 0s var(--dur-5);
 }
 .lp-mock-go span {
   flex: 1;
@@ -555,7 +599,7 @@
   stroke-linecap: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  transition: stroke-dashoffset 0.9s var(--ease-in-out);
+  transition: stroke-dashoffset var(--dur-7) var(--ease-move);
 }
 .lp-stage[data-step='2'] .lp-mock-route path {
   stroke-dashoffset: 0;
@@ -569,15 +613,53 @@
   stroke-width: 2;
   transform-origin: 270px 16px;
   transform: scale(0);
-  transition: transform 0.5s 0.6s var(--ease-spring);
+  transition: transform var(--dur-5) var(--ease-spring);
+  transition-delay: calc(var(--dur-7) * 0.6);
 }
 .lp-stage[data-step='2'] .lp-mock-route-pin {
   transform: scale(1);
 }
 
 .lp-steps {
+  position: relative;
   list-style: none;
   display: grid;
+  padding-left: var(--space-8);
+}
+/* The step line: fills to the current step while the ball rolls along it */
+.lp-track {
+  position: absolute;
+  left: 8px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--c-border);
+  overflow: hidden;
+}
+.lp-track-fill {
+  display: block;
+  height: 100%;
+  background: var(--c-accent);
+  transform-origin: top;
+  transition: transform var(--dur-5) var(--ease-move);
+}
+.lp-track-ball {
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 19px;
+  height: 19px;
+  border: 2px solid var(--c-text);
+  border-radius: 50%;
+  background:
+    linear-gradient(var(--c-text), var(--c-text)) center / 100% 2px no-repeat,
+    linear-gradient(var(--c-text), var(--c-text)) center / 2px 100% no-repeat, var(--c-hl);
+  transition: transform var(--dur-5) var(--ease-move);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-track-fill,
+  .lp-track-ball {
+    transition: none;
+  }
 }
 .lp-step {
   display: grid;
@@ -590,7 +672,7 @@
 .lp-step > div {
   padding-left: var(--space-4);
   border-left: 3px solid var(--c-border);
-  transition: border-color 0.4s var(--ease-out);
+  transition: border-color var(--dur-5) var(--ease-move);
 }
 .lp-step.is-active > div {
   border-left-color: var(--c-accent);
@@ -605,12 +687,16 @@
   font-family: var(--font-display);
   font-weight: 800;
   font-size: var(--text-xl);
-  transition: background-color 0.4s var(--ease-out), transform 0.5s var(--ease-spring);
+  transition: background-color var(--dur-5) var(--ease-move), color var(--dur-5) var(--ease-move), transform var(--dur-5) var(--ease-spring);
+}
+.lp-step.is-done .lp-step-n {
+  background: var(--c-ink);
+  color: var(--c-on-ink);
 }
 .lp-step.is-active .lp-step-n {
   background: var(--c-hl);
   color: var(--c-on-hl);
-  transform: scale(1.12);
+  transform: scale(calc(1 + (var(--scale-pop) - 1) * 3));
 }
 .lp-step h3 {
   font-family: var(--font-display);
@@ -681,8 +767,13 @@
   border-radius: 50%;
   background: var(--c-stage-accent);
 }
-.reveal-ready .lp-final.is-in .lp-final-ball {
-  animation: lp-drop 0.9s var(--ease-out) both;
+/* Arrival: the ball drops in and bounces, then the search button nods once */
+.reveal-ready .lp-final-inner.is-in > .lp-final-ball {
+  animation: lp-drop var(--dur-7) var(--ease-move) backwards;
+}
+.reveal-ready .lp-final-inner.is-in .city-search-btn {
+  animation: m-pop var(--dur-5) var(--ease-spring) backwards;
+  animation-delay: calc(var(--dur-7) + var(--stagger) * 3);
 }
 .lp-final-links {
   color: var(--c-on-stage-muted);
@@ -692,47 +783,50 @@
   color: var(--c-on-stage);
 }
 
-/* ── Section reveals (only when motion is welcome) ────── */
-.reveal-ready .reveal .lp-h2,
-.reveal-ready .reveal .lp-lead,
-.reveal-ready .reveal .lp-host-facts li,
-.reveal-ready .reveal .city-search {
-  opacity: 0;
-  transform: translateY(24px);
+/* ── Trust ────────────────────────────────────────────── */
+.lp-trust {
+  padding: clamp(var(--space-10), 7vw, var(--space-16)) 0;
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-border);
 }
-.reveal-ready .reveal.is-in .lp-h2,
-.reveal-ready .reveal.is-in .lp-lead,
-.reveal-ready .reveal.is-in .lp-host-facts li,
-.reveal-ready .reveal.is-in .city-search {
-  opacity: 1;
-  transform: none;
-  transition: opacity 0.6s var(--ease-out), transform 0.7s var(--ease-expo);
+.lp-trust-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-6) 0 var(--space-5);
 }
-.reveal-ready .reveal.is-in .lp-host-facts li:nth-child(2) {
-  transition-delay: 90ms;
+.lp-trust-list li {
+  display: grid;
+  gap: var(--space-1);
+  align-content: start;
+  padding: var(--space-5);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-bg);
+  color: var(--c-text-muted);
 }
-.reveal-ready .reveal.is-in .lp-host-facts li:nth-child(3) {
-  transition-delay: 180ms;
+.lp-trust-list strong {
+  color: var(--c-text);
 }
-.lp-final .city-search {
-  animation: none;
+.lp-trust-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--c-hl);
+  color: var(--c-on-hl);
+}
+.lp-trust-more {
+  font-size: var(--text-sm);
+  color: var(--c-text-subtle);
 }
 
-@keyframes lp-rise {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-}
 @keyframes lp-roll {
   from {
-    transform: translateX(-70vw) rotate(-900deg);
-  }
-  78% {
-    transform: translateX(0.12em) rotate(20deg);
-  }
-  to {
-    transform: none;
+    transform: translateX(-60vw) rotate(-720deg);
   }
 }
 @keyframes lp-mark {
@@ -741,31 +835,32 @@
     color: var(--c-text);
   }
 }
-@keyframes lp-pulse {
+@keyframes lp-ring {
+  from {
+    opacity: 0.6;
+  }
   to {
-    box-shadow: 0 0 0 10px transparent;
+    opacity: 0;
+    transform: scale(2.6);
   }
 }
 @keyframes lp-drop {
   0% {
-    transform: translateY(-120px);
+    transform: translateY(calc(var(--move-4) * -5));
     opacity: 0;
   }
   45% {
-    transform: translateY(0);
+    transform: none;
     opacity: 1;
   }
   62% {
-    transform: translateY(-28px);
+    transform: translateY(calc(var(--move-4) * -1));
   }
   78% {
-    transform: translateY(0);
+    transform: none;
   }
   88% {
-    transform: translateY(-8px);
-  }
-  100% {
-    transform: none;
+    transform: translateY(calc(var(--move-4) * -0.33));
   }
 }
 
@@ -797,10 +892,12 @@
   .lp-mock-route {
     height: 36px;
   }
+  /* The pinned scene covers the top of the screen: each step's text sits low in its
+     slot, so the step that is active (middle of the screen) is always readable */
   .lp-step {
-    min-height: 46vh;
-    align-content: start;
-    padding-top: var(--space-6);
+    min-height: 62vh;
+    align-content: end;
+    padding-bottom: var(--space-6);
   }
   .lp-host-inner {
     grid-template-columns: 1fr;

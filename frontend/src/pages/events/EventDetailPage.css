@@ -222,13 +222,12 @@
   border-radius: var(--radius-pill);
   background: var(--c-hl);
   color: var(--c-on-hl);
-  animation: joined-in var(--dur-slow) var(--ease-spring);
 }
-@keyframes joined-in {
-  from {
-    transform: scale(0.94);
-    opacity: 0;
-  }
+/* Success moment: the button turns into the confirmation (only right after joining) */
+.joined-note.just-joined {
+  --m-move: 0px;
+  --m-scale: var(--scale-enter);
+  animation: m-enter var(--dur-4) var(--ease-spring);
 }
 /* Quiet trust line: present, never louder than the join action */
 .event-trust {

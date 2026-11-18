@@ -1,0 +1,130 @@
+/*
+ * Motion primitives. Every moving thing in Hobbook uses these keyframes and
+ * the tokens from tokens.css, so the product moves like one piece.
+ *
+ *   enter   fade + small rise (+ optional zoom), --ease-enter
+ *   exit    fade + shorter drop, --ease-exit, ~0.7× the enter
+ *   move    in-place change, --ease-move
+ *   spring  confirmations only (join, save, toast)
+ *
+ * Under prefers-reduced-motion the travel and scale tokens are neutral, so
+ * the same rules become plain fades. Nothing here is required to read or use
+ * the page.
+ */
+
+@keyframes m-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--m-move, var(--move-2))) scale(var(--m-scale, 1));
+  }
+}
+@keyframes m-exit {
+  to {
+    opacity: 0;
+    transform: translateY(var(--m-move-out, var(--move-1))) scale(var(--m-scale, 1));
+  }
+}
+@keyframes m-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes m-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+/* One-off emphasis: grows a touch and settles */
+@keyframes m-pop {
+  40% {
+    transform: scale(var(--scale-pop));
+  }
+}
+@keyframes m-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* Loading under reduced motion: a slow breath instead of movement */
+@keyframes m-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes m-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ── Utility classes ─────────────────────────────────────── */
+.m-enter {
+  animation: m-enter var(--m-dur, var(--dur-3)) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+.m-fade-in {
+  animation: m-fade-in var(--dur-2) var(--ease-move) backwards;
+}
+
+/* ── Presence (see hooks/usePresence.ts) ─────────────────── */
+.presence {
+  display: contents;
+}
+[data-presence='exit'] {
+  pointer-events: none;
+}
+
+/* ── Scroll reveal (see hooks/useReveal.ts) ──────────────────
+   data-reveal         rise in
+   data-reveal="zoom"  rise in with the subtle zoom
+   data-reveal="group" its direct children follow one another (stagger)
+   Hidden start states exist only under html.reveal-ready.            */
+.reveal-ready [data-reveal]:not([data-reveal='group']),
+.reveal-ready [data-reveal='group'] > * {
+  transition:
+    opacity var(--dur-5) var(--ease-move),
+    transform var(--dur-6) var(--ease-enter);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+}
+.reveal-ready [data-reveal]:not([data-reveal='group']):not(.is-in),
+.reveal-ready [data-reveal='group']:not(.is-in) > * {
+  opacity: 0;
+  transform: translateY(var(--move-4));
+}
+.reveal-ready [data-reveal='zoom']:not(.is-in) {
+  transform: translateY(var(--move-3)) scale(var(--scale-enter));
+}
+/* Group order: the index comes from the position, up to six steps */
+[data-reveal='group'] > :nth-child(2) {
+  --i: 1;
+}
+[data-reveal='group'] > :nth-child(3) {
+  --i: 2;
+}
+[data-reveal='group'] > :nth-child(4) {
+  --i: 3;
+}
+[data-reveal='group'] > :nth-child(5) {
+  --i: 4;
+}
+[data-reveal='group'] > :nth-child(n + 6) {
+  --i: 5;
+}
+
+/* ── Scroll-linked zoom: key visuals settle as they come into view ──
+   Progressive: only where scroll-driven animations exist, never with
+   reduced motion. Elsewhere they simply appear.                       */
+@keyframes m-scroll-zoom {
+  from {
+    transform: scale(var(--scale-enter));
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    [data-scroll-zoom] {
+      animation: m-scroll-zoom linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+}

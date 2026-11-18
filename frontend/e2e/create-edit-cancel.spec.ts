@@ -62,6 +62,8 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   await page.getByRole('button', { name: 'Absagen' }).click()
   await page.getByLabel(/Grund/).fill('Sturmwarnung')
   await page.getByRole('button', { name: 'Event absagen' }).click()
+  // The dialog plays its exit and is then removed from the page
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(page.getByText('Dieses Event wurde abgesagt.')).toBeVisible()
   await expect(page.getByText('Grund: Sturmwarnung')).toBeVisible()
 

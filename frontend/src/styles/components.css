@@ -27,17 +27,17 @@
   white-space: nowrap;
   cursor: pointer;
   transition:
-    background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+    background-color var(--dur-2) var(--ease-move),
+    border-color var(--dur-2) var(--ease-move),
+    color var(--dur-2) var(--ease-move),
+    transform var(--dur-1) var(--ease-move);
 }
 .btn:hover:not(:disabled) {
   background: var(--btn-bg-hover);
   text-decoration: none;
 }
 .btn:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(var(--scale-press));
 }
 .btn:disabled,
 .btn[aria-disabled='true'] {
@@ -161,7 +161,7 @@ fieldset.field {
   border-radius: var(--radius-sm);
   background: var(--c-surface);
   color: var(--c-text);
-  transition: border-color var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+  transition: border-color var(--dur-2) var(--ease-move), box-shadow var(--dur-2) var(--ease-move);
 }
 .input::placeholder,
 .textarea::placeholder {
@@ -251,10 +251,18 @@ fieldset.field {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   cursor: pointer;
-  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition:
+    background-color var(--dur-2) var(--ease-move),
+    border-color var(--dur-2) var(--ease-move),
+    color var(--dur-2) var(--ease-move),
+    transform var(--dur-1) var(--ease-move);
 }
 .chip:hover {
   border-color: var(--c-text-subtle);
+}
+button.chip:active:not(:disabled),
+a.chip:active {
+  transform: scale(var(--scale-press));
 }
 .chip[aria-pressed='true'],
 .chip.is-on {
@@ -331,6 +339,12 @@ fieldset.field {
 .notice > svg {
   margin-top: 2px;
 }
+/* Live feedback arrives (status and alert notices); static hints just sit there */
+.notice[role='status'],
+.notice[role='alert'] {
+  --m-move: var(--move-1);
+  animation: m-enter var(--dur-3) var(--ease-enter) backwards;
+}
 .notice-info {
   background: var(--c-info-soft);
 }
@@ -370,14 +384,30 @@ fieldset.field {
   min-height: var(--control-h);
   padding: 0 var(--space-4);
   background: none;
+  position: relative;
   border: none;
-  border-bottom: 2px solid transparent;
   margin-bottom: -1px;
   color: var(--c-text-muted);
   font-weight: var(--weight-semibold);
   text-decoration: none;
   white-space: nowrap;
-  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+  transition: color var(--dur-2) var(--ease-move);
+}
+/* The selected marker grows out from the centre of the tab */
+.tab::after {
+  content: '';
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-accent);
+  transform: scaleX(0);
+  transition: transform var(--dur-3) var(--ease-move);
+}
+.tab:active {
+  color: var(--c-text);
 }
 .tab:hover {
   color: var(--c-text);
@@ -386,8 +416,10 @@ fieldset.field {
 .tab[aria-selected='true'],
 .tab.tab-active {
   color: var(--c-text);
-  border-bottom-width: 3px;
-  border-bottom-color: var(--c-accent);
+}
+.tab[aria-selected='true']::after,
+.tab.tab-active::after {
+  transform: scaleX(1);
 }
 
 /* ── Empty / error states ────────────────────────────── */
@@ -423,14 +455,11 @@ fieldset.field {
   border-radius: var(--radius-sm);
   background: linear-gradient(90deg, var(--c-surface-2) 0%, var(--c-neutral-soft) 50%, var(--c-surface-2) 100%);
   background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s var(--ease-in-out) infinite;
+  animation: m-shimmer var(--dur-loop) var(--ease-linear) infinite;
 }
-@keyframes skeleton-shimmer {
-  from {
-    background-position: 200% 0;
-  }
-  to {
-    background-position: -200% 0;
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: m-breathe var(--dur-loop) var(--ease-move) infinite;
   }
 }
 

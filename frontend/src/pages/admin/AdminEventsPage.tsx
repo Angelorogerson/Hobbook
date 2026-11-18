@@ -11,6 +11,7 @@ import { sportLabel } from '@/constants/sports'
 import { formatEventDate } from '@/utils/format'
 import AdminNav from './AdminNav'
 import './admin.css'
+import { Presence } from '@/hooks/usePresence'
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<SportEvent[] | null>(null)
@@ -107,38 +108,42 @@ export default function AdminEventsPage() {
         </>
       )}
 
-      {cancelling && (
-        <CancelEventDialog
-          event={cancelling}
-          onClose={() => setCancelling(null)}
-          onCancelled={() => {
-            setCancelling(null)
-            load()
-          }}
-        />
-      )}
-      {deleting && (
-        <ConfirmDialog
-          title="Event endgültig löschen?"
-          confirmLabel="Löschen"
-          onClose={() => setDeleting(null)}
-          onConfirm={async () => {
-            const ev = deleting
-            try {
-              await deleteEvent(ev._id)
-            } catch (err) {
-              setError(apiError(err).message)
-            }
-            setDeleting(null)
-            load()
-          }}
-        >
-          <p>
-            „{deleting.title}“ wird für alle {deleting.participantCount} Teilnehmenden ohne Hinweis entfernt. Für normale
-            Fälle ist „Absagen“ transparenter.
-          </p>
-        </ConfirmDialog>
-      )}
+      <Presence show={!!cancelling}>
+        {cancelling && (
+          <CancelEventDialog
+            event={cancelling}
+            onClose={() => setCancelling(null)}
+            onCancelled={() => {
+              setCancelling(null)
+              load()
+            }}
+          />
+        )}
+      </Presence>
+      <Presence show={!!deleting}>
+        {deleting && (
+          <ConfirmDialog
+            title="Event endgültig löschen?"
+            confirmLabel="Löschen"
+            onClose={() => setDeleting(null)}
+            onConfirm={async () => {
+              const ev = deleting
+              try {
+                await deleteEvent(ev._id)
+              } catch (err) {
+                setError(apiError(err).message)
+              }
+              setDeleting(null)
+              load()
+            }}
+          >
+            <p>
+              „{deleting.title}“ wird für alle {deleting.participantCount} Teilnehmenden ohne Hinweis entfernt. Für normale
+              Fälle ist „Absagen“ transparenter.
+            </p>
+          </ConfirmDialog>
+        )}
+      </Presence>
     </div>
   )
 }

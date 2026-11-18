@@ -36,6 +36,7 @@ import SaveButton from '@/components/events/SaveButton'
 import { Avatar } from '@/components/ui/Avatar'
 import { useToast } from '@/components/ui/Toast'
 import './EventDetailPage.css'
+import { Presence } from '@/hooks/usePresence'
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -338,13 +339,13 @@ export default function EventDetailPage() {
           <div className="card event-action-card">
             <CapacityMeter taken={event.participantCount} max={event.maxParticipants} status={event.status} />
             {feedback && (
-              <p className="notice notice-success" role="status">
+              <p key={feedback} className="notice notice-success" role="status">
                 <CheckCircle2 size={18} aria-hidden="true" />
                 {feedback}
               </p>
             )}
             {actionError && (
-              <p className="notice notice-danger" role="alert">
+              <p key={actionError} className="notice notice-danger" role="alert">
                 <AlertTriangle size={18} aria-hidden="true" />
                 {actionError}
               </p>
@@ -370,7 +371,7 @@ export default function EventDetailPage() {
             )}
             {isActive && event.joined && !event.isOrganizer && (
               <>
-                <p className="joined-note">
+                <p className={`joined-note${feedback === 'Du bist dabei!' ? ' just-joined' : ''}`}>
                   <Check size={18} aria-hidden="true" /> Du bist angemeldet.
                 </p>
                 <button
@@ -431,18 +432,22 @@ export default function EventDetailPage() {
         </aside>
       </div>
 
-      {dialog === 'cancel' && (
-        <CancelEventDialog
-          event={event}
-          onClose={() => setDialog(null)}
-          onCancelled={(e) => {
-            setEvent(e)
-            setDialog(null)
-            setFeedback('Das Event wurde abgesagt.')
-          }}
-        />
-      )}
-      {dialog === 'report' && <ReportDialog eventId={event._id} onClose={() => setDialog(null)} />}
+      <Presence show={dialog === 'cancel'}>
+        {dialog === 'cancel' && (
+          <CancelEventDialog
+            event={event}
+            onClose={() => setDialog(null)}
+            onCancelled={(e) => {
+              setEvent(e)
+              setDialog(null)
+              setFeedback('Das Event wurde abgesagt.')
+            }}
+          />
+        )}
+      </Presence>
+      <Presence show={dialog === 'report'}>
+        {dialog === 'report' && <ReportDialog eventId={event._id} onClose={() => setDialog(null)} />}
+      </Presence>
     </div>
   )
 }

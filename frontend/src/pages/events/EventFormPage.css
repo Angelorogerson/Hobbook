@@ -87,9 +87,10 @@
   text-align: center;
   cursor: pointer;
   transition:
-    border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+    border-color var(--dur-2) var(--ease-move),
+    background-color var(--dur-2) var(--ease-move),
+    color var(--dur-2) var(--ease-move),
+    transform var(--dur-1) var(--ease-move);
 }
 .sport-choice svg {
   color: var(--sport-color);
@@ -98,7 +99,7 @@
   border-color: var(--c-border-strong);
 }
 .sport-choice:active {
-  transform: scale(0.97);
+  transform: scale(var(--scale-press));
 }
 .sport-choice.is-on {
   border-color: var(--c-ink);
@@ -142,12 +143,37 @@
   margin-top: var(--space-2);
 }
 .form-more > summary {
+  transition: color var(--dur-2) var(--ease-move);
   display: flex;
   align-items: center;
   min-height: var(--control-h);
   font-weight: var(--weight-semibold);
   color: var(--c-link);
   cursor: pointer;
+}
+/* Opening reveals the optional fields; the summary arrow turns with it */
+.form-more[open] > :not(summary) {
+  --m-move: var(--move-1);
+  animation: m-enter var(--dur-3) var(--ease-enter) backwards;
+}
+.form-more > summary::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  margin-right: var(--space-3);
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-2) var(--ease-move);
+}
+.form-more[open] > summary::before {
+  transform: rotate(45deg);
+}
+.form-more > summary {
+  list-style: none;
+}
+.form-more > summary::-webkit-details-marker {
+  display: none;
 }
 .form-more[open] > summary {
   margin-bottom: var(--space-3);

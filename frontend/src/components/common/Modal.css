@@ -6,7 +6,7 @@
   place-items: center;
   padding: var(--space-4);
   background: var(--c-overlay);
-  animation: modal-fade var(--dur-base) var(--ease-out);
+  animation: m-fade-in var(--dur-3) var(--ease-move);
 }
 .modal {
   width: 100%;
@@ -18,7 +18,9 @@
   border-radius: var(--radius-lg);
   background: var(--c-surface-raised);
   box-shadow: var(--shadow-2);
-  animation: modal-in var(--dur-slow) var(--ease-out);
+  --m-move: var(--move-2);
+  --m-scale: var(--scale-enter);
+  animation: m-enter var(--dur-4) var(--ease-enter);
 }
 .modal-head {
   display: flex;
@@ -40,16 +42,12 @@
   gap: var(--space-2);
   margin-top: var(--space-5);
 }
-@keyframes modal-fade {
-  from {
-    opacity: 0;
-  }
+/* Leaving: faster than arriving, same path back */
+[data-presence='exit'] .modal-backdrop {
+  animation: m-fade-out var(--dur-4-out) var(--ease-exit) forwards;
 }
-@keyframes modal-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
+[data-presence='exit'] .modal {
+  animation: m-exit var(--dur-4-out) var(--ease-exit) forwards;
 }
 /* Bottom sheet on phones: thumb-reachable actions */
 @media (max-width: 640px) {
@@ -64,5 +62,11 @@
   }
   .modal-actions .btn {
     flex: 1;
+  }
+  /* The sheet rises from the bottom edge and goes back down */
+  .modal {
+    --m-move: 40%;
+    --m-move-out: 40%;
+    --m-scale: 1;
   }
 }
