@@ -94,6 +94,8 @@ export default function EventDetailPage() {
       .finally(() => setBusy(false))
   }, [resume, event, authState.isLoggedIn, navigate, location.pathname])
 
+  const arrival = (location.state as { created?: boolean; updated?: boolean } | null) || {}
+
   if (loading) return <LoadingSpinner fullScreen />
 
   if (loadError || !event) {
@@ -193,6 +195,25 @@ export default function EventDetailPage() {
             </div>
           </header>
 
+          {arrival.created && isActive && (
+            <div className="notice notice-success event-live" role="status">
+              <CheckCircle2 size={20} aria-hidden="true" />
+              <div className="notice-body">
+                <p>
+                  <strong>Dein Event ist live.</strong> Teile den Link, damit Leute mitmachen.
+                </p>
+                <button type="button" className="btn btn-ink btn-sm" onClick={share}>
+                  <Share2 size={14} aria-hidden="true" /> Event teilen
+                </button>
+              </div>
+            </div>
+          )}
+          {arrival.updated && (
+            <p className="notice notice-success" role="status">
+              <CheckCircle2 size={18} aria-hidden="true" />
+              Änderungen gespeichert.
+            </p>
+          )}
           {event.status === 'cancelled' && (
             <div className="notice notice-danger" role="status">
               <XCircle size={20} aria-hidden="true" />

@@ -9,16 +9,14 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   await expect(page.getByRole('heading', { name: 'Event erstellen' })).toBeVisible()
 
   // Inline validation before anything is sent
-  await page.getByRole('button', { name: 'Vorschau ansehen' }).click()
+  await page.getByRole('button', { name: 'Veröffentlichen' }).click()
   await expect(page.getByText('Bitte prüfe die markierten Felder.')).toBeVisible()
   await expect(page.getByText('Bitte wähle eine Sportart')).toBeVisible()
 
   const date = new Date(Date.now() + 3 * 24 * 3600 * 1000)
   const ymd = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 
-  await page.getByLabel('Sportart *', { exact: true }).selectOption('frisbee')
-  await page.getByLabel('Titel *', { exact: true }).fill('Ultimate am Tempelhofer Feld')
-  await page.getByLabel('Beschreibung').fill('Discs sind da.')
+  await page.getByRole('radio', { name: 'Ultimate Frisbee' }).check({ force: true })
   await page.getByLabel('Datum *', { exact: true }).fill(ymd)
   await page.getByLabel('Beginn *', { exact: true }).fill('17:00')
   await page.getByLabel('Ende *', { exact: true }).fill('19:00')
@@ -27,11 +25,20 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   await page.getByRole('list', { name: 'Suchergebnisse' }).getByRole('button').first().click()
   await expect(page.getByText(/Pin gesetzt/)).toBeVisible()
   await expect(page.getByLabel('Stadt *', { exact: true })).toHaveValue('Berlin')
-  await page.getByLabel('Maximale Teilnehmende *', { exact: true }).fill('14')
+  // The title is suggested from sport and meeting point until the organizer writes one
+  await expect(page.getByLabel('Titel *', { exact: true })).toHaveValue('Ultimate Frisbee – Tempelhofer Feld')
+  await page.getByLabel('Titel *', { exact: true }).fill('Ultimate am Tempelhofer Feld')
+  await page.getByLabel('Maximale Teilnehmende *', { exact: true }).fill('13')
+  await page.getByRole('button', { name: 'Eine Person mehr' }).click()
+  await page.getByText('Mehr Optionen').click()
+  await page.getByLabel('Mitbringen').fill('Helles und dunkles Shirt')
+  await page.getByLabel('Beschreibung').fill('Discs sind da.')
 
-  await page.getByRole('button', { name: 'Vorschau ansehen' }).click()
-  await expect(page.getByRole('heading', { name: 'Vorschau' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'So sehen es die anderen' })).toBeVisible()
   await page.getByRole('button', { name: 'Veröffentlichen' }).click()
+
+  await expect(page.getByText('Dein Event ist live.')).toBeVisible()
+  await expect(page.getByText('Helles und dunkles Shirt')).toBeVisible()
 
   await expect(page.getByRole('heading', { name: 'Ultimate am Tempelhofer Feld' })).toBeVisible()
   await expect(page.getByText('1 von 14')).toBeVisible()
@@ -47,8 +54,8 @@ test('Create → visible in discovery → Edit → Cancel', async ({ page }) => 
   await page.getByRole('link', { name: 'Bearbeiten' }).click()
   await expect(page.getByRole('heading', { name: 'Event bearbeiten' })).toBeVisible()
   await page.getByLabel('Titel *', { exact: true }).fill('Ultimate Frisbee am Feld')
-  await page.getByRole('button', { name: 'Vorschau ansehen' }).click()
   await page.getByRole('button', { name: 'Änderungen speichern' }).click()
+  await expect(page.getByText('Änderungen gespeichert.')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Ultimate Frisbee am Feld' })).toBeVisible()
 
   // Cancel with reason: stays visible as cancelled
