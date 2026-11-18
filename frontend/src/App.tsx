@@ -24,6 +24,13 @@ import './App.css'
 const DiscoverPage = lazy(() => import('@/pages/events/DiscoverPage'))
 const EventDetailPage = lazy(() => import('@/pages/events/EventDetailPage'))
 const EventFormPage = lazy(() => import('@/pages/events/EventFormPage'))
+const GroupPage = lazy(() => import('@/pages/groups/GroupPage'))
+const NotificationsPage = lazy(() => import('@/pages/main/NotificationsPage'))
+const PublicProfilePage = lazy(() => import('@/pages/main/PublicProfilePage'))
+const AnswerLinkPage = lazy(() => import('@/pages/main/LinkActionPages').then((m) => ({ default: m.AnswerLinkPage })))
+const MuteLinkPage = lazy(() => import('@/pages/main/LinkActionPages').then((m) => ({ default: m.MuteLinkPage })))
+const AdminMetricsPage = lazy(() => import('@/pages/admin/AdminMetricsPage'))
+const WelcomePage = lazy(() => import('@/pages/auth/WelcomePage'))
 
 export const DISCOVER_PATH = '/entdecken'
 
@@ -101,6 +108,11 @@ export default function App() {
               <Route path="/impressum" element={<ImprintPage />} />
               <Route path="/ueber" element={<AboutPage />} />
               <Route path="/regeln" element={<RulesPage />} />
+              <Route path="/s/:key" element={<GroupPage />} />
+              <Route path="/stammspiel/:key" element={<GroupPage />} />
+              <Route path="/leute/:id" element={<PublicProfilePage />} />
+              <Route path="/antwort/:token" element={<AnswerLinkPage />} />
+              <Route path="/stumm/:token" element={<MuteLinkPage />} />
 
               {/* Signed-in */}
               <Route element={<ProtectedRoute />}>
@@ -108,12 +120,16 @@ export default function App() {
                 <Route path="/events/:id/bearbeiten" element={<EventFormPage />} />
                 <Route path="/meine-events" element={<MyEventsPage />} />
                 <Route path="/profil" element={<ProfilePage />} />
+                <Route path="/benachrichtigungen" element={<NotificationsPage />} />
+                <Route path="/willkommen" element={<WelcomePage />} />
+                <Route path="/stammspiel/:groupId/bearbeiten" element={<EventFormPage />} />
               </Route>
 
               {/* Moderation */}
               <Route element={<ProtectedRoute adminOnly />}>
                 <Route path="/admin" element={<AdminReportsPage />} />
                 <Route path="/admin/events" element={<AdminEventsPage />} />
+                <Route path="/admin/kennzahlen" element={<AdminMetricsPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

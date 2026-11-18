@@ -134,20 +134,28 @@ export const listEventsQuerySchema = z.object({
   radiusKm: z.coerce.number().min(0.1).max(200).optional(),
   includePast: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   includeCancelled: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
+  // Only games of weekly Stammspiele
+  series: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
 
-export const createReportSchema = z.object({
-  eventId: z.string().regex(/^[a-f\d]{24}$/i, 'Event ist ungültig'),
-  reason: z.enum(REPORT_REASONS, { errorMap: () => ({ message: 'Grund ist ungültig' }) }),
-  text: text(0, 1000, 'Beschreibung').optional(),
-});
+// A report is about an event or about a person.
+export const createReportSchema = z
+  .object({
+    eventId: z.string().regex(/^[a-f\d]{24}$/i, 'Event ist ungültig').optional(),
+    userId: z.string().regex(/^[a-f\d]{24}$/i, 'Person ist ungültig').optional(),
+    reason: z.enum(REPORT_REASONS, { errorMap: () => ({ message: 'Grund ist ungültig' }) }),
+    text: text(0, 1000, 'Beschreibung').optional(),
+  })
+  .refine((d) => !d.eventId !== !d.userId, 'Bitte gib ein Event oder eine Person an');
 
 export const updateReportSchema = z.object({
   status: z.enum(REPORT_STATUSES),
   note: text(0, 1000, 'Notiz').optional(),
   cancelEvent: z.boolean().optional(),
+  // Person reports: block the reported account.
+  deactivateUser: z.boolean().optional(),
 });
 
 export const listReportsQuerySchema = z.object({

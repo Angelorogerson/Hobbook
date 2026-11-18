@@ -41,10 +41,16 @@ test('Discover → Detail → Join (sign in only when joining)', async ({ page }
   await expect(page.getByText(/ausgetreten/)).toBeVisible()
 })
 
-test('full events cannot be joined', async ({ page }) => {
+test('a full event offers the waiting list instead of a dead end', async ({ page }) => {
   await page.goto('/entdecken?stadt=M%C3%BCnchen')
   await page.getByRole('link', { name: 'Volleyball am Isarstrand' }).click()
-  await expect(page.getByRole('button', { name: 'Event ist voll' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Mitmachen' })).toHaveCount(0)
+  // Guests see the waiting list too; it completes by itself after signing in.
+  await page.getByRole('button', { name: 'Auf die Warteliste' }).click()
+  await login(page, { email: 'admin@hobbook.test', password: 'test-password-3' })
+  await expect(page.getByText('Du bist auf der Warteliste (Platz 1).')).toBeVisible()
+  await page.getByRole('button', { name: 'Warteliste verlassen' }).click()
+  await expect(page.getByText('Du bist nicht mehr auf der Warteliste.')).toBeVisible()
 })
 
 test('save an event and find it under "Gemerkt"', async ({ page }) => {

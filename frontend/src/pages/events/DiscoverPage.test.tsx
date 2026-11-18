@@ -110,6 +110,22 @@ describe('DiscoverPage', () => {
     expect(screen.getByRole('button', { name: /Kartenausschnitt/ })).toBeInTheDocument()
   })
 
+  it('the "Stammspiele" chip shows only weekly games and lives in the URL', async () => {
+    listEvents.mockResolvedValue({ events: [], total: 0, page: 1, limit: 200 })
+    const user = userEvent.setup()
+    renderPage('/?stadt=Kaiserslautern')
+    await screen.findByText('Hier ist noch nichts los.')
+    const chip = screen.getByRole('button', { name: 'Stammspiele' })
+    await user.click(chip)
+    expect(chip).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() => {
+      const last = listEvents.mock.calls[listEvents.mock.calls.length - 1][0]
+      expect(last).toMatchObject({ city: 'Kaiserslautern', series: true })
+    })
+    expect(screen.getByTestId('location').textContent).toContain('stamm=1')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Stammspiele in Kaiserslautern')
+  })
+
   it('shows an honest empty state with a create action', async () => {
     listEvents.mockResolvedValue({ events: [], total: 0, page: 1, limit: 200 })
     renderPage('/?stadt=Nirgendwo')

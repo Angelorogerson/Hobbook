@@ -84,3 +84,24 @@
     padding-top: var(--space-2) !important;
   }
 }
+
+/* Pilot metrics */
+.metric-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+.metric {
+  display: grid;
+  gap: var(--space-1);
+}
+.metric-label {
+  font-size: var(--text-sm);
+  color: var(--c-text-muted);
+}
+.metric-value {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+}

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const API_PORT = 5055
-const WEB_PORT = 5190
+// Override with E2E_API_PORT / E2E_WEB_PORT when the defaults are busy.
+const API_PORT = Number(process.env.E2E_API_PORT || 5055)
+const WEB_PORT = Number(process.env.E2E_WEB_PORT || 5190)
 
 /**
  * E2E runs against an in-memory MongoDB seeded by backend/scripts/e2e-server.js.
@@ -36,7 +37,7 @@ export default defineConfig({
       stdout: 'pipe',
       reuseExistingServer: false,
       timeout: 180_000,
-      env: { ...(process.env as Record<string, string>), E2E_API_PORT: String(API_PORT), CLIENT_URL: `http://localhost:${WEB_PORT}` },
+      env: { ...(process.env as Record<string, string>), E2E_API_PORT: String(API_PORT), CLIENT_URL: `http://localhost:${WEB_PORT}`, PUBLIC_APP_URL: `http://localhost:${WEB_PORT}` },
     },
     {
       command: `npx vite --port ${WEB_PORT} --strictPort --host localhost`,

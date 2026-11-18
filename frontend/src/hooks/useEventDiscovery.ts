@@ -23,6 +23,8 @@ export interface DiscoveryFilters {
   near: { lat: number; lng: number } | null
   /** Only events that still have a spot (filtered in the browser). */
   freeOnly: boolean
+  /** Only games of weekly Stammspiele. */
+  seriesOnly: boolean
 }
 
 const PAGE_SIZE = 200 // map + list share one result set; the API caps at 200
@@ -112,6 +114,7 @@ export function useEventDiscovery() {
       // A city or map area is the more specific choice and wins over the position.
       near: city || area ? null : near,
       freeOnly: params.get('frei') === '1',
+      seriesOnly: params.get('stamm') === '1',
     }
   }, [params, near])
 
@@ -129,10 +132,11 @@ export function useEventDiscovery() {
       near: filters.near || undefined,
       radiusKm: filters.near ? NEAR_RADIUS_KM : undefined,
       ...rangeFor(filters.when),
+      series: filters.seriesOnly || undefined,
       limit: PAGE_SIZE,
     }),
     // freeOnly is applied in the browser and must not trigger a new request
-    [filters.area, filters.city, filters.sport, filters.near, filters.when]
+    [filters.area, filters.city, filters.sport, filters.near, filters.when, filters.seriesOnly]
   )
 
   useEffect(() => {
@@ -155,7 +159,7 @@ export function useEventDiscovery() {
   }, [query, reloadKey])
 
   const update = useCallback(
-    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich' | 'frei', string | null>>) => {
+    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich' | 'frei' | 'stamm', string | null>>) => {
       setParams(
         (prev) => {
           const next = new URLSearchParams(prev)
@@ -197,6 +201,7 @@ export function useEventDiscovery() {
       update({ stadt: c || null, bereich: null })
     },
     setFreeOnly: (on: boolean) => update({ frei: on ? '1' : null }),
+    setSeriesOnly: (on: boolean) => update({ stamm: on ? '1' : null }),
     setSport: (sport: string) => update({ sport: sport || null }),
     setWhen: (when: WhenFilter) => update({ wann: when === 'all' ? null : when }),
     setArea: (area: BBox) => update({ bereich: serializeArea(area), stadt: null }),

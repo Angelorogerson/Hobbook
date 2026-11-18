@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarCheck, Compass, MapPin, Plus, RefreshCw } from 'lucide-react'
+import { ArrowRight, CalendarCheck, Compass, MapPin, Plus, RefreshCw, Repeat } from 'lucide-react'
 import { getMyEvents, listEvents, type SportEvent } from '@/api/eventApi'
+import { getMyGroups, listGroups, rhythmText, type Group } from '@/api/groupApi'
+import AnswerCard from '@/components/series/AnswerCard'
+import { formatShortWhen } from '@/utils/format'
 import { apiError } from '@/api/axiosInstance'
 import { useAuthContext } from '@/store/AuthContext'
 import EventCard from '@/components/events/EventCard'
@@ -26,16 +29,29 @@ export default function HomePage() {
 
   const [mine, setMine] = useState<SportEvent[] | null>(null)
   const [nearby, setNearby] = useState<SportEvent[] | null>(null)
+  const [groups, setGroups] = useState<Group[]>([])
+  const [openGroups, setOpenGroups] = useState<Group[]>([])
   const [error, setError] = useState('')
   const [reload, setReload] = useState(0)
 
   useEffect(() => {
     let active = true
     setError('')
-    Promise.all([getMyEvents(), listEvents({ city: city || undefined, limit: 12 })])
-      .then(([my, list]) => {
+    Promise.all([
+      getMyEvents(),
+      listEvents({ city: city || undefined, limit: 12 }),
+      getMyGroups().catch(() => [] as Group[]),
+      city ? listGroups({ city, limit: 6 }).catch(() => [] as Group[]) : Promise.resolve([] as Group[]),
+    ])
+      .then(([my, list, myGroups, cityGroups]) => {
         if (!active) return
-        const next = [...my.created, ...my.joined].filter(isUpcoming).sort(byStart)
+        setGroups(myGroups)
+        // Stammspiele nearby that you could join (not the ones you're already in).
+        const myGroupIds = new Set(myGroups.map((g) => g._id))
+        setOpenGroups(cityGroups.filter((g) => !myGroupIds.has(g._id)))
+        // Stammspiel games already sit in "Deine Woche".
+        const inWeek = new Set(myGroups.map((g) => g.upcoming?._id).filter(Boolean))
+        const next = [...my.created, ...my.joined].filter((e) => isUpcoming(e) && !inWeek.has(e._id)).sort(byStart)
         setMine(next)
         const mineIds = new Set(next.map((e) => e._id))
         setNearby(list.events.filter((e) => !mineIds.has(e._id)).slice(0, 6))
@@ -68,6 +84,41 @@ export default function HomePage() {
           </Link>
         </div>
       </header>
+
+      {groups.length > 0 && (
+        <section className="home-section home-week" aria-labelledby="home-week">
+          <div className="home-section-head">
+            <h2 id="home-week">Deine Woche</h2>
+          </div>
+          <ul className="home-week-list">
+            {groups.map((g) => (
+              <li key={g._id} className="card card-pad week-card">
+                <div className="week-card-head">
+                  <div>
+                    <Link to={`/stammspiel/${g._id}`} className="week-card-title">
+                      {g.name}
+                    </Link>
+                    <p className="hint">
+                      <Repeat size={12} aria-hidden="true" /> {rhythmText(g)} · {g.location.placeName}
+                    </p>
+                  </div>
+                  {g.upcoming && <span className="week-card-when num">{formatShortWhen(g.upcoming.startAt, g.upcoming.timezone)}</span>}
+                </div>
+                {g.upcoming ? (
+                  <AnswerCard
+                    compact
+                    event={g.upcoming}
+                    viewerId={user?._id}
+                    onChange={(e) => setGroups((list) => list.map((x) => (x._id === g._id ? { ...x, upcoming: { ...x.upcoming!, ...e } } : x)))}
+                  />
+                ) : (
+                  <p className="hint">Der nächste Termin öffnet bald – du bekommst Bescheid.</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <nav className="home-sports" aria-label={favourites.length ? 'Deine Sportarten' : 'Beliebte Sportarten'}>
         {sportChips.map((key) => (
@@ -107,8 +158,18 @@ export default function HomePage() {
           </div>
         )}
         {mine && mine.length === 0 && (
-          <EmptyState icon={<CalendarCheck size={24} aria-hidden="true" />} title="Noch nichts geplant.">
-            Such dir unten etwas aus und tippe auf „Mitmachen“ – dein nächstes Event erscheint dann hier.
+          <EmptyState
+            icon={<CalendarCheck size={24} aria-hidden="true" />}
+            title="Noch nichts geplant."
+            action={
+              groups.length === 0 ? (
+                <Link to="/events/neu?woche=1" className="btn btn-secondary">
+                  <Repeat size={16} aria-hidden="true" /> Stammspiel anlegen
+                </Link>
+              ) : undefined
+            }
+          >
+            Such dir unten etwas aus und tippe auf „Mitmachen“. Spielt ihr jede Woche? Leg ein Stammspiel an – Hobbook fragt dann jede Woche, wer dabei ist.
           </EmptyState>
         )}
         {mine && mine.length > 0 && (
@@ -166,6 +227,36 @@ export default function HomePage() {
           </ul>
         )}
       </section>
+
+      {openGroups.length > 0 && (
+        <section className="home-section" aria-labelledby="home-groups">
+          <div className="home-section-head">
+            <h2 id="home-groups">Stammspiele in {city}</h2>
+            <Link to={`/entdecken?stamm=1&stadt=${encodeURIComponent(city)}`} className="home-more">
+              Alle ansehen <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          </div>
+          <ul className="home-week-list m-fade-in">
+            {openGroups.map((g) => (
+              <li key={g._id}>
+                <Link to={`/stammspiel/${g._id}`} className="card card-pad open-group">
+                  <span className="open-group-sport">
+                    <SportIcon sport={g.sport} size={14} /> {sportLabel(g.sport)}
+                  </span>
+                  <span className="week-card-title">{g.name}</span>
+                  <span className="hint">
+                    <Repeat size={12} aria-hidden="true" /> {rhythmText(g)} · {g.location.placeName}
+                  </span>
+                  <span className="hint">
+                    {g.memberCount} {g.memberCount === 1 ? 'Mitglied' : 'Mitglieder'}
+                    {g.upcoming ? ` · nächster Termin: ${g.upcoming.counts?.in ?? g.upcoming.participantCount} von ${g.upcoming.maxParticipants} dabei` : ''}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }

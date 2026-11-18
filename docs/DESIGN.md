@@ -247,3 +247,34 @@ One motion language, written as tokens (`styles/tokens.css`), primitives (`style
 - The preference is read live (`useReducedMotion`), so changing it while the page is open takes effect.
 
 **Not used:** parallax, scroll-jacking, blur, 3D tilt, cursor effects, endless decorative loops, animation libraries, and a shared-element morph from card to detail (needs React Router's data router; revisit later).
+
+## 10. Stammspiel (weekly game) surfaces
+
+The answer card (`components/series/AnswerCard.tsx`, `series.css`) is shared by the event page, the Stammspiel page (`/stammspiel/:id`, invite link `/s/:code`) and Home ("Deine Woche").
+
+- **Status ribbon:** *Offen* (neutral, with deadline and countdown) → *Findet statt* (volt lime, ink text) or *Fällt aus* (danger soft, with the reason). One word decides; the reason follows.
+- **Attendance meter:** a fill for "dabei" and a marker at the minimum. The fill turns green once the minimum is reached. Exposed as `role="meter"` with a full sentence as `aria-valuetext`.
+- **Two answers, never three:** "Ich bin dabei" / "Diesmal nicht" side by side; the chosen one is filled (`aria-pressed`). No "vielleicht".
+- **Roster** (members and hosts only): Dabei, Warteliste, Diesmal nicht, Noch keine Antwort. Your own chip is lime and reads "Du".
+- **Waiting list everywhere:** a full single event offers "Auf die Warteliste" instead of a disabled button.
+- **Weekday chips** show "Mo" and are named "Mo, Montag" (label in name, WCAG 2.5.3).
+
+**Motion (state, never decoration)**
+
+| Moment | Motion | Tokens |
+|---|---|---|
+| Answering | Your chip glides (FLIP) from its old row into the new one; the chosen button's icon pops | `--dur-4`, `--ease-spring`, `--scale-pop` |
+| Minimum reached | The marker pops once | `m-pop`, `--dur-4` |
+| Decided "on" | The lime ribbon sweeps in once from the left | `--dur-5`, `--ease-enter` |
+| Decided "off" | The ribbon fades to the danger tone | `--dur-4`, `--ease-move` |
+| Next week opens | The game card enters from the right (time runs left → right) | `--move-4`, `--dur-4` |
+| Bell | The unread dot fades and scales in; it never shakes | `--dur-3`, `--ease-spring` |
+| Email link answered | A check draws itself once | `--dur-5`/`--dur-6` stroke draw |
+
+Under reduced motion the chip jumps, nothing travels or scales, and the ribbon and check just appear.
+
+**More surfaces**
+- **Pending spot** (`components/series/PendingSpot.tsx`): a warning-toned notice with a live countdown ("bitte bis 18:45 bestätigen") and two equal buttons, "Ich komme" / "Doch nicht". It enters with the spring once. While shown, the regular answer buttons are hidden, so there's one decision at a time.
+- **Email link pages** never act on open: the game, the current answer and two buttons, with the email's choice as the primary one.
+- **Welcome** (`/willkommen`): one card, two optional questions, "Weiter" plus a quiet "Überspringen".
+- **Members list:** host actions are text buttons ("Co-Host", "Übergeben", red "Entfernen"), each behind a confirm dialog; blocked people are listed separately with "Sperre aufheben".

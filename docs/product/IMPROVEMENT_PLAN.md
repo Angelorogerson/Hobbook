@@ -2,6 +2,8 @@
 
 Labels used throughout: **[F]** fact I observed in code or the running demo · **[U]** your statement · **[A]** my assumption (not verified) · **[R]** my recommendation.
 
+> **Update 2026-11-18:** the next big improvement was chosen and built as one piece: the **Stammspiel** (see [NEXT_BIG_IMPROVEMENT.md](NEXT_BIG_IMPROVEMENT.md)). It covers B-05 (notifications: bell, email, push), B-06 (groups with weekly series), B-08 (answers, nudges, deadline decision), B-09 (weather on the game and a host warning; Hobbook never cancels by itself), B-07 (link previews via `worker/index.js`), the waiting list, the B-10/B-12 groundwork as reliability *facts* (no score), a public mini profile and B-15 light (admin "Kennzahlen"). Still open from this backlog: B-01 go-live, B-04 password reset and email verification, B-11, B-13, B-14, B-16, B-18.
+
 ## Context
 
 Hobbook is a free community sports-event web app (React/Vite + Express + MongoDB). You asked for a critical audit and an improvement plan. Discovery gave these fixed points [U]:

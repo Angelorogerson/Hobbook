@@ -2,6 +2,7 @@ import { NavLink, Link, useLocation } from 'react-router-dom'
 import { Compass, Home, Plus, CalendarCheck, User, Shield, LogIn } from 'lucide-react'
 import { useAuthContext } from '../../store/AuthContext'
 import { Logo } from '../ui/Brand'
+import NotificationBell, { useUnreadCount } from './NotificationBell'
 import './Navbar.css'
 
 const linkClass = ({ isActive }: { isActive: boolean }) => `nav-link${isActive ? ' active' : ''}`
@@ -15,6 +16,7 @@ export default function Navbar() {
   const { authState } = useAuthContext()
   const { pathname } = useLocation()
   const isAdmin = authState.user?.role === 'admin'
+  const unread = useUnreadCount(authState.isLoggedIn)
   const discoverClass = ({ isActive }: { isActive: boolean }) => linkClass({ isActive: isActive || pathname === '/karte' })
 
   return (
@@ -43,7 +45,10 @@ export default function Navbar() {
             )}
           </nav>
 
+          {authState.isLoggedIn && <NotificationBell unread={unread} className="nav-link topbar-bell" />}
+
           <div className="topbar-actions">
+            {authState.isLoggedIn && <NotificationBell unread={unread} />}
             <Link to="/events/neu" className="btn btn-primary create-btn">
               <Plus size={18} aria-hidden="true" /> Event erstellen
             </Link>

@@ -1,14 +1,17 @@
 import { useState } from 'react'
 import Modal from '@/components/common/Modal'
-import { createReport, REPORT_REASONS } from '@/api/reportApi'
+import { createReport, reportPerson, REPORT_REASONS } from '@/api/reportApi'
 import { apiError } from '@/api/axiosInstance'
 
 interface Props {
-  eventId: string
+  /** Report an event … */
+  eventId?: string
+  /** … or a person (exactly one of the two). */
+  person?: { id: string; name: string }
   onClose: () => void
 }
 
-export default function ReportDialog({ eventId, onClose }: Props) {
+export default function ReportDialog({ eventId, person, onClose }: Props) {
   const [reason, setReason] = useState('')
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -29,7 +32,7 @@ export default function ReportDialog({ eventId, onClose }: Props) {
   }
 
   return (
-    <Modal title="Event melden" onClose={onClose}>
+    <Modal title={person ? `${person.name} melden` : 'Event melden'} onClose={onClose}>
       <form
         onSubmit={async (e) => {
           e.preventDefault()
@@ -40,7 +43,8 @@ export default function ReportDialog({ eventId, onClose }: Props) {
           setBusy(true)
           setError('')
           try {
-            setDone(await createReport(eventId, reason, text.trim() || undefined))
+            const details = text.trim() || undefined
+            setDone(person ? await reportPerson(person.id, reason, details) : await createReport(eventId!, reason, details))
           } catch (err) {
             setError(apiError(err).message)
           } finally {
@@ -50,7 +54,7 @@ export default function ReportDialog({ eventId, onClose }: Props) {
       >
         <fieldset className="field">
           <legend className="label">Was ist das Problem?</legend>
-          {REPORT_REASONS.map((r) => (
+          {REPORT_REASONS.filter((r) => !person || r.key !== 'wrong_info').map((r) => (
             <label key={r.key} className="radio-row">
               <input type="radio" name="reason" value={r.key} checked={reason === r.key} onChange={() => setReason(r.key)} />
               {r.label}

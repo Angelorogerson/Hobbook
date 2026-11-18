@@ -68,4 +68,39 @@ test.describe('accessibility', () => {
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     expect(await seriousViolations(page)).toEqual([])
   })
+
+  test('Stammspiel page, weekly form and notifications', async ({ page }) => {
+    // Guest view of the seeded Stammspiel (invite link)
+    await page.goto('/s/uniplatz')
+    await expect(page.getByRole('heading', { level: 1, name: 'Basketball am Uni-Platz' })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+    // Member and host view, with the answer card and roster
+    await loginFromStart(page, ORGANIZER)
+    await page.goto('/s/uniplatz')
+    await expect(page.getByRole('button', { name: 'Ich bin dabei' })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+    await page.goto('/events/neu?woche=1')
+    await expect(page.getByRole('heading', { level: 1, name: 'Stammspiel anlegen' })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+    await page.goto('/benachrichtigungen')
+    await expect(page.getByRole('heading', { level: 1, name: 'Benachrichtigungen' })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+  })
+
+  test('welcome step and email answer page', async ({ page, request }) => {
+    await loginFromStart(page, ORGANIZER)
+    await page.goto('/willkommen')
+    await expect(page.getByRole('heading', { level: 1, name: /Willkommen/ })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+
+    // A real one-tap link from the in-memory outbox (test-only route of the E2E server).
+    const api = `http://127.0.0.1:${process.env.E2E_API_PORT || 5055}`
+    await request.post(`${api}/api/jobs/run`, { headers: { 'x-job-secret': 'e2e-job-secret' } })
+    const { messages } = await (await request.get(`${api}/__e2e/outbox`)).json()
+    const mail = messages.find((m: { text: string }) => /Ich bin dabei: /.test(m.text))
+    expect(mail).toBeTruthy()
+    await page.goto(new URL(mail.text.match(/Ich bin dabei: (\S+)/)[1]).pathname)
+    await expect(page.getByRole('heading', { level: 1, name: /dabei\?/ })).toBeVisible()
+    expect(await seriousViolations(page)).toEqual([])
+  })
 })

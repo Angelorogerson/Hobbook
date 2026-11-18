@@ -59,13 +59,43 @@ export function PrivacyPage() {
         <li>Den Zeitpunkt, zu dem du bei der Registrierung bestätigt hast, mindestens 16 Jahre alt zu sein.</li>
         <li>Events, die du erstellst: Titel, Beschreibung, Zeit, Ort mit Koordinaten.</li>
         <li>Teilnahmen an Events und Meldungen, die du abschickst.</li>
+        <li>
+          Stammspiele: deine Mitgliedschaft, deine Antworten („dabei“ / „diesmal nicht“, mit Zeitpunkt), deinen Platz auf
+          einer Warteliste und ob du ein Stammspiel stummgeschaltet hast.
+        </li>
+        <li>
+          Nach einem Spiel: ob Organisator:innen dich als nicht erschienen eingetragen haben und ob du widersprochen
+          hast.
+        </li>
+        <li>
+          Wenn du jemanden meldest oder gemeldet wirst: die Meldung (Grund, optionaler Text). Meldungen sieht nur die
+          Moderation. Organisator:innen eines Stammspiels können Mitglieder entfernen und sperren; gespeichert wird dann,
+          wer gesperrt ist.
+        </li>
+        <li>Benachrichtigungen in der App (werden nach 60 Tagen automatisch gelöscht) und deine E-Mail-Einstellung.</li>
+        <li>Wenn du Push aktivierst: die technische Push-Adresse deines Browsers (keine Telefonnummer).</li>
       </ul>
+      <h2>E-Mails und Benachrichtigungen</h2>
+      <p>
+        Wir schreiben dir nur zu Spielen, bei denen du Mitglied oder angemeldet bist: Einladung, eine Erinnerung, wenn
+        du noch nicht geantwortet hast, ob das Spiel stattfindet, eine Erinnerung kurz vorher, sowie Absagen und
+        Änderungen. Keine Werbung, keine Newsletter. E-Mails schaltest du im <Link to="/profil#benachrichtigungen">Profil</Link>{' '}
+        ab, einzelne Stammspiele schaltest du auf ihrer Seite oder über den Link in jeder E-Mail stumm. Die Knöpfe in
+        E-Mails („Ich bin dabei“) enthalten einen signierten Link, der nur für dich und nur bis zum Spielbeginn gilt.
+      </p>
+      <h2>Verlässlichkeit</h2>
+      <p>
+        Auf deinem öffentlichen Profil steht, wie viele Spiele du in den letzten 12 Monaten zugesagt hast, wie oft du
+        als nicht erschienen eingetragen wurdest (ohne Widerspruch) und wie oft du nach der Antwortfrist abgesagt hast.
+        Andere sehen das erst ab 3 Spielen. Es gibt keine Sterne oder Bewertungen.
+      </p>
       <h2>Mindestalter</h2>
       <p>Hobbook richtet sich an Personen ab 16 Jahren. Ein Konto darf nur anlegen, wer mindestens 16 Jahre alt ist.</p>
       <h2>Was öffentlich sichtbar ist</h2>
       <p>
         Bei Events wird der Name des Organisators nur als „Vorname N.“ gezeigt. Die Namen der Teilnehmenden sehen nur
-        Organisator, Teilnehmende und die Moderation. E-Mail-Adressen werden nie öffentlich angezeigt.
+        Organisator, Teilnehmende und die Moderation; bei Stammspielen außerdem die Mitglieder. Wer nicht Mitglied ist,
+        sieht nur Zahlen. E-Mail-Adressen werden nie öffentlich angezeigt.
       </p>
       <h2>Standort</h2>
       <p>
@@ -96,6 +126,18 @@ export function PrivacyPage() {
           „Route“ bei einem Event ist ein Link zu Google Maps. Erst wenn du ihn antippst, öffnet sich Google Maps und
           erhält den Treffpunkt des Events.
         </li>
+        <li>
+          E-Mails verschicken wir über den Versanddienst Brevo (Sendinblue SAS, Paris). Dafür erhält Brevo deine
+          E-Mail-Adresse, deinen Namen und den Inhalt der Nachricht.
+        </li>
+        <li>
+          Die Wettervorhersage für ein Spiel fragt unser Server bei Open-Meteo ab; übertragen werden nur die
+          Koordinaten des Treffpunkts, keine Daten über dich.
+        </li>
+        <li>
+          Push-Nachrichten laufen über den Push-Dienst deines Browsers (z. B. Google, Mozilla oder Apple), falls du
+          Push aktivierst.
+        </li>
         <li>Schriften werden von unserem eigenen Server geladen, nicht von Google.</li>
       </ul>
       <h2>Speicherung im Browser</h2>
@@ -108,7 +150,9 @@ export function PrivacyPage() {
       <h2>Löschung</h2>
       <p>
         Du kannst dein Konto jederzeit im <Link to="/profil">Profil</Link> löschen. Deine anstehenden Events mit
-        Anmeldungen werden dann abgesagt, alle übrigen personenbezogenen Daten werden entfernt.
+        Anmeldungen werden dann abgesagt. Organisierst du ein Stammspiel, übernimmt es dein Co-Host; ohne Co-Host endet
+        es und der offene Termin wird abgesagt. Deine Zusagen, Antworten, Mitgliedschaften und Benachrichtigungen werden
+        gelöscht, frei werdende Plätze gehen an die Warteliste. Alle übrigen personenbezogenen Daten werden entfernt.
       </p>
     </div>
   )
@@ -157,6 +201,15 @@ export function AboutPage() {
         </li>
       </ol>
 
+      <h2>Stammspiele: jede Woche, ohne Gruppenchat-Chaos</h2>
+      <p>
+        Spielt ihr jede Woche zur gleichen Zeit? Leg ein Stammspiel an und teile den Link einmal in eurer Gruppe. Ab
+        dann öffnet Hobbook jede Woche den nächsten Termin, fragt alle „Bist du dabei?“ (Antwort mit einem Tipp, auch
+        direkt aus der E-Mail), erinnert nur die, die noch nicht geantwortet haben, und entscheidet zur Antwortfrist:
+        Genug Zusagen – es findet statt. Zu wenige – alle bekommen Bescheid, dass es ausfällt. Ist ein Spiel voll, kommst
+        du auf die Warteliste und rückst automatisch nach.
+      </p>
+
       <h2>Häufige Fragen</h2>
       <h3>Kostet das etwas?</h3>
       <p>Nein. Hobbook und alle Events sind kostenlos.</p>
@@ -168,7 +221,15 @@ export function AboutPage() {
         Organisator. Mehr dazu in den <Link to="/datenschutz">Datenschutzhinweisen</Link>.
       </p>
       <h3>Was, wenn ein Event abgesagt oder geändert wird?</h3>
-      <p>Abgesagte Events bleiben mit Grund sichtbar. Ändern sich Termin oder Ort, steht das deutlich im Event.</p>
+      <p>
+        Alle Angemeldeten bekommen sofort Bescheid – in der App und per E-Mail. Abgesagte Events bleiben mit Grund
+        sichtbar.
+      </p>
+      <h3>Und bei schlechtem Wetter?</h3>
+      <p>
+        Für die nächsten zwei Tage zeigt jedes Spiel die Wettervorhersage. Bei Unwetter bekommen die
+        Organisator:innen eine Warnung und können mit einem Tipp absagen. Hobbook sagt nie von selbst wegen Wetter ab.
+      </p>
       <h3>Mir kommt ein Event komisch vor.</h3>
       <p>
         Nutze „Melden“ im Event – wir sehen uns das an. Was wir voneinander erwarten, steht in den{' '}
@@ -189,7 +250,15 @@ export function RulesPage() {
       <h2>Miteinander</h2>
       <ul>
         <li>Sei fair und freundlich – auf dem Platz und daneben. Alle Niveaus sind willkommen, wenn das Event es sagt.</li>
-        <li>Wer zusagt, kommt. Wenn es nicht klappt, tritt rechtzeitig aus, damit der Platz frei wird.</li>
+        <li>
+          Wer zusagt, kommt. Wenn es nicht klappt, sag vor der Antwortfrist ab – dann rückt jemand von der Warteliste
+          nach.
+        </li>
+        <li>
+          Organisator:innen können bis 24 Stunden nach einem Spiel eintragen, wer trotz Zusage nicht da war. Wer
+          eingetragen wird, bekommt Bescheid und kann innerhalb von 24 Stunden widersprechen; dann zählt der Eintrag
+          nicht. Bitte nutze das ehrlich und nur für echte No-Shows.
+        </li>
         <li>Als Organisator: Halte Angaben aktuell und sage ab, statt einfach nicht zu erscheinen.</li>
       </ul>
       <h2>Sicher treffen</h2>
@@ -205,6 +274,20 @@ export function RulesPage() {
         <li>Beleidigungen, Diskriminierung oder Belästigung.</li>
         <li>Falsche Angaben zu Ort, Zeit oder Art des Events.</li>
       </ul>
+      <h2>Warteliste und Nachrücken</h2>
+      <ul>
+        <li>Ist ein Spiel voll, kannst du dich auf die Warteliste setzen. Wird ein Platz frei, rückt die erste Person automatisch nach.</li>
+        <li>
+          Wird ein Platz erst in den letzten 6 Stunden vor Beginn frei, musst du innerhalb von 30 Minuten bestätigen –
+          sonst geht der Platz an die nächste Person. So steht niemand mit einem Platz da, den er nicht mehr nutzen kann.
+        </li>
+      </ul>
+      <h2>Stammspiele: entfernen und sperren</h2>
+      <p>
+        Organisator:innen und Co-Hosts können Mitglieder entfernen und, wenn nötig, sperren. Gesperrte können nicht
+        wieder beitreten oder antworten. Bei ernsten Problemen melde die Person über ihr Profil („Person melden“); die
+        Moderation kann Konten sperren.
+      </p>
       <p>
         Fällt dir etwas auf, nutze „Melden“ im Event. Gemeldete Events werden geprüft und können entfernt werden.
       </p>

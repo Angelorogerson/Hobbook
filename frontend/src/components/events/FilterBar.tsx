@@ -10,6 +10,7 @@ interface Props {
   onSport: (sport: string) => void
   onWhen: (when: WhenFilter) => void
   onFreeOnly: (on: boolean) => void
+  onSeriesOnly?: (on: boolean) => void
   onClearArea: () => void
   onReset: () => void
   /** Search around the viewer's position (asks the browser for permission). */
@@ -29,6 +30,7 @@ export default function FilterBar({
   onSport,
   onWhen,
   onFreeOnly,
+  onSeriesOnly,
   onClearArea,
   onReset,
   onNearMe,
@@ -39,7 +41,7 @@ export default function FilterBar({
   const [city, setCity] = useState(filters.city)
   useEffect(() => setCity(filters.city), [filters.city])
 
-  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near || filters.freeOnly)
+  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near || filters.freeOnly || filters.seriesOnly)
 
   return (
     <div className="filterbar">
@@ -114,6 +116,11 @@ export default function FilterBar({
         <button type="button" className="chip" aria-pressed={filters.freeOnly} onClick={() => onFreeOnly(!filters.freeOnly)}>
           Plätze frei
         </button>
+        {onSeriesOnly && (
+          <button type="button" className="chip" aria-pressed={filters.seriesOnly} onClick={() => onSeriesOnly(!filters.seriesOnly)}>
+            Stammspiele
+          </button>
+        )}
 
         {filters.area && (
           <button type="button" className="chip is-on" onClick={onClearArea}>

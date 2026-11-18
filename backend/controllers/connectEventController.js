@@ -1,6 +1,12 @@
-import { ConnectEvent, Report, User } from '../models/index.js';
+import { ConnectEvent, Group, Report, User } from '../models/index.js';
 import { serializeEvent } from '../utils/serializeEvent.js';
 import { cityKey, escapeRegex } from '../utils/text.js';
+import { formatWhen } from '../utils/time.js';
+import { joinOrWait, leaveAndPromote, isLate, ACTIVE } from '../services/attendance.js';
+import { notify } from '../services/notify.js';
+import { announceDecision, isHost } from '../services/stammspiel.js';
+import { afterPromotion, confirmSpot } from '../services/promotion.js';
+import { isBlocked } from '../services/groupAdmin.js';
 
 const CREATOR_FIELDS = 'name';
 const CREATOR_DETAIL_FIELDS = 'name createdAt';
@@ -11,7 +17,7 @@ const notFound = (res) => res.status(404).json({ message: 'Event nicht gefunden'
 const isOwnerOrAdmin = (event, user) =>
   user.role === 'admin' || event.creator.toString() === user._id.toString();
 
-function toLocationDoc(loc) {
+export function toLocationDoc(loc) {
   return {
     placeName: loc.placeName,
     address: loc.address,
@@ -22,11 +28,44 @@ function toLocationDoc(loc) {
   };
 }
 
+const GROUP_FIELDS = 'name weekday startTime rsvpMode organizer coHosts members inviteCode visibility active';
+const GROUP_LIST_FIELDS = 'name weekday startTime rsvpMode';
+
 async function loadForResponse(id) {
   return ConnectEvent.findById(id)
     .populate('creator', CREATOR_DETAIL_FIELDS)
     .populate('participants', PARTICIPANT_FIELDS)
+    .populate('waitlist', PARTICIPANT_FIELDS)
+    .populate('responses.user', PARTICIPANT_FIELDS)
+    .populate({ path: 'group', select: GROUP_FIELDS, populate: { path: 'members.user', select: PARTICIPANT_FIELDS } })
     .lean();
+}
+
+const respond = async (res, req, id, extra = {}) => {
+  const full = await loadForResponse(id);
+  return res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }), ...extra });
+};
+
+/** Everyone affected by a change, except the person who made it. */
+const audience = (event, actorId) =>
+  [...(event.participants || []), ...(event.waitlist || [])].map(String).filter((id) => id !== String(actorId));
+
+const notifyPromoted = (event, promoted) => afterPromotion(event, promoted, new Date());
+
+/** Tell participants (and the waiting list) that time or place changed. */
+export async function notifyChanged(updated, actorId, { timeChanged, placeChanged }) {
+  if (!timeChanged && !placeChanged) return;
+  const what = timeChanged && placeChanged ? 'Zeit und Ort wurden' : timeChanged ? 'Die Zeit wurde' : 'Der Ort wurde';
+  await notify({
+    users: audience(updated, actorId),
+    type: 'changed',
+    title: `Geändert: ${updated.title}`,
+    body: `${what} geändert. Jetzt: ${formatWhen(updated.startAt, updated.timezone)} · ${updated.location?.placeName || ''}`,
+    link: `/events/${updated._id}`,
+    event: updated,
+    group: updated.group || undefined,
+    important: true,
+  });
 }
 
 /**
@@ -47,6 +86,7 @@ export const getEvents = async (req, res) => {
   if (q.to) filter.startAt = { $lte: q.to };
 
   if (q.sport?.length) filter.sport = { $in: q.sport };
+  if (q.series) filter.group = { $ne: null };
   if (q.city) {
     const key = cityKey(q.city);
     if (key) filter['location.cityKey'] = { $regex: `^${escapeRegex(key)}` };
@@ -73,6 +113,7 @@ export const getEvents = async (req, res) => {
       .skip(skip)
       .limit(q.limit)
       .populate('creator', CREATOR_FIELDS)
+      .populate('group', GROUP_LIST_FIELDS)
       .lean(),
     ConnectEvent.countDocuments(filter),
   ]);
@@ -89,10 +130,15 @@ export const getEvents = async (req, res) => {
 export const getMyEvents = async (req, res) => {
   const uid = req.user._id;
   const [created, joined] = await Promise.all([
-    ConnectEvent.find({ creator: uid }).sort({ startAt: 1 }).populate('creator', CREATOR_FIELDS).lean(),
-    ConnectEvent.find({ participants: uid, creator: { $ne: uid } })
+    ConnectEvent.find({ creator: uid })
       .sort({ startAt: 1 })
       .populate('creator', CREATOR_FIELDS)
+      .populate('group', GROUP_LIST_FIELDS)
+      .lean(),
+    ConnectEvent.find({ $or: [{ participants: uid }, { waitlist: uid }], creator: { $ne: uid } })
+      .sort({ startAt: 1 })
+      .populate('creator', CREATOR_FIELDS)
+      .populate('group', GROUP_LIST_FIELDS)
       .lean(),
   ]);
   // Bookmarked events in the order they start; deleted events simply drop out.
@@ -231,6 +277,8 @@ export const updateEvent = async (req, res) => {
     return res.status(409).json({ message: 'Event kann nicht mehr bearbeitet werden' });
   }
 
+  if (set.changedAt) await notifyChanged(updated, req.user._id, { timeChanged: !!timeChanged, placeChanged: !!placeChanged });
+
   const full = await loadForResponse(updated._id);
   res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }) });
 };
@@ -239,18 +287,43 @@ export const updateEvent = async (req, res) => {
 export const cancelEvent = async (req, res) => {
   const event = await ConnectEvent.findById(req.params.id);
   if (!event) return notFound(res);
-  if (!isOwnerOrAdmin(event, req.user)) {
+  const group = event.group ? await Group.findById(event.group).lean() : null;
+  if (!(isOwnerOrAdmin(event, req.user) || (group && isHost(group, req.user)))) {
     return res.status(403).json({ message: 'Nur der Organisator darf dieses Event absagen' });
   }
-  const updated = await ConnectEvent.findOneAndUpdate(
-    { _id: event._id, status: { $in: ['open', 'full'] }, endAt: { $gte: new Date() } },
-    { $set: { status: 'cancelled', cancelledAt: new Date(), cancelledReason: req.validated.body.reason || '' } },
-    { new: true }
-  );
+  const updated = await cancelWithNotice(event, req.validated.body.reason || '', req.user._id);
   if (!updated) return res.status(409).json({ message: 'Event ist bereits abgesagt oder vorbei' });
-  const full = await loadForResponse(updated._id);
-  res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }) });
+  return respond(res, req, updated._id);
 };
+
+/** Cancel an active event and tell everyone affected. Returns the updated event or null. */
+export async function cancelWithNotice(event, reason, actorId) {
+  const now = new Date();
+  const updated = await ConnectEvent.findOneAndUpdate(
+    { _id: event._id, status: { $in: ACTIVE }, endAt: { $gte: now } },
+    {
+      $set: {
+        status: 'cancelled',
+        cancelledAt: now,
+        cancelledReason: reason,
+        ...(event.group && { decision: 'off', decidedAt: now }),
+      },
+    },
+    { new: true }
+  ).lean();
+  if (!updated) return null;
+  await notify({
+    users: audience(updated, actorId),
+    type: event.group ? 'decision_off' : 'cancelled',
+    title: event.group ? `${updated.title} fällt aus` : `Abgesagt: ${updated.title}`,
+    body: `${formatWhen(updated.startAt, updated.timezone)}.${reason ? ` Grund: ${reason}` : ''}`,
+    link: `/events/${updated._id}`,
+    event: updated,
+    group: updated.group || undefined,
+    important: true,
+  });
+  return updated;
+}
 
 /**
  * DELETE /api/events/:id — hard delete only while nobody else has joined;
@@ -275,88 +348,200 @@ export const deleteEvent = async (req, res) => {
   res.json({ message: 'Event gelöscht' });
 };
 
-/** POST /api/events/:id/join — atomic, idempotent. */
+/** Stammspiel games: answering "in" also makes you a member of the Stammspiel. */
+async function ensureMember(event, uid) {
+  if (!event.group) return;
+  await Group.updateOne(
+    { _id: event.group, active: true, 'members.user': { $ne: uid } },
+    { $push: { members: { user: uid, joinedAt: new Date() } } }
+  );
+}
+
+async function explainNotJoinable(res, req, id, uid, now) {
+  const event = await ConnectEvent.findById(id).lean();
+  if (!event) return notFound(res);
+  if (event.participants.some((p) => p.toString() === uid.toString())) {
+    return respond(res, req, event._id, { alreadyJoined: true });
+  }
+  if (event.status === 'cancelled') return res.status(409).json({ message: 'Dieses Event wurde abgesagt' });
+  if (event.startAt <= now || event.status === 'completed') {
+    return res.status(409).json({ message: 'Dieses Event hat bereits begonnen oder ist vorbei' });
+  }
+  return res.status(409).json({ message: 'Dieses Event ist leider voll' });
+}
+
+async function answerIn(req, res, meta) {
+  const uid = req.user._id;
+  const now = new Date();
+  if (meta.group) {
+    const group = await Group.findById(meta.group).select('blocked').lean();
+    if (isBlocked(group, uid)) return res.status(403).json({ message: 'Du kannst diesem Stammspiel nicht beitreten.' });
+  }
+  const updated = await joinOrWait(req.params.id, uid, { now, waitIfFull: true, record: true });
+  if (!updated) {
+    const event = await ConnectEvent.findById(req.params.id).lean();
+    if (!event) return notFound(res);
+    if (event.status === 'cancelled' || event.decision === 'off') {
+      return res.status(409).json({ message: 'Dieser Termin fällt aus' });
+    }
+    return res.status(409).json({ message: 'Dieser Termin hat bereits begonnen oder ist vorbei' });
+  }
+  await ensureMember(meta, uid);
+  await confirmSpot(updated._id, uid);
+  return respond(res, req, updated._id);
+}
+
+async function answerOut(req, res, meta) {
+  const uid = req.user._id;
+  const now = new Date();
+  const result = await leaveAndPromote(req.params.id, uid, { now, record: true, late: isLate(meta, now), allowCreator: true });
+  if (!result) {
+    const event = await ConnectEvent.findById(req.params.id).lean();
+    if (!event) return notFound(res);
+    return res.status(409).json({ message: 'Dieser Termin hat bereits begonnen oder fällt aus' });
+  }
+  await notifyPromoted(result.after, result.promoted);
+  return respond(res, req, result.after._id);
+}
+
+/** POST /api/events/:id/join — atomic, idempotent. Stammspiel games behave like answering "in". */
 export const joinEvent = async (req, res) => {
   const uid = req.user._id;
   const now = new Date();
+  const meta = await ConnectEvent.findById(req.params.id).select('group').lean();
+  if (!meta) return notFound(res);
+  if (meta.group) return answerIn(req, res, meta);
 
-  // Single atomic update: condition (open, future, not joined, capacity left) + push + status.
-  const updated = await ConnectEvent.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      status: 'open',
-      startAt: { $gt: now },
-      participants: { $ne: uid },
-      $expr: { $lt: [{ $size: '$participants' }, '$maxParticipants'] },
-    },
-    [
-      { $set: { participants: { $concatArrays: ['$participants', [uid]] } } },
-      {
-        $set: {
-          status: { $cond: [{ $gte: [{ $size: '$participants' }, '$maxParticipants'] }, 'full', 'open'] },
-        },
-      },
-    ],
-    { new: true }
-  );
-
-  if (!updated) {
-    const event = await ConnectEvent.findById(req.params.id).lean();
-    if (!event) return notFound(res);
-    if (event.participants.some((p) => p.toString() === uid.toString())) {
-      const full = await loadForResponse(event._id);
-      return res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }), alreadyJoined: true });
-    }
-    if (event.status === 'cancelled') return res.status(409).json({ message: 'Dieses Event wurde abgesagt' });
-    if (event.startAt <= now || event.status === 'completed') {
-      return res.status(409).json({ message: 'Dieses Event hat bereits begonnen oder ist vorbei' });
-    }
-    return res.status(409).json({ message: 'Dieses Event ist leider voll' });
+  const updated = await joinOrWait(req.params.id, uid, { now, waitIfFull: false, record: true });
+  if (!updated || !updated.participants.some((p) => p.toString() === uid.toString())) {
+    return explainNotJoinable(res, req, req.params.id, uid, now);
   }
-
-  const full = await loadForResponse(updated._id);
-  res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }) });
+  return respond(res, req, updated._id);
 };
 
-/** POST /api/events/:id/leave — atomic; the organizer cannot leave (must cancel). */
+/** POST /api/events/:id/waitlist — queue for a full event; the first in line moves up automatically. */
+export const joinWaitlist = async (req, res) => {
+  const uid = req.user._id;
+  const now = new Date();
+  const updated = await joinOrWait(req.params.id, uid, { now, waitIfFull: true });
+  if (!updated) return explainNotJoinable(res, req, req.params.id, uid, now);
+  return respond(res, req, updated._id);
+};
+
+/** POST /api/events/:id/answer — { answer: 'in' | 'out' } for Stammspiel games. */
+export const answerEvent = async (req, res) => {
+  const meta = await ConnectEvent.findById(req.params.id).select('group deadlineAt startAt').lean();
+  if (!meta) return notFound(res);
+  if (!meta.group) return res.status(400).json({ message: 'Nur für Stammspiele' });
+  return req.validated.body.answer === 'in' ? answerIn(req, res, meta) : answerOut(req, res, meta);
+};
+
+/** POST /api/events/:id/leave — frees the spot for the waiting list. The organizer of a single event cannot leave. */
 export const leaveEvent = async (req, res) => {
   const uid = req.user._id;
   const now = new Date();
+  const meta = await ConnectEvent.findById(req.params.id).select('group deadlineAt startAt creator').lean();
+  if (!meta) return notFound(res);
+  if (meta.group) return answerOut(req, res, meta);
 
-  const updated = await ConnectEvent.findOneAndUpdate(
-    {
-      _id: req.params.id,
-      participants: uid,
-      creator: { $ne: uid },
-      status: { $in: ['open', 'full'] },
-      startAt: { $gt: now },
-    },
-    [
-      { $set: { participants: { $filter: { input: '$participants', cond: { $ne: ['$$this', uid] } } } } },
-      {
-        $set: {
-          status: { $cond: [{ $lt: [{ $size: '$participants' }, '$maxParticipants'] }, 'open', 'full'] },
-        },
-      },
-    ],
-    { new: true }
-  );
-
-  if (!updated) {
+  // Single events also keep the answer history, so late cancellations count for reliability.
+  const result = await leaveAndPromote(req.params.id, uid, { now, record: true, requireMember: true, late: isLate(meta, now) });
+  if (!result) {
     const event = await ConnectEvent.findById(req.params.id).lean();
-    if (!event) return notFound(res);
     if (event.creator.toString() === uid.toString()) {
       return res.status(409).json({ message: 'Als Organisator kannst du nicht austreten. Sage das Event stattdessen ab.' });
     }
-    if (!event.participants.some((p) => p.toString() === uid.toString())) {
-      const full = await loadForResponse(event._id);
-      return res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }), alreadyLeft: true });
+    if (![...event.participants, ...(event.waitlist || [])].some((p) => p.toString() === uid.toString())) {
+      return respond(res, req, event._id, { alreadyLeft: true });
     }
     return res.status(409).json({ message: 'Austreten ist nach Beginn oder bei abgesagten Events nicht möglich' });
   }
+  await notifyPromoted(result.after, result.promoted);
+  return respond(res, req, result.after._id);
+};
 
-  const full = await loadForResponse(updated._id);
-  res.json({ event: serializeEvent(full, { viewer: req.user, detail: true }) });
+/** POST /api/events/:id/confirm-spot — "Ich komme" after moving up shortly before kick-off. */
+export const confirmPromotion = async (req, res) => {
+  const ok = await confirmSpot(req.params.id, req.user._id);
+  if (!ok) {
+    const event = await ConnectEvent.findById(req.params.id).select('_id').lean();
+    if (!event) return notFound(res);
+  }
+  return respond(res, req, req.params.id, { confirmed: ok });
+};
+
+/** POST /api/events/:id/decide — hosts call the game early: { decision: 'on' | 'off', reason? }. */
+export const decideEvent = async (req, res) => {
+  const event = await ConnectEvent.findById(req.params.id).lean();
+  if (!event) return notFound(res);
+  const group = event.group ? await Group.findById(event.group).lean() : null;
+  if (!(isOwnerOrAdmin(event, req.user) || (group && isHost(group, req.user)))) {
+    return res.status(403).json({ message: 'Nur Organisator:innen können das entscheiden' });
+  }
+  const { decision, reason } = req.validated.body;
+  if (decision === 'off') {
+    const updated = await cancelWithNotice(event, reason || '', req.user._id);
+    if (!updated) return res.status(409).json({ message: 'Dieser Termin ist bereits abgesagt oder vorbei' });
+    return respond(res, req, updated._id);
+  }
+  if (!group) return res.status(400).json({ message: 'Nur für Stammspiele' });
+  const updated = await ConnectEvent.findOneAndUpdate(
+    { _id: event._id, decision: 'open', status: { $in: ACTIVE }, startAt: { $gt: new Date() } },
+    { $set: { decision: 'on', decidedAt: new Date() } },
+    { new: true }
+  ).lean();
+  if (!updated) return res.status(409).json({ message: 'Dieser Termin ist bereits entschieden' });
+  await announceDecision(updated, group, true);
+  return respond(res, req, updated._id);
+};
+
+const NO_SHOW_WINDOW_MS = 24 * 3600 * 1000;
+
+/** PUT /api/events/:id/no-shows — hosts mark who didn't come, until 24 h after the end. */
+export const markNoShows = async (req, res) => {
+  const event = await ConnectEvent.findById(req.params.id);
+  if (!event) return notFound(res);
+  const group = event.group ? await Group.findById(event.group).lean() : null;
+  if (!(isOwnerOrAdmin(event, req.user) || (group && isHost(group, req.user)))) {
+    return res.status(403).json({ message: 'Nur Organisator:innen können das eintragen' });
+  }
+  const now = Date.now();
+  const end = event.endAt.getTime();
+  if (event.status === 'cancelled' || now < end || now > end + NO_SHOW_WINDOW_MS) {
+    return res.status(409).json({ message: 'Das geht nur in den 24 Stunden nach dem Spiel' });
+  }
+  const allowed = new Set(event.participants.map(String).filter((id) => id !== String(req.user._id)));
+  const wanted = [...new Set(req.validated.body.userIds)].filter((id) => allowed.has(id));
+  const existing = new Map(event.noShows.map((n) => [String(n.user), n]));
+  const fresh = wanted.filter((id) => !existing.has(id));
+  event.noShows = wanted.map((id) => existing.get(id) || { user: id, markedAt: new Date(now) });
+  await event.save();
+  await notify({
+    users: fresh,
+    type: 'no_show',
+    title: `Als nicht erschienen eingetragen: ${event.title}`,
+    body: 'Stimmt das nicht? Du kannst innerhalb von 24 Stunden widersprechen.',
+    link: `/events/${event._id}`,
+    event,
+    email: false,
+  });
+  return respond(res, req, event._id);
+};
+
+/** POST /api/events/:id/dispute — the marked person disagrees (within 24 h). */
+export const disputeNoShow = async (req, res) => {
+  const uid = String(req.user._id);
+  const event = await ConnectEvent.findById(req.params.id);
+  if (!event) return notFound(res);
+  const mark = event.noShows.find((n) => String(n.user) === uid);
+  if (!mark) return res.status(404).json({ message: 'Kein Eintrag gefunden' });
+  if (Date.now() > mark.markedAt.getTime() + NO_SHOW_WINDOW_MS) {
+    return res.status(409).json({ message: 'Die Frist zum Widersprechen ist abgelaufen' });
+  }
+  mark.disputed = true;
+  mark.disputeNote = req.validated.body.note || '';
+  await event.save();
+  return respond(res, req, event._id);
 };
 
 // ─── ADMIN ───

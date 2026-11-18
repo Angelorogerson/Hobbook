@@ -8,6 +8,7 @@ export interface User {
   role: 'user' | 'admin'
   city?: string
   sports?: string[]
+  emailNotifications?: boolean
 }
 
 export interface AuthState {
@@ -53,7 +54,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   register: (userData: RegisterInput) => Promise<void>
   logout: () => void
-  updateUser: (userData: Partial<Pick<User, 'name' | 'city' | 'sports'>>) => Promise<void>
+  updateUser: (userData: Partial<Pick<User, 'name' | 'city' | 'sports' | 'emailNotifications'>>) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -102,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOGOUT' })
   }, [])
 
-  const updateUser = useCallback(async (userData: Partial<Pick<User, 'name' | 'city' | 'sports'>>) => {
+  const updateUser = useCallback(async (userData: Partial<Pick<User, 'name' | 'city' | 'sports' | 'emailNotifications'>>) => {
     const { data } = await api.put('/users/me', userData)
     dispatch({ type: 'UPDATE_USER', payload: data.user })
   }, [])

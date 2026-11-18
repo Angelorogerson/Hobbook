@@ -1,4 +1,8 @@
-import { User, ConnectEvent, Report } from '../models/index.js';
+import { User, ConnectEvent, Report, Group, Notification } from '../models/index.js';
+import { cancelWithNotice } from './connectEventController.js';
+import { leaveAndPromote } from '../services/attendance.js';
+import { afterPromotion } from '../services/promotion.js';
+import { transferGroup } from '../services/groupAdmin.js';
 import { SPORT_KEYS } from '../config/sports.js';
 import { cleanText } from '../utils/text.js';
 
@@ -9,7 +13,34 @@ const publicUser = (u) => ({
   role: u.role,
   city: u.city || '',
   sports: u.sports || [],
+  emailNotifications: u.emailNotifications !== false,
 });
+
+/**
+ * Before an account is deleted: Stammspiele it organizes go to the longest-serving
+ * co-host, or end (and their open game is called off). Memberships, co-host roles
+ * and blocks are removed everywhere.
+ */
+async function removeFromStammspiele(uid, now) {
+  const organized = await Group.find({ organizer: uid, active: true }).lean();
+  for (const g of organized) {
+    const coHosts = (g.coHosts || []).map(String).filter((c) => c !== String(uid));
+    const successor = (g.members || [])
+      .filter((m) => coHosts.includes(String(m.user)))
+      .sort((a, b) => new Date(a.joinedAt) - new Date(b.joinedAt))[0];
+    if (successor) {
+      await transferGroup(g, successor.user, {
+        keepPrevious: false,
+        reason: 'Die bisherige Organisator:in hat ihr Konto gelöscht. Als Co-Host übernimmst du jetzt das Stammspiel.',
+      });
+    } else {
+      await Group.updateOne({ _id: g._id }, { $set: { active: false, endedAt: now } });
+      const open = await ConnectEvent.find({ group: g._id, status: { $in: ['open', 'full'] }, startAt: { $gt: now } }).lean();
+      for (const e of open) await cancelWithNotice(e, 'Die Organisator:in hat ihr Konto gelöscht', uid);
+    }
+  }
+  await Group.updateMany({}, { $pull: { members: { user: uid }, coHosts: uid, blocked: uid } });
+}
 
 /** PUT /api/users/me — name, city, sports only. */
 const updateMe = async (req, res) => {
@@ -27,6 +58,13 @@ const updateMe = async (req, res) => {
       return res.status(400).json({ message: 'Ungültige Sportarten', errors: { sports: 'Ungültige Sportarten' } });
     }
     set.sports = [...new Set(req.body.sports)];
+  }
+
+  if (req.body.emailNotifications !== undefined) {
+    if (typeof req.body.emailNotifications !== 'boolean') {
+      return res.status(400).json({ message: 'Ungültige Einstellung', errors: { emailNotifications: 'Ungültig' } });
+    }
+    set.emailNotifications = req.body.emailNotifications;
   }
 
   const user = await User.findByIdAndUpdate(req.user._id, { $set: set }, { new: true, runValidators: true });
@@ -63,17 +101,14 @@ const deleteMe = async (req, res) => {
 
   const uid = user._id;
   const now = new Date();
+  await removeFromStammspiele(uid, now);
+
   const own = await ConnectEvent.find({ creator: uid }).lean();
   for (const e of own) {
     const others = e.participants.filter((p) => p.toString() !== uid.toString());
     if (others.length > 0 && e.endAt >= now && ['open', 'full'].includes(e.status)) {
-      await ConnectEvent.updateOne(
-        { _id: e._id },
-        {
-          $set: { status: 'cancelled', cancelledAt: now, cancelledReason: 'Der Organisator hat sein Konto gelöscht' },
-          $pull: { participants: uid },
-        }
-      );
+      await cancelWithNotice(e, 'Der Organisator hat sein Konto gelöscht', uid);
+      await ConnectEvent.updateOne({ _id: e._id }, { $pull: { participants: uid } });
     } else if (others.length === 0) {
       await ConnectEvent.deleteOne({ _id: e._id });
     } else {
@@ -81,7 +116,19 @@ const deleteMe = async (req, res) => {
     }
   }
 
-  // Leave joined events (reopen if they were full).
+  // Upcoming games: free the spot properly, so the waiting list moves up.
+  const upcoming = await ConnectEvent.find({
+    $or: [{ participants: uid }, { waitlist: uid }],
+    creator: { $ne: uid },
+    status: { $in: ['open', 'full'] },
+    startAt: { $gt: now },
+  }).lean();
+  for (const e of upcoming) {
+    const r = await leaveAndPromote(e._id, uid, { now, requireMember: true, allowCreator: true });
+    if (r) await afterPromotion(r.after, r.promoted, now);
+  }
+
+  // Everything else: leave past games and remove every trace of answers and marks.
   await ConnectEvent.updateMany({ participants: uid, creator: { $ne: uid } }, [
     { $set: { participants: { $filter: { input: '$participants', cond: { $ne: ['$$this', uid] } } } } },
     {
@@ -96,6 +143,11 @@ const deleteMe = async (req, res) => {
       },
     },
   ]);
+  await ConnectEvent.updateMany(
+    {},
+    { $pull: { waitlist: uid, responses: { user: uid }, noShows: { user: uid }, pendingPromotions: { user: uid } } }
+  );
+  await Notification.deleteMany({ user: uid });
 
   await Report.updateMany({ reporter: uid }, { $set: { reporter: null } });
   await User.deleteOne({ _id: uid });

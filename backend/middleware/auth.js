@@ -22,6 +22,9 @@ const protect = async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'User nicht gefunden' });
     }
+    if (req.user.isActive === false) {
+      return res.status(401).json({ message: 'Dieses Konto ist gesperrt' });
+    }
 
     next();
   } catch (error) {

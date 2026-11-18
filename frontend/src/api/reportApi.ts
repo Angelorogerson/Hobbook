@@ -21,10 +21,17 @@ export interface Report {
   resolvedAt: string | null
   reporter: { _id: string; displayName: string } | null
   event: SportEvent | null
+  /** Reports about a person. */
+  targetUser: { _id: string; displayName: string; active: boolean } | null
 }
 
 export async function createReport(eventId: string, reason: string, text?: string): Promise<string> {
   const { data } = await api.post('/reports', { eventId, reason, text })
+  return data.message
+}
+
+export async function reportPerson(userId: string, reason: string, text?: string): Promise<string> {
+  const { data } = await api.post('/reports', { userId, reason, text })
   return data.message
 }
 
@@ -35,7 +42,7 @@ export async function listReports(status?: ReportStatus): Promise<Report[]> {
 
 export async function updateReport(
   id: string,
-  body: { status: ReportStatus; note?: string; cancelEvent?: boolean }
+  body: { status: ReportStatus; note?: string; cancelEvent?: boolean; deactivateUser?: boolean }
 ): Promise<Report> {
   const { data } = await api.patch(`/reports/${id}`, body)
   return data.report

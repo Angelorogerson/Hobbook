@@ -27,6 +27,9 @@ const login = async (req, res) => {
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ message: 'Ungültige E-Mail oder Passwort' });
   }
+  if (user.isActive === false) {
+    return res.status(403).json({ message: 'Dieses Konto ist gesperrt. Wenn du denkst, das ist ein Fehler, schreib uns (Kontakt im Impressum).' });
+  }
 
   res.status(200).json({ token: signToken(user), user: sessionUser(user) });
 };
@@ -34,7 +37,15 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   const u = req.user;
   res.json({
-    user: { _id: u._id, name: u.name, email: u.email, role: u.role, city: u.city || '', sports: u.sports || [] },
+    user: {
+      _id: u._id,
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      city: u.city || '',
+      sports: u.sports || [],
+      emailNotifications: u.emailNotifications !== false,
+    },
   });
 };
 

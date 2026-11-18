@@ -1,0 +1,42 @@
+.public-profile {
+  display: grid;
+  gap: var(--space-5);
+}
+.public-profile-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.public-profile-sports {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.public-profile-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+}
+.public-profile-facts p,
+.public-profile .section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.reliability {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.reliability dt {
+  font-size: var(--text-xs);
+  color: var(--c-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.reliability dd {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+}

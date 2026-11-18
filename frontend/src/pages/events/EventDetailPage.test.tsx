@@ -6,12 +6,13 @@ import { makeEvent } from '@/test/fixtures'
 
 vi.mock('@/components/map/EventMap', () => ({ default: () => <div data-testid="fake-map" /> }))
 
-const api = { getEvent: vi.fn(), joinEvent: vi.fn(), leaveEvent: vi.fn() }
+const api = { getEvent: vi.fn(), joinEvent: vi.fn(), leaveEvent: vi.fn(), joinWaitlist: vi.fn() }
 vi.mock('@/api/eventApi', async (orig) => ({
   ...(await orig<typeof import('@/api/eventApi')>()),
   getEvent: (...a: unknown[]) => api.getEvent(...a),
   joinEvent: (...a: unknown[]) => api.joinEvent(...a),
   leaveEvent: (...a: unknown[]) => api.leaveEvent(...a),
+  joinWaitlist: (...a: unknown[]) => api.joinWaitlist(...a),
 }))
 
 let loggedIn = false
@@ -79,7 +80,19 @@ describe('EventDetailPage join/leave', () => {
     renderPage()
     await user.click(await screen.findByRole('button', { name: 'Mitmachen' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Dieses Event ist leider voll')
-    expect(await screen.findByRole('button', { name: 'Event ist voll' })).toBeDisabled()
+    // A full event offers the waiting list instead of a dead end.
+    expect(await screen.findByRole('button', { name: 'Auf die Warteliste' })).toBeEnabled()
+  })
+
+  it('queues on the waiting list for a full event', async () => {
+    loggedIn = true
+    api.getEvent.mockResolvedValue(makeEvent({ status: 'full', spotsLeft: 0, participantCount: 10, waitlistCount: 1 }))
+    api.joinWaitlist.mockResolvedValue(makeEvent({ status: 'full', spotsLeft: 0, participantCount: 10, waitlistCount: 2, waitlistPosition: 2 }))
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Auf die Warteliste (1 warten)' }))
+    expect(await screen.findByText(/Warteliste \(Platz 2\)/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Warteliste verlassen' })).toBeInTheDocument()
   })
 
   it('shows cancelled state with reason and no join button', async () => {

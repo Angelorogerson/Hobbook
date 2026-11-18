@@ -1,3 +1,25 @@
+# Changes: Stammspiel gaps closed (2026-11-18, second pass)
+
+- **Account deletion:** a Stammspiel goes to the longest-serving co-host (notice `handover`), or ends and its open game is called off. Memberships, co-host roles, blocks, answers, waiting-list places, no-show marks and notifications are removed; freed spots go to the waiting list.
+- **Email links need a tap:** `/antwort/:token` shows the game first (`POST /api/links/preview`) and answers only on tap. `/stumm/:token` asks before muting. Scanners that open links can no longer answer for anyone.
+- **Moving up shortly before kick-off:** within 6 h of the start a promoted person holds the spot for 30 min and must confirm ("Ich komme" / "Doch nicht", also from email). Unconfirmed spots pass on via the new job step `expirePromotions` (`services/promotion.js`). Earlier promotions stay automatic.
+- **Onboarding:** after sign-up, `/willkommen` asks for city and sports (prefilled from the invite's Stammspiel or the last searched city), then continues to where the person was going.
+- **Stammspiele in Discover:** "Stammspiele" filter chip (`?stamm=1`, API `series=true`); public listing `GET /api/groups?city|near|sport`; Home shows "Stammspiele in {Stadt}".
+- **Edit scope:** editing a Stammspiel with an open game asks "Nur ab nächster Woche" / "Auch für {Termin}". The open game moves within its week; participants are told about time or place changes; impossible moves give a clear 409.
+- **Late cancellations on single events** now count for reliability (only when a real spot was given up, never for leaving the waiting list).
+- **People:** hosts remove and optionally block members (blocked people can't rejoin, answer or use email links; hosts can lift blocks). "Person melden" on public profiles; moderation can block accounts ("Konto sperren"), which are then signed out and can't log in.
+- **Handover:** the organizer can hand a Stammspiel to any member; they become co-host.
+- **Tests:** `backend/tests/gaps.test.js` (17 tests), `frontend/src/pages/main/gaps.test.tsx`, Discover chip test, E2E `stammspiel-people.spec.ts` (invite sign-up with welcome step; remove and block), email link tap in `stammspiel.spec.ts`, axe on the welcome and answer pages.
+
+# Changes: Stammspiel – the weekly game that organizes itself (2026-11-18)
+
+Implements all phases of [product/NEXT_BIG_IMPROVEMENT.md](product/NEXT_BIG_IMPROVEMENT.md).
+
+- **Backend:** `Group` (weekly Stammspiel, members, co-hosts, skip dates, invite code) and `Notification` models; `ConnectEvent` gains the game fields (`group`, `occurrenceKey`, `minPlayers`, `deadlineAt`, `decision`, `responses`, `waitlist`, `weather`, `noShows`, job flags). Time-zone-safe weekly generation (`utils/time.js`, DST-tested). Idempotent jobs (`services/stammspiel.js`): generate → invite → nudge non-responders → decide at the deadline → remind 2 h before → weather. Triggered in-process every 5 min, by `POST /api/jobs/run` (secret) and `.github/workflows/jobs.yml`. Atomic waitlist with auto-promotion for all events (`services/attendance.js`). Delivery: in-app notices, email (Brevo driver, `services/mailer.js`), web push (`services/push.js`); per-group mute; changes and cancellations always delivered. Signed one-tap email links (`utils/linkToken.js`). Host tools: remind, skip a week, decide early, cancel for weather, co-hosts, end. No-show marking (24 h) with dispute, reliability facts, public mini profile, admin metrics.
+- **Frontend:** "Jede Woche wiederholen" in the existing create form; Stammspiel page with invite step (WhatsApp, copy), answer card, roster, host tools, members, history and mute; answer card on the event page; waiting list for full events; Home "Deine Woche"; Stammspiele in My Events (default tab = first non-empty); bell + notifications page; email link pages (`/antwort/:token`, `/stumm/:token`); public profiles (`/leute/:id`); notification settings and own reliability in Profile; admin "Kennzahlen"; service worker and manifest for push. Fixes: saving and joining resume after sign-in; one capacity wording ("9 von 12 dabei").
+- **Edge:** `worker/index.js` adds Open Graph previews for `/s/*`, `/stammspiel/*`, `/events/*`.
+- **Tests:** 25 new backend tests (loop, DST, idempotency, tokens, waitlist, privacy, reliability); new frontend tests (answer card, WhatsApp status, bell); E2E `stammspiel.spec.ts` (create → invite → answer in app and from email → automatic decision) and axe checks for the new pages.
+
 # Changes: Free Community Sports Events (2026-11-16)
 
 Implements [product/FREE_SPORTS_EVENTS_USER_STORY.md](product/FREE_SPORTS_EVENTS_USER_STORY.md) on branch `feature/free-sports-events`.

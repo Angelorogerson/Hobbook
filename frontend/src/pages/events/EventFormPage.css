@@ -217,3 +217,52 @@
   font-size: var(--text-sm);
   color: var(--c-text-muted);
 }
+
+/* Stammspiel switch: turns the same three steps into a weekly game */
+.weekly-toggle {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--c-border-strong);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-2) var(--ease-move),
+    border-color var(--dur-2) var(--ease-move);
+}
+.weekly-toggle input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.weekly-toggle > svg {
+  margin-top: 2px;
+  color: var(--c-accent-text);
+}
+.weekly-toggle span {
+  display: grid;
+  gap: 2px;
+}
+.weekly-toggle.is-on {
+  background: var(--c-accent-soft);
+  border-color: var(--c-accent);
+}
+.weekday-row .chip {
+  min-width: 48px;
+  justify-content: center;
+}
+.weekday-tile {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  width: 64px;
+  height: 72px;
+  border-radius: var(--radius-md);
+  background: var(--c-accent-soft);
+  color: var(--c-accent-text);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-xl);
+}

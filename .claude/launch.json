@@ -4,22 +4,75 @@
     {
       "name": "api-demo",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["backend/scripts/e2e-server.js", "--port", "5055"],
+      "runtimeArgs": [
+        "backend/scripts/e2e-server.js",
+        "--port",
+        "5055"
+      ],
       "port": 5055,
       "autoPort": false
     },
     {
       "name": "web-demo",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--port", "5180", "--strictPort", "--mode", "demo"],
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort",
+        "--mode",
+        "demo"
+      ],
       "port": 5180,
       "autoPort": false
     },
     {
       "name": "web-preview",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend", "run", "preview", "--", "--port", "5180", "--strictPort"],
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "preview",
+        "--",
+        "--port",
+        "5180",
+        "--strictPort"
+      ],
       "port": 5180,
+      "autoPort": false
+    },
+    {
+      "name": "api-stammspiel",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "backend/scripts/e2e-server.js",
+        "--port",
+        "5057"
+      ],
+      "port": 5057,
+      "autoPort": false
+    },
+    {
+      "name": "web-stammspiel",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "frontend",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5193",
+        "--strictPort",
+        "--mode",
+        "stammspiel"
+      ],
+      "port": 5193,
       "autoPort": false
     }
   ]

@@ -102,5 +102,28 @@ export const osmLink = (lat: number, lng: number) =>
 /** Opens the phone's maps app (or Google Maps in the browser) with directions to the meeting point. */
 export const routeLink = (lat: number, lng: number) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
 
-export const spotsText = (e: Pick<SportEvent, 'participantCount' | 'maxParticipants'>) =>
-  `${e.participantCount} / ${e.maxParticipants} dabei`
+export const spotsText = (e: Pick<SportEvent, 'participantCount' | 'maxParticipants'>) => capacityText(e.participantCount, e.maxParticipants)
+
+/** "Do. 16:00" in the event's time zone (deadlines, short mentions). */
+export function formatShortWhen(iso: string, timeZone?: string) {
+  const tz = safeTz(timeZone)
+  const d = new Date(iso)
+  const day = new Intl.DateTimeFormat('de-DE', { weekday: 'short', timeZone: tz }).format(d)
+  const time = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: tz }).format(d)
+  return `${day} ${time}`
+}
+
+/** "in 2 Tagen", "in 3 Std.", "in 20 Min.", "vorbei" — coarse on purpose. */
+export function relativeUntil(iso: string, now = new Date()) {
+  const ms = new Date(iso).getTime() - now.getTime()
+  if (ms <= 0) return 'vorbei'
+  const min = Math.round(ms / 60000)
+  if (min < 60) return `in ${min} Min.`
+  const h = Math.round(min / 60)
+  if (h < 36) return `in ${h} Std.`
+  const d = Math.round(h / 24)
+  return `in ${d} ${d === 1 ? 'Tag' : 'Tagen'}`
+}
+
+/** One capacity wording everywhere: "9 von 12 dabei". */
+export const capacityText = (taken: number, max: number) => `${taken} von ${max} dabei`

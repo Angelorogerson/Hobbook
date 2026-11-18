@@ -85,8 +85,19 @@ The server refuses to start in production without `JWT_SECRET` or with a weak on
 
    The three `VITE_OPERATOR_*` values fill the imprint and the privacy page. While one is missing, both pages show a visible "not filled in yet" warning.
 
-4. `wrangler.jsonc` makes deep links such as `/events/123` work. `frontend/public/_headers` sets the security headers (Content-Security-Policy and others). Both are picked up automatically.
+4. `wrangler.jsonc` makes deep links such as `/events/123` work. It also runs `worker/index.js` in front of `/s/*`, `/stammspiel/*` and `/events/*`: that small worker writes link-preview tags (Open Graph) into the page, so a Stammspiel link pasted into WhatsApp shows name, weekday, time and how many are in. Set `API_URL` under `vars` in `wrangler.jsonc` (or in the Cloudflare dashboard) to `https://<your-service>.onrender.com/api`; without it, links work but show no preview. `frontend/public/_headers` sets the security headers (Content-Security-Policy and others). Both are picked up automatically.
 5. Go back to Render and set `CLIENT_URL` to the final Pages address, otherwise the browser blocks API calls (CORS).
+
+## 4b. Weekly games: jobs, email, push
+
+The Stammspiel loop (open next week's game, invite, remind non-responders, decide at the deadline, remind 2 h before, weather) runs as idempotent jobs.
+
+1. **Jobs.** Add `JOB_SECRET` (long random value) to Render. The API runs the jobs itself every 5 minutes while it is awake (`JOBS_INTERVAL_MIN`). For the time the free instance sleeps:
+   - GitHub: Settings → Secrets and variables → Actions → add `API_URL` (`https://<your-service>.onrender.com/api`) and `JOB_SECRET`. `.github/workflows/jobs.yml` then calls `POST /api/jobs/run` every hour.
+   - Recommended in addition: a free cron at [cron-job.org](https://cron-job.org) every 15 minutes, `POST` to the same URL with the header `x-job-secret: <JOB_SECRET>`. Overlapping calls are safe.
+2. **Email (Brevo, free tier).** Create an account, verify a sender address (Senders & IP → Senders), create an API key (SMTP & API → API keys). In Render set `MAIL_DRIVER=brevo`, `BREVO_API_KEY`, `MAIL_FROM` (the verified address), `MAIL_FROM_NAME=Hobbook` and `PUBLIC_APP_URL` (the frontend address, used for links in emails). Check Brevo's current daily limit before inviting large groups. Without these values no emails are sent; the in-app bell still works.
+3. **Push (optional).** Run `npx web-push generate-vapid-keys` once and set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` (e.g. `mailto:you@example.org`) in Render. People can then switch on push per device in their profile.
+4. **Check:** create a Stammspiel, open the invite link in a private window, join with a second account, and run the jobs once by hand (Actions → Weekly-game jobs → Run workflow). The second account should get an invite email whose "Ich bin dabei" button works without signing in.
 
 ## 5. First admin account
 
@@ -109,6 +120,7 @@ Repository → Settings → Secrets and variables → Actions → add `MONGODB_U
 - Open an event link directly in a new tab (tests the SPA fallback).
 - Imprint and privacy page show your details and no warning.
 - Repeat the main flow on one iPhone and one Android phone.
+- Paste a Stammspiel invite link into WhatsApp: the preview shows its name and time.
 
 ## Moving to other hosting later
 

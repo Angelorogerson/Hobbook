@@ -28,3 +28,42 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Stammspiele above the tabs */
+.my-groups h2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.my-group-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+.my-group {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  padding-right: var(--space-10);
+  color: var(--c-text);
+  text-decoration: none;
+  transition: border-color var(--dur-2) var(--ease-move);
+}
+.my-group:hover {
+  border-color: var(--c-border-strong);
+}
+.my-group-name {
+  font-weight: var(--weight-bold);
+}
+.my-group-next {
+  font-size: var(--text-sm);
+}
+.my-group-arrow {
+  position: absolute;
+  right: var(--space-4);
+  top: 50%;
+  translate: 0 -50%;
+  color: var(--c-text-subtle);
+}

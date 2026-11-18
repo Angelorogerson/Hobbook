@@ -5,7 +5,8 @@
  *   player@hobbook.test    / test-password-2
  *   admin@hobbook.test     / test-password-3
  */
-import { User, ConnectEvent } from '../models/index.js';
+import { User, ConnectEvent, Group, Notification } from '../models/index.js';
+import { ensureOccurrence } from '../services/stammspiel.js';
 import { cityKey } from '../utils/text.js';
 
 export const TEST_USERS = {
@@ -31,7 +32,7 @@ const loc = (placeName, address, city, lat, lng, countryCode = 'DE') => ({
 });
 
 export async function seed() {
-  await Promise.all([User.deleteMany({}), ConnectEvent.deleteMany({})]);
+  await Promise.all([User.deleteMany({}), ConnectEvent.deleteMany({}), Group.deleteMany({}), Notification.deleteMany({})]);
   const [organizer, player] = await Promise.all([
     User.create(TEST_USERS.organizer),
     User.create(TEST_USERS.player),
@@ -85,4 +86,28 @@ export async function seed() {
       status: 'full',
     },
   ]);
+
+  // A weekly Stammspiel two days from now, with the player as a member.
+  const inTwo = inDays(2, 19);
+  const weekday = inTwo.getDay() === 0 ? 7 : inTwo.getDay();
+  const group = await Group.create({
+    name: 'Basketball am Uni-Platz',
+    sport: 'basketball',
+    description: 'Jede Woche 3 gegen 3 oder 5 gegen 5, je nachdem wie viele kommen. Neue sind willkommen.',
+    location: loc('Basketballplatz Uni', 'Gottlieb-Daimler-Straße 1, 67663 Kaiserslautern', 'Kaiserslautern', 49.4245, 7.7529),
+    organizer: organizer._id,
+    weekday,
+    startTime: '19:00',
+    durationMin: 120,
+    timezone: 'Europe/Berlin',
+    maxParticipants: 12,
+    minPlayers: 6,
+    deadlineHours: 3,
+    openDaysBefore: 5,
+    rsvpMode: 'ask',
+    visibility: 'public',
+    inviteCode: 'uniplatz',
+    members: [{ user: organizer._id }, { user: player._id }],
+  });
+  await ensureOccurrence(group.toObject(), new Date(), { force: true });
 }

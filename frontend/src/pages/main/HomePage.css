@@ -73,3 +73,64 @@
     width: 100%;
   }
 }
+
+/* Deine Woche: the weekly games with one-tap answers */
+.home-week-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+.week-card {
+  display: grid;
+  gap: var(--space-3);
+  animation: m-enter var(--dur-4) var(--ease-enter) backwards;
+}
+.week-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+.week-card-title {
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lg);
+  color: var(--c-text);
+  text-decoration: none;
+}
+.week-card-title:hover {
+  text-decoration: underline;
+}
+.week-card .hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.week-card-when {
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+}
+@media (max-width: 420px) {
+  .home-week-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.open-group {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--c-text);
+  text-decoration: none;
+  transition: border-color var(--dur-2) var(--ease-move);
+}
+.open-group:hover {
+  border-color: var(--c-border-strong);
+}
+.open-group-sport {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  color: var(--c-text-muted);
+}

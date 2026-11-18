@@ -93,6 +93,32 @@
   display: none;
 }
 
+/* Bell: unread dot fades and scales in once; it never shakes. */
+.bell {
+  position: relative;
+}
+.bell-dot {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  line-height: 18px;
+  text-align: center;
+  animation: m-enter var(--dur-3) var(--ease-spring) backwards;
+  --m-move: 0px;
+  --m-scale: 0.6;
+}
+.topbar-bell {
+  display: none;
+}
+
 /* Tablet: keep the top bar, drop text labels where space is tight */
 @media (max-width: 1024px) {
   .topbar-inner {
@@ -108,6 +134,10 @@
   .topnav,
   .topbar-actions {
     display: none;
+  }
+  .topbar-bell {
+    display: inline-flex;
+    margin-left: auto;
   }
   .bottomnav {
     position: fixed;

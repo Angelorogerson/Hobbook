@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AlertTriangle, Info } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
 import { apiError } from '@/api/axiosInstance'
-import { INTENT_TEXT, resumeState } from './LoginPage'
+import { INTENT_TEXT } from './LoginPage'
 import './auth.css'
 
 export function validateRegistration(v: { name: string; email: string; password: string; confirm: string; age: boolean }) {
@@ -71,7 +71,8 @@ export default function RegisterPage() {
             setBusy(true)
             try {
               await register({ name: v.name.trim(), email: v.email.trim(), password: v.password, ageConfirmed: true })
-              navigate(from, { replace: true, state: resumeState(state.intent) })
+              // Two quick questions first (city, sports); the welcome page then continues to `from`.
+              navigate('/willkommen', { replace: true, state: { from, intent: state.intent } })
             } catch (err) {
               const info = apiError(err, 'Registrierung fehlgeschlagen.')
               setError(info.message)

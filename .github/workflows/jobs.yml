@@ -1,0 +1,30 @@
+name: Weekly-game jobs
+
+# Opens next week's Stammspiel games, sends invites and reminders, and decides
+# games at their deadline (POST /api/jobs/run). The API also runs these steps
+# itself every few minutes while it is awake; this hourly call covers the time
+# a free host sleeps. For tighter timing add a free external cron (e.g.
+# cron-job.org, every 15 minutes) calling the same endpoint – every step is
+# idempotent, so overlapping triggers are safe.
+# Requires repository secrets API_URL (e.g. https://hobbook-api.onrender.com/api) and JOB_SECRET.
+on:
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger jobs (retries while the free instance wakes up)
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          JOB_SECRET: ${{ secrets.JOB_SECRET }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$JOB_SECRET" ]; then echo "API_URL/JOB_SECRET not set – skipping"; exit 0; fi
+          for i in 1 2 3 4; do
+            if curl -fsS --max-time 90 -X POST -H "x-job-secret: $JOB_SECRET" "$API_URL/jobs/run"; then exit 0; fi
+            sleep 20
+          done
+          exit 1

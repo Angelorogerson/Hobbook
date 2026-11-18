@@ -12,6 +12,12 @@ import {
   saveEvent,
   unsaveEvent,
   getAllEventsAdmin,
+  joinWaitlist,
+  answerEvent,
+  decideEvent,
+  markNoShows,
+  disputeNoShow,
+  confirmPromotion,
 } from '../controllers/connectEventController.js';
 import protect from '../middleware/auth.js';
 import optionalAuth from '../middleware/optionalAuth.js';
@@ -24,6 +30,7 @@ import {
   cancelEventSchema,
   listEventsQuerySchema,
 } from '../validation/eventSchemas.js';
+import { answerSchema, decideSchema, noShowsSchema, disputeSchema } from '../validation/groupSchemas.js';
 
 const router = express.Router();
 
@@ -43,6 +50,12 @@ router.post('/:id/cancel', validateObjectId(), protect, writeLimiter, validate(c
 router.delete('/:id', validateObjectId(), protect, writeLimiter, deleteEvent);
 router.post('/:id/join', validateObjectId(), protect, writeLimiter, joinEvent);
 router.post('/:id/leave', validateObjectId(), protect, writeLimiter, leaveEvent);
+router.post('/:id/waitlist', validateObjectId(), protect, writeLimiter, joinWaitlist);
+router.post('/:id/answer', validateObjectId(), protect, writeLimiter, validate(answerSchema), answerEvent);
+router.post('/:id/confirm-spot', validateObjectId(), protect, writeLimiter, confirmPromotion);
+router.post('/:id/decide', validateObjectId(), protect, writeLimiter, validate(decideSchema), decideEvent);
+router.put('/:id/no-shows', validateObjectId(), protect, writeLimiter, validate(noShowsSchema), markNoShows);
+router.post('/:id/dispute', validateObjectId(), protect, writeLimiter, validate(disputeSchema), disputeNoShow);
 router.post('/:id/save', validateObjectId(), protect, writeLimiter, saveEvent);
 router.delete('/:id/save', validateObjectId(), protect, writeLimiter, unsaveEvent);
 

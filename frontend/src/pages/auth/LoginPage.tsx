@@ -16,10 +16,12 @@ export const INTENT_TEXT: Record<string, string> = {
   create: 'Melde dich an, um ein Event zu erstellen.',
   mine: 'Melde dich an, um deine Events zu sehen.',
   save: 'Melde dich an, um Events zu merken.',
+  group: 'Melde dich an, um beim Stammspiel mitzumachen. Danach antwortest du jede Woche mit einem Tipp – auch direkt aus der E-Mail.',
 }
 
 /** After signing in, the target page finishes what the visitor started (e.g. joining). */
-export const resumeState = (intent?: string) => (intent === 'join' || intent === 'report' ? { resume: intent } : undefined)
+export const resumeState = (intent?: string) =>
+  intent === 'join' || intent === 'report' || intent === 'save' || intent === 'group' ? { resume: intent } : undefined
 
 export default function LoginPage() {
   const navigate = useNavigate()

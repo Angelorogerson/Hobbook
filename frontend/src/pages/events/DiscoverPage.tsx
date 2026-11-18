@@ -47,13 +47,17 @@ export default function DiscoverPage({ initialView }: Props) {
     () =>
       areaActive
         ? 'area'
-        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.filters.freeOnly ? 'f' : '', d.loading ? 'l' : 'r'].join('|'),
-    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.filters.freeOnly, d.loading]
+        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.filters.freeOnly ? 'f' : '', d.filters.seriesOnly ? 's' : '', d.loading ? 'l' : 'r'].join('|'),
+    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.filters.freeOnly, d.filters.seriesOnly, d.loading]
   )
   const unmappable = d.events.filter((e) => e.location.lat === null).length
 
   const heading = [
-    d.filters.sport ? sportLabel(d.filters.sport) : 'Sport-Events',
+    d.filters.seriesOnly
+      ? `${d.filters.sport ? `${sportLabel(d.filters.sport)}-` : ''}Stammspiele`
+      : d.filters.sport
+        ? sportLabel(d.filters.sport)
+        : 'Sport-Events',
     areaActive
       ? 'im Kartenausschnitt'
       : d.filters.city
@@ -76,6 +80,7 @@ export default function DiscoverPage({ initialView }: Props) {
             onSport={d.setSport}
             onWhen={d.setWhen}
             onFreeOnly={d.setFreeOnly}
+            onSeriesOnly={d.setSeriesOnly}
             onClearArea={d.clearArea}
             onReset={d.reset}
             onNearMe={d.locate}

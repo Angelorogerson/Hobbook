@@ -9,6 +9,9 @@ export default function AdminNav() {
       <NavLink to="/admin/events" className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}>
         Alle Events
       </NavLink>
+      <NavLink to="/admin/kennzahlen" className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}>
+        Kennzahlen
+      </NavLink>
     </nav>
   )
 }

@@ -1,0 +1,57 @@
+.link-action {
+  display: grid;
+  place-items: center;
+  min-height: 60vh;
+}
+.link-action-card {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  animation: m-enter var(--dur-4) var(--ease-enter) backwards;
+}
+.link-action-event {
+  color: var(--c-text-muted);
+}
+.link-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+/* The check draws once (stroke), then stays. Reduced motion: --dur-7 becomes a fade-length, still fine. */
+.drawn-check circle,
+.drawn-check path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.drawn-check circle {
+  stroke: var(--c-success);
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: draw var(--dur-6) var(--ease-enter) forwards;
+}
+.drawn-check path {
+  stroke: var(--c-success);
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: draw var(--dur-5) var(--ease-enter) var(--dur-4) forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawn-check circle,
+  .drawn-check path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

@@ -7,6 +7,7 @@ import Modal from '@/components/common/Modal'
 import { SPORTS } from '@/constants/sports'
 import { ThemeChoice } from '@/components/ui/Brand'
 import './ProfilePage.css'
+import NotificationSettings from './NotificationSettings'
 import { Presence } from '@/hooks/usePresence'
 
 export default function ProfilePage() {
@@ -128,6 +129,8 @@ export default function ProfilePage() {
           </button>
         </form>
       </section>
+
+      <NotificationSettings />
 
       <section className="card profile-section">
         <h2>Darstellung</h2>

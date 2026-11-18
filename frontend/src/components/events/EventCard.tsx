@@ -1,6 +1,7 @@
 import { forwardRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, MapPin, Crosshair } from 'lucide-react'
+import { Clock, MapPin, Crosshair, Repeat } from 'lucide-react'
+import { WEEKDAYS_SHORT } from '@/api/groupApi'
 import type { SportEvent } from '@/api/eventApi'
 import { sportLabel, levelLabel } from '@/constants/sports'
 import { formatEventDate } from '@/utils/format'
@@ -10,6 +11,7 @@ import { CapacityMeter, DateTile } from '@/components/ui/DataPieces'
 import StatusBadge from './StatusBadge'
 import SaveButton from './SaveButton'
 import './EventCard.css'
+import '@/components/series/series.css'
 
 interface Props {
   event: SportEvent
@@ -53,7 +55,13 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
           {event.level !== 'all' && <span className="event-card-level">{levelLabel(event.level)}</span>}
           <span className="event-card-flags">
             {event.status !== 'open' && <StatusBadge status={event.status} />}
+            {event.series && (
+              <span className="series-badge" title="Stammspiel: jede Woche">
+                <Repeat size={12} aria-hidden="true" /> {event.series.weekday ? `jeden ${WEEKDAYS_SHORT[event.series.weekday]}.` : 'Stammspiel'}
+              </span>
+            )}
             {event.joined && !event.isOrganizer && <span className="badge badge-neutral">Du bist dabei</span>}
+            {event.waitlistPosition ? <span className="badge badge-full">Warteliste {event.waitlistPosition}</span> : null}
             {event.isOrganizer && <span className="badge badge-neutral">Dein Event</span>}
           </span>
         </div>

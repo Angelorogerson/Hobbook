@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Bookmark, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut } from 'lucide-react'
+import { AlertTriangle, Bookmark, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut, Repeat, ArrowRight } from 'lucide-react'
+import { getMyGroups, rhythmText, type Group } from '@/api/groupApi'
+import { formatShortWhen } from '@/utils/format'
+import { decisionLabel } from '@/components/series/AnswerCard'
 import { EmptyState } from '@/components/ui/DataPieces'
 import { deleteEvent, getMyEvents, leaveEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
@@ -30,12 +33,25 @@ export default function MyEventsPage() {
   const [cancelling, setCancelling] = useState<SportEvent | null>(null)
   const [deleting, setDeleting] = useState<SportEvent | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [groups, setGroups] = useState<Group[]>([])
+  const tabChosen = useRef(false)
 
   const load = useCallback(() => {
     setError('')
     getMyEvents()
-      .then(setData)
+      .then((d) => {
+        setData(d)
+        // Open on the first tab that has something in it (once).
+        if (!tabChosen.current) {
+          tabChosen.current = true
+          const first = TABS.find((t) => d[t.key].length > 0)
+          if (first) setTab(first.key)
+        }
+      })
       .catch((err) => setError(apiError(err, 'Deine Events konnten nicht geladen werden.').message))
+    getMyGroups()
+      .then(setGroups)
+      .catch(() => {})
   }, [])
 
   useEffect(load, [load])
@@ -83,7 +99,7 @@ export default function MyEventsPage() {
     return (
       <div className="my-actions">
         <button type="button" className="btn btn-secondary btn-sm" disabled={busyId === e._id} onClick={() => leave(e)}>
-          <LogOut size={14} aria-hidden="true" /> Austreten
+          <LogOut size={14} aria-hidden="true" /> {e.series ? 'Diesmal nicht' : e.waitlistPosition ? 'Warteliste verlassen' : 'Austreten'}
         </button>
       </div>
     )
@@ -115,6 +131,33 @@ export default function MyEventsPage() {
           <Plus size={18} aria-hidden="true" /> Event erstellen
         </Link>
       </div>
+
+      {groups.length > 0 && (
+        <section className="my-section my-groups" aria-labelledby="my-groups">
+          <h2 id="my-groups">
+            <Repeat size={18} aria-hidden="true" /> Stammspiele
+          </h2>
+          <ul className="my-group-list">
+            {groups.map((g) => (
+              <li key={g._id}>
+                <Link to={`/stammspiel/${g._id}`} className="card card-pad my-group">
+                  <span className="my-group-name">{g.name}</span>
+                  <span className="hint">
+                    {rhythmText(g)} · {g.memberCount} Mitglieder{g.isOrganizer ? ' · du organisierst' : ''}
+                  </span>
+                  {g.upcoming && (
+                    <span className="my-group-next">
+                      {formatShortWhen(g.upcoming.startAt, g.upcoming.timezone)}: {decisionLabel(g.upcoming)} · {g.upcoming.counts?.in ?? g.upcoming.participantCount} dabei
+                      {g.upcoming.myAnswer === 'in' ? ' · du bist dabei' : g.upcoming.myAnswer === 'out' ? ' · du bist raus' : g.upcoming.myAnswer === 'waiting' ? ' · Warteliste' : ' · du hast noch nicht geantwortet'}
+                    </span>
+                  )}
+                  <ArrowRight size={16} aria-hidden="true" className="my-group-arrow" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <div
         className="tabs"

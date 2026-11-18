@@ -9,6 +9,8 @@ import userRoutes from './routes/userRoutes.js';
 import connectEventRoutes from './routes/connectEventRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import geocodeRoutes from './routes/geocodeRoutes.js';
+import groupRoutes from './routes/groupRoutes.js';
+import { notificationRoutes, linkRoutes, jobRoutes, pushRoutes, adminRoutes } from './routes/loopRoutes.js';
 import { SPORTS } from './config/sports.js';
 
 // Legacy venue/booking/favorite routes are intentionally not mounted: the product
@@ -48,6 +50,12 @@ export function createApp() {
   app.use('/api/events', connectEventRoutes);
   app.use('/api/reports', reportRoutes);
   app.use('/api/geocode', geocodeRoutes);
+  app.use('/api/groups', groupRoutes);
+  app.use('/api/notifications', notificationRoutes);
+  app.use('/api/links', linkRoutes);
+  app.use('/api/jobs', jobRoutes);
+  app.use('/api/push', pushRoutes);
+  app.use('/api/admin', adminRoutes);
 
   app.use((req, res) => res.status(404).json({ message: 'Route nicht gefunden' }));
 

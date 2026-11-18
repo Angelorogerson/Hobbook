@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Check, Minus, Plus } from 'lucide-react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { AlertTriangle, ArrowLeft, Check, Minus, Plus, Repeat } from 'lucide-react'
 import { createEvent, getEvent, updateEvent, type EventInput, type EventLevel, type EventVisibility, type SportEvent } from '@/api/eventApi'
+import { createGroup, getGroup, updateGroup, WEEKDAYS, WEEKDAYS_SHORT, type Group, type GroupInput, type RsvpMode } from '@/api/groupApi'
 import { apiError } from '@/api/axiosInstance'
 import LocationPicker, { type PickedLocation } from '@/components/map/LocationPicker'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { LEVELS, SPORTS, levelLabel, sportColor, sportLabel } from '@/constants/sports'
 import SportIcon from '@/components/ui/SportIcon'
 import { DateTile } from '@/components/ui/DataPieces'
-import { browserTimeZone, formatEventDate, fromLocalInputs, toLocalInputs } from '@/utils/format'
+import { browserTimeZone, formatEventDate, formatShortWhen, fromLocalInputs, toLocalInputs } from '@/utils/format'
+import Modal from '@/components/common/Modal'
+import { Presence } from '@/hooks/usePresence'
 import { useAuthContext } from '@/store/AuthContext'
 import './EventFormPage.css'
 
@@ -25,7 +28,25 @@ interface FormState {
   bring?: string
   visibility: EventVisibility
   location: PickedLocation
+  /** Stammspiel: repeats every week on `weekday` (1 = Monday … 7 = Sunday). */
+  weekly: boolean
+  weekday: number
+  minPlayers: string
+  deadlineHours: string
+  openDaysBefore: string
+  rsvpMode: RsvpMode
 }
+
+/** ISO weekday (1 = Monday … 7 = Sunday) of a local yyyy-mm-dd date. */
+export const isoWeekdayOf = (date: string) => {
+  const d = new Date(`${date}T12:00:00`)
+  return d.getDay() === 0 ? 7 : d.getDay()
+}
+
+/** Suggested minimum: about 60 % of the spots, at least 2. */
+export const suggestedMin = (max: number) => Math.max(2, Math.min(max, Math.round(max * 0.6)))
+
+const DEADLINES = [1, 2, 3, 6, 12, 24]
 
 /** Local YYYY-MM-DD for a day offset from today (0 = today). */
 export function dayInput(offset: number, now = new Date()) {
@@ -82,6 +103,12 @@ const emptyForm = (): FormState => ({
   bring: '',
   visibility: 'public',
   location: { placeName: '', address: '', city: '', lat: null, lng: null },
+  weekly: false,
+  weekday: isoWeekdayOf(dayInput(1)),
+  minPlayers: '6',
+  deadlineHours: '3',
+  openDaysBefore: '5',
+  rsvpMode: 'ask',
 })
 
 function fromEvent(e: SportEvent): FormState {
@@ -99,6 +126,35 @@ function fromEvent(e: SportEvent): FormState {
     bring: e.bring || '',
     visibility: e.visibility,
     location: { ...e.location },
+    weekly: false,
+    weekday: isoWeekdayOf(s.date),
+    minPlayers: '6',
+    deadlineHours: '3',
+    openDaysBefore: '5',
+    rsvpMode: 'ask',
+  }
+}
+
+function fromGroup(g: Group): FormState {
+  const base = emptyForm()
+  return {
+    ...base,
+    sport: g.sport,
+    title: g.name,
+    startTime: g.startTime,
+    endTime: addMinutes(g.startTime, g.durationMin),
+    maxParticipants: String(g.maxParticipants),
+    level: g.level,
+    description: g.description,
+    bring: g.bring || '',
+    visibility: g.visibility,
+    location: { ...g.location },
+    weekly: true,
+    weekday: g.weekday,
+    minPlayers: String(g.minPlayers),
+    deadlineHours: String(g.deadlineHours),
+    openDaysBefore: String(g.openDaysBefore),
+    rsvpMode: g.rsvpMode,
   }
 }
 
@@ -121,6 +177,10 @@ const FIELD_LINKS: Record<string, { id: string; label: string }> = {
   startAt: { id: 'ev-date', label: 'Datum / Beginn' },
   endAt: { id: 'ev-end', label: 'Ende' },
   maxParticipants: { id: 'ev-max', label: 'Maximale Teilnehmende' },
+  minPlayers: { id: 'ev-min', label: 'Mindestens' },
+  weekday: { id: 'ev-weekday-1', label: 'Wochentag' },
+  name: { id: 'ev-title', label: 'Name' },
+  durationMin: { id: 'ev-end', label: 'Ende' },
   'location.placeName': { id: 'loc-place', label: 'Treffpunkt' },
   'location.address': { id: 'loc-address', label: 'Adresse' },
   'location.city': { id: 'loc-city', label: 'Stadt' },
@@ -132,14 +192,25 @@ export function validateForm(f: FormState, now = new Date()): Record<string, str
   if (!f.sport) e.sport = 'Bitte wähle eine Sportart'
   if (f.title.trim().length < 3) e.title = 'Der Titel braucht mindestens 3 Zeichen'
   if (f.title.trim().length > 100) e.title = 'Der Titel darf höchstens 100 Zeichen haben'
-  const { startAt, endAt } = computeTimes(f)
-  if (!f.date) e.startAt = 'Bitte wähle ein Datum'
-  else if (!startAt) e.startAt = 'Bitte gib eine gültige Startzeit an'
-  else if (new Date(startAt) <= now) e.startAt = 'Die Startzeit muss in der Zukunft liegen'
-  if (!f.endTime || !endAt) e.endAt = 'Bitte gib eine Endzeit an'
-  else if (startAt && new Date(endAt).getTime() - new Date(startAt).getTime() > 24 * 3600 * 1000)
-    e.endAt = 'Ein Event darf höchstens 24 Stunden dauern'
   const max = Number(f.maxParticipants)
+  if (f.weekly) {
+    if (!(f.weekday >= 1 && f.weekday <= 7)) e.weekday = 'Bitte wähle einen Wochentag'
+    if (!/^\d{2}:\d{2}$/.test(f.startTime)) e.startAt = 'Bitte gib eine gültige Startzeit an'
+    const mins = minutesBetween(f.startTime, f.endTime)
+    if (!f.endTime || mins === null) e.endAt = 'Bitte gib eine Endzeit an'
+    else if (mins < 30 || mins > 480) e.endAt = 'Ein Stammspiel dauert 30 Minuten bis 8 Stunden'
+    const min = Number(f.minPlayers)
+    if (!Number.isInteger(min) || min < 2) e.minPlayers = 'Mindestens 2'
+    else if (Number.isInteger(max) && min > max) e.minPlayers = 'Darf nicht über dem Maximum liegen'
+  } else {
+    const { startAt, endAt } = computeTimes(f)
+    if (!f.date) e.startAt = 'Bitte wähle ein Datum'
+    else if (!startAt) e.startAt = 'Bitte gib eine gültige Startzeit an'
+    else if (new Date(startAt) <= now) e.startAt = 'Die Startzeit muss in der Zukunft liegen'
+    if (!f.endTime || !endAt) e.endAt = 'Bitte gib eine Endzeit an'
+    else if (startAt && new Date(endAt).getTime() - new Date(startAt).getTime() > 24 * 3600 * 1000)
+      e.endAt = 'Ein Event darf höchstens 24 Stunden dauern'
+  }
   if (!Number.isInteger(max) || max < 2 || max > 100) e.maxParticipants = 'Bitte 2 bis 100 Teilnehmende angeben'
   if (f.description.length > 2000) e.description = 'Höchstens 2000 Zeichen'
   if ((f.bring || '').length > 200) e.bring = 'Höchstens 200 Zeichen'
@@ -174,6 +245,34 @@ function toInput(f: FormState): EventInput {
   }
 }
 
+function toGroupInput(f: FormState): GroupInput {
+  return {
+    name: f.title.trim(),
+    sport: f.sport,
+    description: f.description.trim(),
+    bring: (f.bring || '').trim(),
+    level: f.level,
+    visibility: f.visibility,
+    weekday: f.weekday,
+    startTime: f.startTime,
+    durationMin: minutesBetween(f.startTime, f.endTime) || 120,
+    timezone: browserTimeZone(),
+    maxParticipants: Number(f.maxParticipants),
+    minPlayers: Number(f.minPlayers),
+    deadlineHours: Number(f.deadlineHours),
+    openDaysBefore: Number(f.openDaysBefore),
+    rsvpMode: f.rsvpMode,
+    location: {
+      placeName: f.location.placeName.trim(),
+      address: f.location.address.trim(),
+      city: f.location.city.trim(),
+      countryCode: f.location.countryCode,
+      lat: f.location.lat!,
+      lng: f.location.lng!,
+    },
+  }
+}
+
 /** Only send what changed when editing (a started-but-unchanged start time must not be re-validated). */
 function diff(original: SportEvent, next: EventInput): Partial<EventInput> {
   const out: Partial<EventInput> = {}
@@ -192,12 +291,15 @@ function diff(original: SportEvent, next: EventInput): Partial<EventInput> {
 }
 
 export default function EventFormPage() {
-  const { id } = useParams<{ id: string }>()
-  const isEdit = !!id
+  const { id, groupId } = useParams<{ id?: string; groupId?: string }>()
+  const isEdit = !!id || !!groupId
+  const isGroupEdit = !!groupId
   const navigate = useNavigate()
   const { authState } = useAuthContext()
+  const [params] = useSearchParams()
 
-  const [form, setForm] = useState<FormState>(emptyForm)
+  const [form, setForm] = useState<FormState>(() => ({ ...emptyForm(), weekly: params.get('woche') === '1' }))
+  const minTouched = useRef(isEdit)
   const [original, setOriginal] = useState<SportEvent | null>(null)
   const [loading, setLoading] = useState(isEdit)
   const [loadError, setLoadError] = useState('')
@@ -207,6 +309,34 @@ export default function EventFormPage() {
   // Until the organizer types a title, it follows sport and meeting point.
   const titleTouched = useRef(isEdit)
   const [moreOpen, setMoreOpen] = useState(isEdit)
+  // Stammspiel edit: the game that is already open (it may or may not take the changes).
+  const [openGame, setOpenGame] = useState<{ startAt: string; timezone: string } | null>(null)
+  const [askScope, setAskScope] = useState(false)
+
+  useEffect(() => {
+    if (!groupId) return
+    getGroup(groupId)
+      .then((g) => {
+        if (!g.isHost) setLoadError('Nur Organisator:innen dürfen dieses Stammspiel bearbeiten.')
+        else if (!g.active) setLoadError('Dieses Stammspiel wurde beendet.')
+        else {
+          setForm(fromGroup(g))
+          const up = g.upcoming
+          if (up && (up.status === 'open' || up.status === 'full') && new Date(up.startAt) > new Date()) {
+            setOpenGame({ startAt: up.startAt, timezone: up.timezone })
+          }
+        }
+      })
+      .catch((err) => setLoadError(apiError(err, 'Stammspiel konnte nicht geladen werden.').message))
+      .finally(() => setLoading(false))
+  }, [groupId])
+
+  // The minimum follows the maximum until the organizer sets it.
+  useEffect(() => {
+    if (minTouched.current) return
+    const max = Number(form.maxParticipants)
+    if (Number.isInteger(max) && max >= 2) setForm((f) => ({ ...f, minPlayers: String(suggestedMin(max)) }))
+  }, [form.maxParticipants])
 
   useEffect(() => {
     if (!id) return
@@ -255,6 +385,22 @@ export default function EventFormPage() {
   const focusFirstInvalid = () =>
     setTimeout(() => document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 0)
 
+  const saveGroupEdit = async (applyToUpcoming: boolean) => {
+    setAskScope(false)
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const g = await updateGroup(groupId!, { ...toGroupInput(form), applyToUpcoming })
+      navigate(`/stammspiel/${g._id}`, { replace: true, state: { updated: true, appliedToUpcoming: applyToUpcoming } })
+    } catch (err) {
+      const info = apiError(err)
+      setSubmitError(info.message)
+      setErrors(info.errors)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   const publish = async (e: React.FormEvent) => {
     e.preventDefault()
     const v = validateForm(form)
@@ -265,9 +411,20 @@ export default function EventFormPage() {
       focusFirstInvalid()
       return
     }
+    // Editing a Stammspiel with an open game: ask whether it takes the changes too.
+    if (isGroupEdit && openGame) {
+      setAskScope(true)
+      return
+    }
     setSubmitting(true)
     setSubmitError('')
     try {
+      if (form.weekly) {
+        const input = toGroupInput(form)
+        const g = isGroupEdit ? await updateGroup(groupId!, input) : await createGroup(input)
+        navigate(`/stammspiel/${g._id}`, { replace: true, state: isGroupEdit ? { updated: true } : { created: true } })
+        return
+      }
       const input = toInput(form)
       const saved = isEdit && original ? await updateEvent(original._id, diff(original, input)) : await createEvent(input)
       navigate(`/events/${saved._id}`, { replace: true, state: isEdit ? { updated: true } : { created: true } })
@@ -296,9 +453,10 @@ export default function EventFormPage() {
     ) : null
 
   const times = computeTimes(form)
-  const summaryReady = !!(form.sport && times.startAt && times.endAt && form.location.placeName.trim())
+  const summaryReady = !!(form.sport && (form.weekly || (times.startAt && times.endAt)) && form.location.placeName.trim())
   const materialChange =
     isEdit &&
+    !form.weekly &&
     original &&
     summaryReady &&
     form.location.lat !== null &&
@@ -312,13 +470,29 @@ export default function EventFormPage() {
 
   return (
     <div className="page page--narrow event-form">
-      <Link to={isEdit && original ? `/events/${original._id}` : '/entdecken'} className="btn btn-ghost btn-sm back-link">
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm back-link"
+        onClick={() =>
+          window.history.length > 1
+            ? navigate(-1)
+            : navigate(isGroupEdit ? `/stammspiel/${groupId}` : isEdit && original ? `/events/${original._id}` : '/entdecken')
+        }
+      >
         <ArrowLeft size={16} aria-hidden="true" /> Abbrechen
-      </Link>
+      </button>
       <div className="page-head">
         <div>
-          <h1 className="page-title">{isEdit ? 'Event bearbeiten' : 'Event erstellen'}</h1>
-          <p className="page-subtitle">Drei kurze Schritte. Kostenlos und offen für alle.</p>
+          <h1 className="page-title">
+            {isGroupEdit ? 'Stammspiel bearbeiten' : isEdit ? 'Event bearbeiten' : form.weekly ? 'Stammspiel anlegen' : 'Event erstellen'}
+          </h1>
+          <p className="page-subtitle">
+            {isGroupEdit
+              ? 'Änderungen gelten ab dem nächsten Termin, der noch nicht geöffnet ist.'
+              : form.weekly
+                ? 'Einmal anlegen – Hobbook öffnet jede Woche den nächsten Termin und fragt alle, wer dabei ist.'
+                : 'Drei kurze Schritte. Kostenlos und offen für alle.'}
+          </p>
         </div>
       </div>
 
@@ -349,6 +523,48 @@ export default function EventFormPage() {
             {err('sport')}
           </fieldset>
 
+          {!isEdit && (
+            <label className={`weekly-toggle${form.weekly ? ' is-on' : ''}`}>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={form.weekly}
+                onChange={(e) => {
+                  const weekly = e.target.checked
+                  setForm((f) => ({ ...f, weekly, weekday: isoWeekdayOf(f.date) }))
+                  clearError('startAt', 'weekday')
+                }}
+              />
+              <Repeat size={20} aria-hidden="true" />
+              <span>
+                <strong>Jede Woche wiederholen</strong>
+                <span className="hint">Als Stammspiel: Hobbook fragt jede Woche alle, wer dabei ist, und sagt Bescheid, ob es stattfindet.</span>
+              </span>
+            </label>
+          )}
+
+          {form.weekly ? (
+            <fieldset className="field" aria-describedby={errors.weekday ? 'err-weekday' : undefined}>
+              <legend className="label">Wochentag *</legend>
+              <div className="chip-row weekday-row">
+                {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                  <button
+                    key={d}
+                    id={`ev-weekday-${d}`}
+                    type="button"
+                    className="chip"
+                    aria-pressed={form.weekday === d}
+                    // Starts with the visible text (label in name), then the full day.
+                    aria-label={`${WEEKDAYS_SHORT[d]}, ${WEEKDAYS[d]}`}
+                    onClick={() => set('weekday', d)}
+                  >
+                    {WEEKDAYS_SHORT[d]}
+                  </button>
+                ))}
+              </div>
+              {err('weekday')}
+            </fieldset>
+          ) : (
           <div className="field">
             <label htmlFor="ev-date">Datum *</label>
             <div className="chip-row" role="group" aria-label="Tag wählen">
@@ -371,6 +587,7 @@ export default function EventFormPage() {
               {...fieldProps('startAt')}
             />
           </div>
+          )}
 
           <div className="field-row">
             <div className="field">
@@ -422,7 +639,10 @@ export default function EventFormPage() {
           </div>
           {err('startAt')}
           {err('endAt')}
-          <p className="hint">Zeitzone: {browserTimeZone()}. Ein Ende vor dem Beginn zählt als nächster Tag.</p>
+          <p className="hint">
+            Zeitzone: {browserTimeZone()}.{' '}
+            {form.weekly ? 'Die Uhrzeit bleibt auch bei Sommer- und Winterzeit gleich.' : 'Ein Ende vor dem Beginn zählt als nächster Tag.'}
+          </p>
         </section>
 
         <section className="form-section card">
@@ -444,7 +664,7 @@ export default function EventFormPage() {
             <span className="form-step">3</span> Details
           </h2>
           <div className="field">
-            <label htmlFor="ev-title">Titel *</label>
+            <label htmlFor="ev-title">{form.weekly ? 'Name des Stammspiels *' : 'Titel *'}</label>
             <input
               id="ev-title"
               className="input"
@@ -482,12 +702,74 @@ export default function EventFormPage() {
                 <Plus size={18} aria-hidden="true" />
               </button>
             </div>
-            <span className="hint">Inklusive dir.</span>
+            <span className="hint">Inklusive dir.{form.weekly ? ' Wer danach zusagt, kommt auf die Warteliste und rückt automatisch nach.' : ''}</span>
             {err('maxParticipants')}
           </div>
 
+          {form.weekly && (
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="ev-min">Findet statt ab *</label>
+                <input
+                  id="ev-min"
+                  type="number"
+                  inputMode="numeric"
+                  min={2}
+                  max={100}
+                  className="input"
+                  value={form.minPlayers}
+                  onChange={(e) => {
+                    minTouched.current = true
+                    set('minPlayers', e.target.value)
+                  }}
+                  {...fieldProps('minPlayers')}
+                />
+                <span className="hint">Zusagen. Darunter fällt der Termin automatisch aus.</span>
+                {err('minPlayers')}
+              </div>
+              <div className="field">
+                <label htmlFor="ev-deadline">Antworten bis</label>
+                <select id="ev-deadline" className="select" value={form.deadlineHours} onChange={(e) => set('deadlineHours', e.target.value)}>
+                  {DEADLINES.map((h) => (
+                    <option key={h} value={String(h)}>
+                      {h === 1 ? '1 Stunde' : `${h} Stunden`} vorher
+                    </option>
+                  ))}
+                </select>
+                <span className="hint">Dann entscheidet Hobbook und sagt allen Bescheid.</span>
+              </div>
+            </div>
+          )}
+
           <details className="form-more" open={moreOpen} onToggle={(e) => setMoreOpen((e.target as HTMLDetailsElement).open)}>
-            <summary>Mehr Optionen (Niveau, Mitbringen, Beschreibung, Sichtbarkeit)</summary>
+            <summary>
+              {form.weekly ? 'Mehr Optionen (Antworten, Einladung, Niveau, Beschreibung, Sichtbarkeit)' : 'Mehr Optionen (Niveau, Mitbringen, Beschreibung, Sichtbarkeit)'}
+            </summary>
+            {form.weekly && (
+              <>
+                <fieldset className="field">
+                  <legend className="label">Wer ist dabei?</legend>
+                  <label className="radio-row">
+                    <input type="radio" name="rsvp" checked={form.rsvpMode === 'ask'} onChange={() => set('rsvpMode', 'ask')} />
+                    Jede Woche alle fragen (empfohlen, wenn neue Leute dazukommen)
+                  </label>
+                  <label className="radio-row">
+                    <input type="radio" name="rsvp" checked={form.rsvpMode === 'autoIn'} onChange={() => set('rsvpMode', 'autoIn')} />
+                    Alle sind dabei, außer sie sagen ab (für einen festen Kern)
+                  </label>
+                </fieldset>
+                <div className="field">
+                  <label htmlFor="ev-open">Einladung verschicken</label>
+                  <select id="ev-open" className="select" value={form.openDaysBefore} onChange={(e) => set('openDaysBefore', e.target.value)}>
+                    {[2, 3, 4, 5, 6].map((d) => (
+                      <option key={d} value={String(d)}>
+                        {d} Tage vorher
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
             <div className="field">
               <label htmlFor="ev-level">Niveau</label>
               <select id="ev-level" className="select" value={form.level} onChange={(e) => set('level', e.target.value as EventLevel)}>
@@ -545,17 +827,26 @@ export default function EventFormPage() {
               So sehen es die anderen
             </h2>
             <div className="preview-head">
-              <DateTile iso={times.startAt!} timeZone={browserTimeZone()} size="lg" />
+              {form.weekly ? (
+                <span className="weekday-tile" aria-hidden="true">
+                  <Repeat size={16} />
+                  {WEEKDAYS_SHORT[form.weekday]}
+                </span>
+              ) : (
+                <DateTile iso={times.startAt!} timeZone={browserTimeZone()} size="lg" />
+              )}
               <div>
                 <p className="preview-sport">
                   <SportIcon sport={form.sport} size={16} /> {sportLabel(form.sport)}
                 </p>
                 <p className="preview-title">{form.title.trim() || 'Ohne Titel'}</p>
                 <p className="preview-meta">
-                  {(() => {
-                    const { day, time } = formatEventDate(times.startAt!, times.endAt!, browserTimeZone())
-                    return `${day}, ${time}`
-                  })()}
+                  {form.weekly
+                    ? `Jeden ${WEEKDAYS[form.weekday]}, ${form.startTime}–${form.endTime} Uhr · ab ${form.minPlayers} Zusagen findet's statt`
+                    : (() => {
+                        const { day, time } = formatEventDate(times.startAt!, times.endAt!, browserTimeZone())
+                        return `${day}, ${time}`
+                      })()}
                 </p>
                 <p className="preview-meta">
                   {form.location.placeName}
@@ -610,10 +901,30 @@ export default function EventFormPage() {
 
         <div className="form-actions">
           <button type="submit" className="btn btn-primary btn-lg" disabled={submitting}>
-            <Check size={18} aria-hidden="true" /> {submitting ? 'Wird gespeichert …' : isEdit ? 'Änderungen speichern' : 'Veröffentlichen'}
+            <Check size={18} aria-hidden="true" />{' '}
+            {submitting ? 'Wird gespeichert …' : isEdit ? 'Änderungen speichern' : form.weekly ? 'Stammspiel starten' : 'Veröffentlichen'}
           </button>
         </div>
       </form>
+
+      <Presence show={askScope}>
+        {askScope && openGame && (
+          <Modal title="Wofür gelten die Änderungen?" onClose={() => setAskScope(false)}>
+            <p>
+              Der Termin am {formatShortWhen(openGame.startAt, openGame.timezone)} ist schon geöffnet. Ändern sich Zeit oder Ort, bekommen alle, die
+              zugesagt haben, Bescheid.
+            </p>
+            <div className="modal-actions scope-actions">
+              <button type="button" className="btn btn-secondary" onClick={() => saveGroupEdit(false)}>
+                Nur ab nächster Woche
+              </button>
+              <button type="button" className="btn btn-primary" onClick={() => saveGroupEdit(true)}>
+                Auch für {formatShortWhen(openGame.startAt, openGame.timezone)}
+              </button>
+            </div>
+          </Modal>
+        )}
+      </Presence>
     </div>
   )
 }

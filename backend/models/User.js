@@ -46,6 +46,21 @@ const userSchema = new mongoose.Schema(
     savedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ConnectEvent' }],
     // Set at sign-up: the person confirmed they are at least 16 years old.
     ageConfirmedAt: { type: Date },
+    // Emails for invites, decisions, reminders and changes (in-app notices always).
+    emailNotifications: { type: Boolean, default: true },
+    // Web push subscriptions (one per browser/device). Private.
+    pushSubscriptions: {
+      type: [
+        {
+          _id: false,
+          endpoint: { type: String, required: true },
+          keys: { p256dh: String, auth: String },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      select: false,
+      default: [],
+    },
   },
   { timestamps: true }
 );

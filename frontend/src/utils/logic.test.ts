@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { rangeFor, parseArea } from '@/hooks/useEventDiscovery'
 import { toQueryParams } from '@/api/eventApi'
-import { validateForm } from '@/pages/events/EventFormPage'
+import { validateForm, suggestedMin, isoWeekdayOf } from '@/pages/events/EventFormPage'
 import { validateRegistration } from '@/pages/auth/RegisterPage'
 import { buildIcs, formatEventDate } from '@/utils/format'
 import { makeEvent } from '@/test/fixtures'
@@ -57,6 +57,12 @@ describe('event form validation', () => {
     description: '',
     visibility: 'public' as const,
     location: { placeName: 'P', address: 'A', city: 'C', lat: 1, lng: 2 },
+    weekly: false,
+    weekday: 4,
+    minPlayers: '6',
+    deadlineHours: '3',
+    openDaysBefore: '5',
+    rsvpMode: 'ask' as const,
   }
 
   it('accepts a complete form', () => {
@@ -76,6 +82,19 @@ describe('event form validation', () => {
 
   it('treats an end before the start as next day', () => {
     expect(validateForm({ ...base, startTime: '22:00', endTime: '01:00' })).toEqual({})
+  })
+
+  it('a weekly game needs no date but a sensible minimum and duration', () => {
+    expect(validateForm({ ...base, weekly: true, date: '2000-01-01' })).toEqual({})
+    expect(Object.keys(validateForm({ ...base, weekly: true, minPlayers: '12' }))).toEqual(['minPlayers'])
+    expect(Object.keys(validateForm({ ...base, weekly: true, startTime: '18:00', endTime: '18:10' }))).toEqual(['endAt'])
+  })
+
+  it('suggests a minimum of about 60 % and finds the weekday of a date', () => {
+    expect(suggestedMin(10)).toBe(6)
+    expect(suggestedMin(2)).toBe(2)
+    expect(isoWeekdayOf('2026-11-22')).toBe(7)
+    expect(isoWeekdayOf('2026-11-19')).toBe(4)
   })
 })
 

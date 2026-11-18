@@ -48,7 +48,43 @@ export interface SportEvent {
   participants?: PublicPerson[]
   createdAt: string
   updatedAt: string
+
+  /** Waiting list (all events): size, and the viewer's place in it (1-based). */
+  waitlistCount?: number
+  waitlistPosition?: number | null
+  weather?: { summary: string; severe: boolean; tempC?: number; code?: number }
+  /** Organizer, co-host or admin. */
+  isHost?: boolean
+
+  // Stammspiel games only
+  series?: {
+    _id: string
+    name: string
+    weekday?: number
+    startTime?: string
+    rsvpMode?: 'ask' | 'autoIn'
+    memberCount: number
+    isMember: boolean
+    inviteCode?: string
+  }
+  minPlayers?: number | null
+  deadlineAt?: string | null
+  decision?: Decision
+  counts?: { in: number; out: number; waiting: number; noAnswer: number | null }
+  myAnswer?: MyAnswer
+  /** Members and hosts only. */
+  roster?: { out: PublicPerson[]; waiting: PublicPerson[]; noAnswer: PublicPerson[] }
+
+  // After the game
+  noShows?: { _id: string; disputed: boolean }[]
+  canMarkNoShows?: boolean
+  myNoShow?: { markedAt: string; disputed: boolean }
+  /** Moved up shortly before kick-off: confirm by then, or the spot passes on. */
+  myPendingPromotion?: { confirmBy: string } | null
 }
+
+export type Decision = 'open' | 'on' | 'off'
+export type MyAnswer = 'in' | 'out' | 'waiting' | null
 
 export interface EventInput {
   title: string
@@ -90,6 +126,8 @@ export interface EventQuery {
   page?: number
   limit?: number
   includePast?: boolean
+  /** Only games of weekly Stammspiele. */
+  series?: boolean
 }
 
 export interface EventListResult {
@@ -117,6 +155,7 @@ export function toQueryParams(q: EventQuery): Record<string, string> {
   if (q.page) p.page = String(q.page)
   if (q.limit) p.limit = String(q.limit)
   if (q.includePast) p.includePast = 'true'
+  if (q.series) p.series = 'true'
   return p
 }
 
@@ -169,6 +208,40 @@ export async function joinEvent(id: string): Promise<SportEvent> {
 
 export async function leaveEvent(id: string): Promise<SportEvent> {
   const { data } = await api.post(`/events/${id}/leave`)
+  return data.event
+}
+
+/** Queue for a full event; the first in line moves up automatically. */
+export async function joinWaitlist(id: string): Promise<SportEvent> {
+  const { data } = await api.post(`/events/${id}/waitlist`)
+  return data.event
+}
+
+/** Stammspiel games: "Ich bin dabei" / "Diesmal nicht". */
+export async function answerEvent(id: string, answer: 'in' | 'out'): Promise<SportEvent> {
+  const { data } = await api.post(`/events/${id}/answer`, { answer })
+  return data.event
+}
+
+/** "Ich komme" after moving up from the waiting list shortly before kick-off. */
+export async function confirmSpot(id: string): Promise<SportEvent> {
+  const { data } = await api.post(`/events/${id}/confirm-spot`)
+  return data.event
+}
+
+/** Hosts call a game early. */
+export async function decideEvent(id: string, decision: 'on' | 'off', reason?: string): Promise<SportEvent> {
+  const { data } = await api.post(`/events/${id}/decide`, { decision, reason })
+  return data.event
+}
+
+export async function markNoShows(id: string, userIds: string[]): Promise<SportEvent> {
+  const { data } = await api.put(`/events/${id}/no-shows`, { userIds })
+  return data.event
+}
+
+export async function disputeNoShow(id: string, note?: string): Promise<SportEvent> {
+  const { data } = await api.post(`/events/${id}/dispute`, { note })
   return data.event
 }
 

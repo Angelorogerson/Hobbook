@@ -29,7 +29,7 @@ export default function AdminReportsPage() {
 
   useEffect(load, [load])
 
-  const act = async (r: Report, body: { status: ReportStatus; cancelEvent?: boolean }) => {
+  const act = async (r: Report, body: { status: ReportStatus; cancelEvent?: boolean; deactivateUser?: boolean }) => {
     setBusy(r._id)
     try {
       await updateReport(r._id, body)
@@ -79,7 +79,12 @@ export default function AdminReportsPage() {
               </span>
             </div>
             {r.text && <p className="admin-text">„{r.text}“</p>}
-            {r.event ? (
+            {r.targetUser ? (
+              <p>
+                Person: <Link to={`/leute/${r.targetUser._id}`}>{r.targetUser.displayName}</Link>{' '}
+                {!r.targetUser.active && <span className="badge badge-cancelled">Gesperrt</span>}
+              </p>
+            ) : r.event ? (
               <p>
                 Event: <Link to={`/events/${r.event._id}`}>{r.event.title}</Link> <StatusBadge status={r.event.status} />{' '}
                 <span className="admin-meta">
@@ -92,6 +97,11 @@ export default function AdminReportsPage() {
             {r.note && <p className="admin-meta">Notiz: {r.note}</p>}
             {r.status === 'open' && (
               <div className="admin-actions">
+                {r.targetUser?.active && (
+                  <button type="button" className="btn btn-danger btn-sm" disabled={busy === r._id} onClick={() => act(r, { status: 'resolved', deactivateUser: true })}>
+                    Konto sperren & erledigen
+                  </button>
+                )}
                 {r.event && (r.event.status === 'open' || r.event.status === 'full') && (
                   <button type="button" className="btn btn-danger btn-sm" disabled={busy === r._id} onClick={() => act(r, { status: 'resolved', cancelEvent: true })}>
                     Event absagen & erledigen
