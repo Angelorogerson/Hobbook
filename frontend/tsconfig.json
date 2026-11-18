@@ -30,6 +30,5 @@
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src"],
-  "exclude": ["src/legacy"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

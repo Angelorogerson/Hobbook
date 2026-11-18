@@ -17,7 +17,8 @@ process.env.CLIENT_URL =
 const { createApp } = await import('../app.js');
 const { seed } = await import('./seed.js');
 
-const mongo = await MongoMemoryServer.create();
+// A generous launch timeout: on a busy machine mongod can need more than the default 10 s.
+const mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 60000 } });
 await mongoose.connect(mongo.getUri());
 await seed();
 

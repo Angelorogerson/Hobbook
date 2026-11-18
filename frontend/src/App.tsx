@@ -7,6 +7,7 @@ import ProtectedRoute from './components/layout/ProtectedRoute'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import LoadingSpinner from './components/common/LoadingSpinner'
+import ServerWakeNotice from './components/layout/ServerWakeNotice'
 import { LoginPage, RegisterPage } from '@/pages/auth'
 import LandingPage from '@/pages/landing/LandingPage'
 import MyEventsPage from '@/pages/events/MyEventsPage'
@@ -81,6 +82,7 @@ export default function App() {
           <a href="#main" className="skip-link">
             Zum Inhalt springen
           </a>
+          <ServerWakeNotice />
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registrieren" element={<RegisterPage />} />

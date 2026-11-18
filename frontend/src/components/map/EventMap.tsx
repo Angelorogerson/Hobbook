@@ -22,6 +22,8 @@ interface Props {
   label?: string
   /** Client-side navigation for the popup link. */
   onOpen?: (id: string) => void
+  /** Centre used when a position search returns no mappable events. */
+  focus?: { lat: number; lng: number } | null
 }
 
 const mappable = (e: SportEvent) => e.location.lat !== null && e.location.lng !== null
@@ -50,7 +52,7 @@ function popupContent(e: SportEvent, onOpen?: (id: string) => void) {
   return root
 }
 
-export default function EventMap({ events, selectedId, onSelect, onSearchArea, fitKey, compact, label, onOpen }: Props) {
+export default function EventMap({ events, selectedId, onSelect, onSearchArea, fitKey, compact, label, onOpen, focus }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
   const markersRef = useRef<Map<string, { marker: Marker; el: HTMLButtonElement }>>(new Map())
@@ -167,7 +169,11 @@ export default function EventMap({ events, selectedId, onSelect, onSearchArea, f
     const map = mapRef.current
     if (!map || !loaded) return
     const pts = events.filter(mappable)
-    if (pts.length === 0) return
+    if (pts.length === 0) {
+      // Nothing to fit: still move to the searched position so the map shows the right place.
+      if (focus) map.jumpTo({ center: [focus.lng, focus.lat], zoom: 11 })
+      return
+    }
     if (pts.length === 1) {
       map.jumpTo({ center: [pts[0].location.lng!, pts[0].location.lat!], zoom: compact ? 15 : 13 })
     } else {

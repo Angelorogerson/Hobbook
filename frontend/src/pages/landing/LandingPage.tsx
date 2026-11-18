@@ -269,7 +269,7 @@ function Ticket({ event }: { event: SportEvent }) {
   const { time } = formatEventDate(event.startAt, event.endAt, event.timezone)
   return (
     <figure className="lp-ticket" style={{ ['--sport-c' as string]: sportColor(event.sport) }}>
-      <Link to={`/events/${event._id}`} className="lp-ticket-card" aria-label={`${event.title} ansehen`}>
+      <Link to={`/events/${event._id}`} className="lp-ticket-card">
         <div className="lp-ticket-head">
           <DateTile iso={event.startAt} timeZone={event.timezone} size="lg" />
           <div>

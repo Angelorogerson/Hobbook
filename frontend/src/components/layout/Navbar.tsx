@@ -25,9 +25,6 @@ export default function Navbar() {
             <NavLink to="/entdecken" className={linkClass}>
               <Compass size={18} aria-hidden="true" /> Entdecken
             </NavLink>
-            <NavLink to="/karte" className={linkClass}>
-              <MapIcon size={18} aria-hidden="true" /> Karte
-            </NavLink>
             <NavLink to="/meine-events" className={linkClass}>
               <CalendarCheck size={18} aria-hidden="true" /> Meine Events
             </NavLink>

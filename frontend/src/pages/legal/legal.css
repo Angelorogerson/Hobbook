@@ -11,3 +11,8 @@
   margin-bottom: var(--space-2);
   color: var(--c-text);
 }
+.legal-address {
+  font-style: normal;
+  line-height: 1.6;
+  margin-bottom: var(--space-3);
+}

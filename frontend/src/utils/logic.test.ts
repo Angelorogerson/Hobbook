@@ -33,6 +33,16 @@ describe('discovery helpers', () => {
       limit: '200',
     })
   })
+
+  it('sends a coarse position for near-me searches, and a map area wins over it', () => {
+    expect(toQueryParams({ near: { lat: 49.44321, lng: 7.76899 }, radiusKm: 25 })).toEqual({
+      near: '7.77,49.44',
+      radiusKm: '25',
+    })
+    const withArea = toQueryParams({ near: { lat: 49.4, lng: 7.7 }, radiusKm: 25, bbox: { minLng: 1, minLat: 2, maxLng: 3, maxLat: 4 } })
+    expect(withArea.near).toBeUndefined()
+    expect(withArea.radiusKm).toBeUndefined()
+  })
 })
 
 describe('event form validation', () => {
@@ -71,7 +81,8 @@ describe('event form validation', () => {
 
 describe('registration validation', () => {
   it('flags all problems', () => {
-    expect(Object.keys(validateRegistration({ name: 'A', email: 'x', password: 'short', confirm: 'other' })).sort()).toEqual([
+    expect(Object.keys(validateRegistration({ name: 'A', email: 'x', password: 'short', confirm: 'other', age: false })).sort()).toEqual([
+      'age',
       'confirm',
       'email',
       'name',

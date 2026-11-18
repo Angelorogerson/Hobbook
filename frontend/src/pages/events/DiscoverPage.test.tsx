@@ -71,7 +71,7 @@ describe('DiscoverPage', () => {
     expect(screen.getByText(/1 ohne Kartenposition/)).toBeInTheDocument()
 
     // Card → map
-    await user.click(screen.getByRole('button', { name: 'Basketball B auf der Karte zeigen' }))
+    await user.click(screen.getByRole('button', { name: 'Auf Karte zeigen: Basketball B' }))
     expect(map).toHaveAttribute('data-selected', 'b')
 
     // Map → card
@@ -112,6 +112,48 @@ describe('DiscoverPage', () => {
     renderPage('/?stadt=Nirgendwo')
     expect(await screen.findByText(/keine offenen Events/)).toBeInTheDocument()
     expect(screen.getAllByRole('link', { name: /Event erstellen/ }).length).toBeGreaterThan(0)
+  })
+
+  it('searches around the viewer only after a click, and a city search replaces it', async () => {
+    listEvents.mockResolvedValue({ events: [], total: 0, page: 1, limit: 200 })
+    const getCurrentPosition = vi.fn((ok: (p: { coords: { latitude: number; longitude: number } }) => void) =>
+      ok({ coords: { latitude: 49.44, longitude: 7.77 } })
+    )
+    Object.defineProperty(navigator, 'geolocation', { value: { getCurrentPosition }, configurable: true })
+    const user = userEvent.setup()
+    renderPage()
+    await screen.findByText(/Keine Events gefunden/)
+    expect(getCurrentPosition).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'In meiner Nähe' }))
+    await waitFor(() => {
+      const last = listEvents.mock.calls[listEvents.mock.calls.length - 1][0]
+      expect(last.near).toEqual({ lat: 49.44, lng: 7.77 })
+      expect(last.radiusKm).toBe(25)
+    })
+    // The position is never written to the shareable URL.
+    expect(screen.getByTestId('location').textContent).toBe('')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('in deiner Nähe (25 km)')
+
+    await user.type(screen.getByLabelText('Stadt oder Gebiet'), 'Mannheim')
+    await user.click(screen.getByRole('button', { name: 'Stadt suchen' }))
+    await waitFor(() => {
+      const last = listEvents.mock.calls[listEvents.mock.calls.length - 1][0]
+      expect(last.city).toBe('Mannheim')
+      expect(last.near).toBeUndefined()
+    })
+  })
+
+  it('explains a refused location request', async () => {
+    listEvents.mockResolvedValue({ events: [], total: 0, page: 1, limit: 200 })
+    const getCurrentPosition = vi.fn((_ok: unknown, fail: (e: { code: number; PERMISSION_DENIED: number }) => void) =>
+      fail({ code: 1, PERMISSION_DENIED: 1 })
+    )
+    Object.defineProperty(navigator, 'geolocation', { value: { getCurrentPosition }, configurable: true })
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'In meiner Nähe' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(/nicht erlaubt/)
   })
 
   it('shows an error with retry', async () => {

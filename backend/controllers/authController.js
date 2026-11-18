@@ -1,68 +1,41 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
 
+const signToken = (user) =>
+  jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+
+const sessionUser = (user) => ({ _id: user._id, name: user.name, email: user.email, role: user.role });
+
+/** POST /api/auth/register — body validated by registerSchema. */
 const register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password } = req.validated.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Alle Felder erforderlich' });
-  }
-  if (String(password).length < 8) {
-    return res.status(400).json({ message: 'Das Passwort muss mindestens 8 Zeichen haben', errors: { password: 'Mindestens 8 Zeichen' } });
-  }
-
-  const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
+  const existing = await User.findOne({ email });
   if (existing) {
-    return res.status(400).json({ message: 'E-Mail bereits registriert' });
+    return res.status(400).json({ message: 'E-Mail bereits registriert', errors: { email: 'E-Mail bereits registriert' } });
   }
 
-  const user = await User.create({ name, email, password });
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
-
-  res.status(201).json({
-    token,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  });
+  const user = await User.create({ name, email, password, ageConfirmedAt: new Date() });
+  res.status(201).json({ token: signToken(user), user: sessionUser(user) });
 };
 
+/** POST /api/auth/login — body validated by loginSchema. */
 const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Alle Felder erforderlich' });
-  }
+  const { email, password } = req.validated.body;
 
   const user = await User.findOne({ email }).select('+password');
-
   if (!user || !(await user.comparePassword(password))) {
     return res.status(401).json({ message: 'Ungültige E-Mail oder Passwort' });
   }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-  });
-
-  res.status(200).json({
-    token,
-    user: {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  });
+  res.status(200).json({ token: signToken(user), user: sessionUser(user) });
 };
 
 const getMe = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json({ user });
+  const u = req.user;
+  res.json({
+    user: { _id: u._id, name: u.name, email: u.email, role: u.role, city: u.city || '', sports: u.sports || [] },
+  });
 };
 
 export { register, login, getMe };

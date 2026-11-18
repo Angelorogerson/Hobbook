@@ -80,7 +80,8 @@ const EventCard = forwardRef<HTMLElement, Props>(function EventCard({ event, sel
                   e.stopPropagation()
                   onShowOnMap(event._id)
                 }}
-                aria-label={`${event.title} auf der Karte zeigen`}
+                // Starts with the visible text so voice control ("Auf Karte") finds the button.
+                aria-label={`Auf Karte zeigen: ${event.title}`}
               >
                 <Crosshair size={16} aria-hidden="true" /> Auf Karte
               </button>

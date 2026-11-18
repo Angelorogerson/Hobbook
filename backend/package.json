@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e:server": "node scripts/e2e-server.js",
-    "migrate:events": "node scripts/migrate-events.js"
+    "migrate:events": "node scripts/migrate-events.js",
+    "make-admin": "node scripts/make-admin.js",
+    "backup": "node scripts/backup.js"
   },
   "keywords": [],
   "author": "",

@@ -164,6 +164,12 @@ describe('app basics', () => {
     expect((await api().get('/api/favorites')).status).toBe(404);
   });
 
+  it('GET /health reports the database state', async () => {
+    const res = await api().get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.db).toBe('up');
+  });
+
   it('serves the sports list', async () => {
     const res = await api().get('/api/sports');
     expect(res.body.sports.length).toBeGreaterThan(2);

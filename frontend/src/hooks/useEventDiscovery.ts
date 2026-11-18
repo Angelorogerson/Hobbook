@@ -18,9 +18,34 @@ export interface DiscoveryFilters {
   sport: string
   when: WhenFilter
   area: BBox | null
+  /** Search around the viewer's position. Kept in memory only, never in the URL. */
+  near: { lat: number; lng: number } | null
 }
 
 const PAGE_SIZE = 200 // map + list share one result set; the API caps at 200
+export const NEAR_RADIUS_KM = 25
+
+/** Ask the browser for the current position (only ever called after a click). */
+export function currentPosition(): Promise<{ lat: number; lng: number }> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) {
+      reject(new Error('Dein Browser unterstützt keine Standortabfrage.'))
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (err) =>
+        reject(
+          new Error(
+            err.code === err.PERMISSION_DENIED
+              ? 'Standortzugriff wurde nicht erlaubt. Such stattdessen nach deiner Stadt.'
+              : 'Dein Standort konnte nicht ermittelt werden. Such stattdessen nach deiner Stadt.'
+          )
+        ),
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 5 * 60 * 1000 }
+    )
+  })
+}
 
 /** Date range for a quick filter, in the viewer's local time. */
 export function rangeFor(when: WhenFilter, now = new Date()): { from?: string; to?: string } {
@@ -64,16 +89,22 @@ const serializeArea = (b: BBox) => [b.minLng, b.minLat, b.maxLng, b.maxLat].map(
  */
 export function useEventDiscovery() {
   const [params, setParams] = useSearchParams()
+  const [near, setNear] = useState<{ lat: number; lng: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+  const [locateError, setLocateError] = useState<string | null>(null)
 
-  const filters: DiscoveryFilters = useMemo(
-    () => ({
-      city: params.get('stadt') || '',
+  const filters: DiscoveryFilters = useMemo(() => {
+    const city = params.get('stadt') || ''
+    const area = parseArea(params.get('bereich'))
+    return {
+      city,
       sport: params.get('sport') || '',
       when: (params.get('wann') as WhenFilter) || 'all',
-      area: parseArea(params.get('bereich')),
-    }),
-    [params]
-  )
+      area,
+      // A city or map area is the more specific choice and wins over the position.
+      near: city || area ? null : near,
+    }
+  }, [params, near])
 
   const [events, setEvents] = useState<SportEvent[]>([])
   const [total, setTotal] = useState(0)
@@ -86,6 +117,8 @@ export function useEventDiscovery() {
       city: filters.area ? undefined : filters.city || undefined,
       sport: filters.sport || undefined,
       bbox: filters.area || undefined,
+      near: filters.near || undefined,
+      radiusKm: filters.near ? NEAR_RADIUS_KM : undefined,
       ...rangeFor(filters.when),
       limit: PAGE_SIZE,
     }),
@@ -140,6 +173,25 @@ export function useEventDiscovery() {
     setWhen: (when: WhenFilter) => update({ wann: when === 'all' ? null : when }),
     setArea: (area: BBox) => update({ bereich: serializeArea(area), stadt: null }),
     clearArea: () => update({ bereich: null }),
-    reset: () => setParams(new URLSearchParams(), { replace: true }),
+    locating,
+    locateError,
+    locate: async () => {
+      setLocating(true)
+      setLocateError(null)
+      try {
+        setNear(await currentPosition())
+        update({ stadt: null, bereich: null })
+      } catch (err) {
+        setLocateError(err instanceof Error ? err.message : 'Dein Standort konnte nicht ermittelt werden.')
+      } finally {
+        setLocating(false)
+      }
+    },
+    clearNear: () => setNear(null),
+    reset: () => {
+      setNear(null)
+      setLocateError(null)
+      setParams(new URLSearchParams(), { replace: true })
+    },
   }
 }

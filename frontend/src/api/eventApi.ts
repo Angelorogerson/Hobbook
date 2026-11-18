@@ -76,6 +76,9 @@ export interface EventQuery {
   from?: string
   to?: string
   bbox?: BBox
+  /** Search around a point (see radiusKm). */
+  near?: { lat: number; lng: number }
+  radiusKm?: number
   page?: number
   limit?: number
   includePast?: boolean
@@ -97,6 +100,11 @@ export function toQueryParams(q: EventQuery): Record<string, string> {
   if (q.bbox) {
     const { minLng, minLat, maxLng, maxLat } = q.bbox
     p.bbox = [minLng, minLat, maxLng, maxLat].map((n) => n.toFixed(5)).join(',')
+  }
+  if (q.near && !q.bbox) {
+    // Two decimals (about 1 km) are enough for a radius search and keep the position coarse.
+    p.near = `${q.near.lng.toFixed(2)},${q.near.lat.toFixed(2)}`
+    if (q.radiusKm) p.radiusKm = String(q.radiusKm)
   }
   if (q.page) p.page = String(q.page)
   if (q.limit) p.limit = String(q.limit)

@@ -14,6 +14,13 @@
       "runtimeArgs": ["--prefix", "frontend", "run", "dev", "--", "--port", "5180", "--strictPort", "--mode", "demo"],
       "port": 5180,
       "autoPort": false
+    },
+    {
+      "name": "web-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "preview", "--", "--port", "5180", "--strictPort"],
+      "port": 5180,
+      "autoPort": false
     }
   ]
 }

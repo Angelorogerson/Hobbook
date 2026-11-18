@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, 'Password is required'],
-      minlength: 6,
+      minlength: 8,
       select: false,
     },
     role: {
@@ -38,24 +38,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    avatar: {
-      type: String,
-      default: null,
-    },
     isActive: {
       type: Boolean,
       default: true,
     },
-    favorites: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Venue',
-      },
-    ],
+    // Set at sign-up: the person confirmed they are at least 16 years old.
+    ageConfirmedAt: { type: Date },
   },
   { timestamps: true }
 );

@@ -5,7 +5,7 @@ import EventMap from '@/components/map/EventMap'
 import EventCard from '@/components/events/EventCard'
 import FilterBar from '@/components/events/FilterBar'
 import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
-import { useEventDiscovery } from '@/hooks/useEventDiscovery'
+import { NEAR_RADIUS_KM, useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
 import './DiscoverPage.css'
 
@@ -42,14 +42,23 @@ export default function DiscoverPage({ initialView }: Props) {
   // With an explicit map area the viewport is the user's choice: don't jump.
   const areaActive = !!d.filters.area
   const fitKey = useMemo(
-    () => (areaActive ? 'area' : [d.filters.city, d.filters.sport, d.filters.when, d.loading ? 'l' : 'r'].join('|')),
-    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.loading]
+    () =>
+      areaActive
+        ? 'area'
+        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.loading ? 'l' : 'r'].join('|'),
+    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.loading]
   )
   const unmappable = d.events.filter((e) => e.location.lat === null).length
 
   const heading = [
     d.filters.sport ? sportLabel(d.filters.sport) : 'Sport-Events',
-    areaActive ? 'im Kartenausschnitt' : d.filters.city ? `in ${d.filters.city}` : 'in deiner Nähe und überall',
+    areaActive
+      ? 'im Kartenausschnitt'
+      : d.filters.city
+        ? `in ${d.filters.city}`
+        : d.filters.near
+          ? `in deiner Nähe (${NEAR_RADIUS_KM} km)`
+          : 'in deiner Nähe und überall',
   ].join(' ')
 
   return (
@@ -66,6 +75,10 @@ export default function DiscoverPage({ initialView }: Props) {
             onWhen={d.setWhen}
             onClearArea={d.clearArea}
             onReset={d.reset}
+            onNearMe={d.locate}
+            onClearNear={d.clearNear}
+            locating={d.locating}
+            locateError={d.locateError}
           />
           <p className="discover-count" role="status" aria-live="polite">
             {d.loading
@@ -153,6 +166,7 @@ export default function DiscoverPage({ initialView }: Props) {
           onOpen={(id) => navigate(`/events/${id}`)}
           onSearchArea={d.setArea}
           fitKey={fitKey}
+          focus={d.filters.near}
         />
       </section>
 

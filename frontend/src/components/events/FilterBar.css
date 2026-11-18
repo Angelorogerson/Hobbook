@@ -29,3 +29,11 @@
   align-items: center;
   gap: var(--space-2);
 }
+.filterbar-near {
+  justify-self: start;
+}
+.filterbar-near-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--c-danger);
+}

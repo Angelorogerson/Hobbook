@@ -7,12 +7,13 @@ import { Logo } from '@/components/ui/Brand'
 import { INTENT_TEXT } from './LoginPage'
 import './auth.css'
 
-export function validateRegistration(v: { name: string; email: string; password: string; confirm: string }) {
+export function validateRegistration(v: { name: string; email: string; password: string; confirm: string; age: boolean }) {
   const e: Record<string, string> = {}
   if (v.name.trim().length < 2) e.name = 'Bitte gib deinen Namen an (mind. 2 Zeichen).'
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.email.trim())) e.email = 'Bitte gib eine gültige E-Mail-Adresse ein.'
   if (v.password.length < 8) e.password = 'Das Passwort muss mindestens 8 Zeichen haben.'
   if (v.password !== v.confirm) e.confirm = 'Die Passwörter stimmen nicht überein.'
+  if (!v.age) e.age = 'Bitte bestätige, dass du mindestens 16 Jahre alt bist.'
   return e
 }
 
@@ -23,12 +24,12 @@ export default function RegisterPage() {
   const from = state.from && state.from.startsWith('/') ? state.from : '/'
   const { register } = useAuthContext()
 
-  const [v, setV] = useState({ name: '', email: '', password: '', confirm: '' })
+  const [v, setV] = useState({ name: '', email: '', password: '', confirm: '', age: false })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const field = (key: keyof typeof v, label: string, type: string, autoComplete: string, hint?: string) => (
+  const field = (key: 'name' | 'email' | 'password' | 'confirm', label: string, type: string, autoComplete: string, hint?: string) => (
     <div className="field">
       <label htmlFor={`reg-${key}`}>{label}</label>
       <input
@@ -73,10 +74,12 @@ export default function RegisterPage() {
             if (Object.keys(errs).length) return
             setBusy(true)
             try {
-              await register({ name: v.name.trim(), email: v.email.trim(), password: v.password })
+              await register({ name: v.name.trim(), email: v.email.trim(), password: v.password, ageConfirmed: true })
               navigate(from, { replace: true })
             } catch (err) {
-              setError(apiError(err, 'Registrierung fehlgeschlagen.').message)
+              const info = apiError(err, 'Registrierung fehlgeschlagen.')
+              setError(info.message)
+              setErrors(info.errors)
               setBusy(false)
             }
           }}
@@ -85,6 +88,24 @@ export default function RegisterPage() {
           {field('email', 'E-Mail', 'email', 'email')}
           {field('password', 'Passwort', 'password', 'new-password', 'Mindestens 8 Zeichen')}
           {field('confirm', 'Passwort wiederholen', 'password', 'new-password')}
+          <div className="field">
+            <label className="check-row" htmlFor="reg-age">
+              <input
+                id="reg-age"
+                type="checkbox"
+                checked={v.age}
+                onChange={(e) => setV({ ...v, age: e.target.checked })}
+                aria-invalid={!!errors.age}
+                aria-describedby={errors.age ? 'reg-age-err' : undefined}
+              />
+              Ich bin mindestens 16 Jahre alt.
+            </label>
+            {errors.age && (
+              <span id="reg-age-err" className="error">
+                {errors.age}
+              </span>
+            )}
+          </div>
           {error && (
             <p className="notice notice-danger" role="alert">
               <AlertTriangle size={18} aria-hidden="true" />

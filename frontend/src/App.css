@@ -77,3 +77,19 @@
     height: calc(100dvh - var(--header-h) - var(--bottom-nav-h) - env(safe-area-inset-bottom));
   }
 }
+
+/* Server wake-up hint (free hosting sleeps when idle) */
+.wake-notice {
+  position: fixed;
+  left: 50%;
+  top: calc(var(--header-h) + var(--space-3));
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  width: max-content;
+  max-width: calc(100vw - 2 * var(--space-4));
+  margin: 0;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+}
+.site-footer-support {
+  gap: var(--space-1);
+}

@@ -11,7 +11,7 @@ const publicUser = (u) => ({
   sports: u.sports || [],
 });
 
-/** PUT /api/users/me — name, city, sports only (phone/avatar are no longer collected). */
+/** PUT /api/users/me — name, city, sports only. */
 const updateMe = async (req, res) => {
   const set = {};
   if (req.body.name !== undefined) {
@@ -35,13 +35,7 @@ const updateMe = async (req, res) => {
 
 /** PUT /api/users/me/password */
 const updatePassword = async (req, res) => {
-  const { currentPassword, newPassword } = req.body || {};
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ message: 'Aktuelles und neues Passwort sind erforderlich' });
-  }
-  if (String(newPassword).length < 8) {
-    return res.status(400).json({ message: 'Das neue Passwort muss mindestens 8 Zeichen haben' });
-  }
+  const { currentPassword, newPassword } = req.validated.body;
 
   const user = await User.findById(req.user._id).select('+password');
   if (!(await user.comparePassword(currentPassword))) {
@@ -61,9 +55,9 @@ const updatePassword = async (req, res) => {
  * - reports keep their content but lose the reporter reference
  */
 const deleteMe = async (req, res) => {
-  const { password } = req.body || {};
+  const { password } = req.validated.body;
   const user = await User.findById(req.user._id).select('+password');
-  if (!password || !(await user.comparePassword(password))) {
+  if (!(await user.comparePassword(password))) {
     return res.status(400).json({ message: 'Bitte bestätige mit deinem Passwort' });
   }
 

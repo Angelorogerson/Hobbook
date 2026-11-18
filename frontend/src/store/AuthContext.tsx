@@ -40,10 +40,18 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
   }
 }
 
+interface RegisterInput {
+  name: string
+  email: string
+  password: string
+  /** The person confirmed they are at least 16 years old. */
+  ageConfirmed: boolean
+}
+
 interface AuthContextValue {
   authState: AuthState
   login: (email: string, password: string) => Promise<void>
-  register: (userData: { name: string; email: string; password: string }) => Promise<void>
+  register: (userData: RegisterInput) => Promise<void>
   logout: () => void
   updateUser: (userData: Partial<Pick<User, 'name' | 'city' | 'sports'>>) => Promise<void>
 }
@@ -82,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOGIN_SUCCESS', payload: { token: data.token, user: data.user } })
   }, [])
 
-  const register = useCallback(async (userData: { name: string; email: string; password: string }) => {
+  const register = useCallback(async (userData: RegisterInput) => {
     const { data } = await api.post('/auth/register', userData)
     localStorage.setItem(TOKEN_KEY, data.token)
     dispatch({ type: 'LOGIN_SUCCESS', payload: { token: data.token, user: data.user } })

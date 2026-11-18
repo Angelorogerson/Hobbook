@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { LocateFixed, Search, X } from 'lucide-react'
 import { SPORTS } from '@/constants/sports'
 import { WHEN_OPTIONS, type DiscoveryFilters, type WhenFilter } from '@/hooks/useEventDiscovery'
 import './FilterBar.css'
@@ -11,13 +11,29 @@ interface Props {
   onWhen: (when: WhenFilter) => void
   onClearArea: () => void
   onReset: () => void
+  /** Search around the viewer's position (asks the browser for permission). */
+  onNearMe?: () => void
+  onClearNear?: () => void
+  locating?: boolean
+  locateError?: string | null
 }
 
-export default function FilterBar({ filters, onCity, onSport, onWhen, onClearArea, onReset }: Props) {
+export default function FilterBar({
+  filters,
+  onCity,
+  onSport,
+  onWhen,
+  onClearArea,
+  onReset,
+  onNearMe,
+  onClearNear,
+  locating,
+  locateError,
+}: Props) {
   const [city, setCity] = useState(filters.city)
   useEffect(() => setCity(filters.city), [filters.city])
 
-  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area)
+  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near)
 
   return (
     <div className="filterbar">
@@ -47,6 +63,17 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
           Suchen
         </button>
       </form>
+
+      {onNearMe && !filters.near && (
+        <button type="button" className="btn btn-ghost btn-sm filterbar-near" onClick={onNearMe} disabled={locating}>
+          <LocateFixed size={16} aria-hidden="true" /> {locating ? 'Standort wird ermittelt …' : 'In meiner Nähe'}
+        </button>
+      )}
+      {locateError && (
+        <p className="filterbar-near-error" role="alert">
+          {locateError}
+        </p>
+      )}
 
       <div className="filterbar-row">
         <label htmlFor="filter-sport" className="sr-only">
@@ -83,6 +110,11 @@ export default function FilterBar({ filters, onCity, onSport, onWhen, onClearAre
           {filters.area && (
             <button type="button" className="chip is-on" onClick={onClearArea}>
               Kartenausschnitt <X size={14} aria-label="entfernen" />
+            </button>
+          )}
+          {filters.near && (
+            <button type="button" className="chip is-on" onClick={onClearNear}>
+              In meiner Nähe <X size={14} aria-label="entfernen" />
             </button>
           )}
           <button type="button" className="btn btn-ghost btn-sm" onClick={onReset}>
