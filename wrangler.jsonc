@@ -1,0 +1,13 @@
+// Cloudflare Workers static assets: serves the built frontend.
+// Build command in Cloudflare: cd frontend && npm ci && npm run build
+// Deploy command: npx wrangler deploy
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hobbook",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./frontend/dist",
+    // Unknown paths such as /events/123 return index.html so the React router can handle them.
+    "not_found_handling": "single-page-application"
+  }
+}

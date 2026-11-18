@@ -85,7 +85,7 @@ The server refuses to start in production without `JWT_SECRET` or with a weak on
 
    The three `VITE_OPERATOR_*` values fill the imprint and the privacy page. While one is missing, both pages show a visible "not filled in yet" warning.
 
-4. `frontend/public/_redirects` makes deep links such as `/events/123` work. `frontend/public/_headers` sets the security headers (Content-Security-Policy and others). Both are picked up automatically.
+4. `wrangler.jsonc` makes deep links such as `/events/123` work. `frontend/public/_headers` sets the security headers (Content-Security-Policy and others). Both are picked up automatically.
 5. Go back to Render and set `CLIENT_URL` to the final Pages address, otherwise the browser blocks API calls (CORS).
 
 ## 5. First admin account
