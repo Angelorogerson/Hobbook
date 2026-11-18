@@ -1,0 +1,55 @@
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--c-surface);
+  background: var(--c-accent-soft);
+  color: var(--c-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  line-height: 1;
+}
+.avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.6875rem;
+}
+.avatar--lg {
+  width: 56px;
+  height: 56px;
+  font-size: var(--text-lg);
+}
+/* Tints reuse existing soft tokens; ink text keeps every pair readable */
+.avatar--t0 {
+  background: var(--c-accent-soft);
+}
+.avatar--t1 {
+  background: var(--c-success-soft);
+}
+.avatar--t2 {
+  background: var(--c-warning-soft);
+}
+.avatar--t3 {
+  background: var(--c-danger-soft);
+}
+.avatar--t4 {
+  background: var(--c-hl);
+  color: var(--c-on-hl);
+}
+.avatar--t5 {
+  background: var(--c-neutral-soft);
+}
+.avatar--more {
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+}
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+}
+.avatar-stack .avatar + .avatar {
+  margin-left: -8px;
+}

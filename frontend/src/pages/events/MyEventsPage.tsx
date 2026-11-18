@@ -7,7 +7,7 @@ import { apiError } from '@/api/axiosInstance'
 import EventCard from '@/components/events/EventCard'
 import CancelEventDialog from '@/components/events/CancelEventDialog'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
-import Modal from '@/components/common/Modal'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
 import './MyEventsPage.css'
 
 type Tab = 'created' | 'joined'
@@ -180,31 +180,24 @@ export default function MyEventsPage() {
         />
       )}
       {deleting && (
-        <Modal title="Event löschen?" onClose={() => setDeleting(null)}>
+        <ConfirmDialog
+          title="Event löschen?"
+          confirmLabel="Endgültig löschen"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const ev = deleting
+            try {
+              await deleteEvent(ev._id)
+              setMessage(`„${ev.title}“ wurde gelöscht.`)
+            } catch (err) {
+              setMessage(apiError(err).message, 'danger')
+            }
+            setDeleting(null)
+            load()
+          }}
+        >
           <p>„{deleting.title}“ wird endgültig gelöscht. Es hat sich noch niemand angemeldet.</p>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => setDeleting(null)}>
-              Abbrechen
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={async () => {
-                const ev = deleting
-                setDeleting(null)
-                try {
-                  await deleteEvent(ev._id)
-                  setMessage(`„${ev.title}“ wurde gelöscht.`)
-                } catch (err) {
-                  setMessage(apiError(err).message, 'danger')
-                }
-                load()
-              }}
-            >
-              Endgültig löschen
-            </button>
-          </div>
-        </Modal>
+        </ConfirmDialog>
       )}
     </div>
   )

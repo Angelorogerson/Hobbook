@@ -15,9 +15,9 @@
   justify-content: center;
   gap: var(--space-2);
   min-height: var(--control-h);
-  padding: 0 var(--space-4);
+  padding: 0 var(--space-5);
   border: 1px solid var(--btn-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
   background: var(--btn-bg);
   color: var(--btn-fg);
   font-weight: var(--weight-semibold);
@@ -37,7 +37,7 @@
   text-decoration: none;
 }
 .btn:active:not(:disabled) {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 .btn:disabled,
 .btn[aria-disabled='true'] {
@@ -54,7 +54,26 @@
   border-color: var(--c-accent-hover);
 }
 .btn-secondary {
-  /* default tokens */
+  --btn-border: var(--c-border);
+}
+/* Ink button: strong secondary on light surfaces */
+.btn-ink {
+  --btn-bg: var(--c-ink);
+  --btn-fg: var(--c-on-ink);
+  --btn-border: var(--c-ink);
+  --btn-bg-hover: var(--c-ink);
+}
+/* Highlight button: the confirmed, positive state ("Du bist dabei") */
+.btn-hl {
+  --btn-bg: var(--c-hl);
+  --btn-fg: var(--c-on-hl);
+  --btn-border: var(--c-hl);
+  --btn-bg-hover: var(--c-hl-hover);
+}
+.btn-lg {
+  min-height: var(--control-h-lg);
+  padding: 0 var(--space-6);
+  font-size: var(--text-lg);
 }
 .btn-outline {
   --btn-bg: transparent;
@@ -72,6 +91,7 @@
   --btn-bg: transparent;
   --btn-border: transparent;
   --btn-fg: var(--c-text-muted);
+  padding: 0 var(--space-3);
 }
 .btn-ghost:hover:not(:disabled) {
   color: var(--c-text);
@@ -238,9 +258,9 @@ fieldset.field {
 }
 .chip[aria-pressed='true'],
 .chip.is-on {
-  border-color: var(--c-accent);
-  background: var(--c-accent-soft);
-  color: var(--c-accent-text);
+  border-color: var(--c-ink);
+  background: var(--c-ink);
+  color: var(--c-on-ink);
 }
 .chip input {
   accent-color: var(--c-accent);
@@ -256,7 +276,7 @@ fieldset.field {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 2px var(--space-2);
+  padding: 3px var(--space-3);
   border-radius: var(--radius-pill);
   font-size: var(--text-xs);
   font-weight: var(--weight-semibold);
@@ -366,6 +386,7 @@ fieldset.field {
 .tab[aria-selected='true'],
 .tab.tab-active {
   color: var(--c-text);
+  border-bottom-width: 3px;
   border-bottom-color: var(--c-accent);
 }
 
@@ -384,8 +405,8 @@ fieldset.field {
   width: 56px;
   height: 56px;
   border-radius: var(--radius-pill);
-  background: var(--c-surface-2);
-  color: var(--c-text-muted);
+  background: var(--c-hl);
+  color: var(--c-on-hl);
 }
 .state h2,
 .state h3 {

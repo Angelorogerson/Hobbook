@@ -23,7 +23,8 @@
 .date-tile-day {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-display);
   margin: 2px 0;
 }
 .date-tile--lg {
@@ -31,7 +32,7 @@
   min-height: 80px;
 }
 .date-tile--lg .date-tile-day {
-  font-size: var(--text-4xl);
+  font-size: var(--text-3xl);
 }
 
 /* Capacity meter */
@@ -41,10 +42,10 @@
   gap: var(--space-1);
 }
 .capacity--low {
-  --cap-color: var(--c-accent);
+  --cap-color: var(--c-warning);
 }
 .capacity--full {
-  --cap-color: var(--c-warning);
+  --cap-color: var(--c-text-subtle);
 }
 .capacity--muted {
   --cap-color: var(--c-text-subtle);
@@ -52,14 +53,14 @@
 .capacity-track {
   display: flex;
   gap: 3px;
-  height: 6px;
+  height: 8px;
   border-radius: var(--radius-pill);
   overflow: hidden;
   background: transparent;
 }
 .capacity-seg {
   flex: 1;
-  border-radius: 2px;
+  border-radius: var(--radius-pill);
   background: var(--c-neutral-soft);
 }
 .capacity-seg.is-taken {
@@ -86,7 +87,7 @@
   color: var(--c-text);
 }
 .capacity--low .capacity-left {
-  color: var(--c-accent-text);
+  color: var(--c-warning);
 }
 .capacity--muted .capacity-left {
   color: var(--c-text-muted);

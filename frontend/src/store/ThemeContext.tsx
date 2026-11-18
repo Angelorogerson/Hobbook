@@ -4,7 +4,7 @@ export type ThemePreference = 'system' | 'light' | 'dark'
 export type ResolvedTheme = 'light' | 'dark'
 
 const STORAGE_KEY = 'hobbook_theme'
-const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#111a27' }
+const THEME_COLORS: Record<ResolvedTheme, string> = { light: '#ffffff', dark: '#161920' }
 
 function readPreference(): ThemePreference {
   try {

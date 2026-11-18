@@ -1,6 +1,6 @@
 .auth-page {
-  min-height: 100vh;
-  min-height: 100dvh;
+  /* Sits inside the app layout: fill the space between header and tab bar */
+  min-height: calc(100dvh - var(--header-h) - var(--bottom-nav-h));
   display: grid;
   place-items: center;
   padding: var(--space-6) var(--space-4);

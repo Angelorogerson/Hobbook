@@ -8,7 +8,7 @@ interface Props {
   children: ReactNode
 }
 
-/** Accessible modal: labelled, Escape closes, focus moves in and returns on close. */
+/** Accessible modal: labelled, Escape closes, focus moves in, stays in, and returns on close. */
 export default function Modal({ title, onClose, children }: Props) {
   const titleId = useId()
   const ref = useRef<HTMLDivElement>(null)
@@ -22,6 +22,21 @@ export default function Modal({ title, onClose, children }: Props) {
     first?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCloseRef.current()
+      if (e.key !== 'Tab' || !ref.current) return
+      const items = Array.from(
+        ref.current.querySelectorAll<HTMLElement>('a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)')
+      )
+      if (!items.length) return
+      const firstItem = items[0]
+      const lastItem = items[items.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === firstItem || !ref.current.contains(active))) {
+        e.preventDefault()
+        lastItem.focus()
+      } else if (!e.shiftKey && (active === lastItem || !ref.current.contains(active))) {
+        e.preventDefault()
+        firstItem.focus()
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => {

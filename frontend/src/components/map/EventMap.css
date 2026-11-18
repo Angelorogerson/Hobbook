@@ -95,8 +95,9 @@
   display: block;
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
-  font-size: var(--text-xl);
-  line-height: 1.1;
+  font-size: var(--text-lg);
+  line-height: 1.15;
+  letter-spacing: var(--tracking-display);
   margin: 0 var(--space-6) var(--space-1) 0;
   color: var(--c-text);
   text-decoration: none;

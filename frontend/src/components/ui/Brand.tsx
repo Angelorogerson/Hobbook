@@ -5,16 +5,16 @@ import { useTheme, type ThemePreference } from '@/store/ThemeContext'
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false" className="logo-mark">
-      <rect width="32" height="32" rx="8" fill="var(--c-ink)" />
+      <rect width="32" height="32" rx="10" fill="#2f4bff" />
       <path
         d="M10 6.5v19M10 17.5a5.5 5.5 0 0 1 11 0v8"
         fill="none"
-        stroke="var(--c-on-ink)"
+        stroke="#fff"
         strokeWidth="3"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <circle cx="22" cy="8.5" r="3.2" fill="var(--c-accent)" />
+      <circle cx="22.5" cy="8" r="3.4" fill="#d4ff3a" />
     </svg>
   )
 }

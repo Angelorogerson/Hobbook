@@ -9,5 +9,5 @@
     t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   }
   document.documentElement.dataset.theme = t
-  if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#111a27')
+  if (t === 'dark') document.querySelector('meta[name="theme-color"]').setAttribute('content', '#161920')
 })()

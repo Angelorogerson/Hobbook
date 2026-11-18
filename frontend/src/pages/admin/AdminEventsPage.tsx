@@ -5,7 +5,7 @@ import { listAllEventsAdmin, deleteEvent, type SportEvent } from '@/api/eventApi
 import { apiError } from '@/api/axiosInstance'
 import StatusBadge from '@/components/events/StatusBadge'
 import CancelEventDialog from '@/components/events/CancelEventDialog'
-import Modal from '@/components/common/Modal'
+import ConfirmDialog from '@/components/common/ConfirmDialog'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { sportLabel } from '@/constants/sports'
 import { formatEventDate } from '@/utils/format'
@@ -118,33 +118,26 @@ export default function AdminEventsPage() {
         />
       )}
       {deleting && (
-        <Modal title="Event endgültig löschen?" onClose={() => setDeleting(null)}>
+        <ConfirmDialog
+          title="Event endgültig löschen?"
+          confirmLabel="Löschen"
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const ev = deleting
+            try {
+              await deleteEvent(ev._id)
+            } catch (err) {
+              setError(apiError(err).message)
+            }
+            setDeleting(null)
+            load()
+          }}
+        >
           <p>
             „{deleting.title}“ wird für alle {deleting.participantCount} Teilnehmenden ohne Hinweis entfernt. Für normale
             Fälle ist „Absagen“ transparenter.
           </p>
-          <div className="modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => setDeleting(null)}>
-              Abbrechen
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={async () => {
-                const ev = deleting
-                setDeleting(null)
-                try {
-                  await deleteEvent(ev._id)
-                } catch (err) {
-                  setError(apiError(err).message)
-                }
-                load()
-              }}
-            >
-              Löschen
-            </button>
-          </div>
-        </Modal>
+        </ConfirmDialog>
       )}
     </div>
   )
