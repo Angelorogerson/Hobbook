@@ -150,6 +150,9 @@ const deleteMe = async (req, res) => {
     { $pull: { waitlist: uid, responses: { user: uid }, noShows: { user: uid }, pendingPromotions: { user: uid } } }
   );
   await Notification.deleteMany({ user: uid });
+  // What the person wrote under events goes with the account; feedback stays without a link to them.
+  await Comment.deleteMany({ author: uid });
+  await Feedback.updateMany({ user: uid }, { $set: { user: null } });
 
   await Report.updateMany({ reporter: uid }, { $set: { reporter: null } });
   await User.deleteOne({ _id: uid });

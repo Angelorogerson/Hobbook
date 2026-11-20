@@ -74,6 +74,16 @@ export function PrivacyPage() {
         </li>
         <li>Benachrichtigungen in der App (werden nach 60 Tagen automatisch gelöscht) und deine E-Mail-Einstellung.</li>
         <li>Wenn du Push aktivierst: die technische Push-Adresse deines Browsers (keine Telefonnummer).</li>
+        <li>Ob und wann du deine E-Mail-Adresse bestätigt hast.</li>
+        <li>
+          Fragen und Infos, die du unter einem Event schreibst. Sie sind mit deinem Namen als „Vorname N.“ für alle
+          sichtbar, die das Event öffnen können. Du kannst sie jederzeit löschen.
+        </li>
+        <li>Such-Alarme: die Stadt und, wenn gewählt, die Sportart, zu der du über neue Events informiert werden willst.</li>
+        <li>
+          Feedback, das du uns schickst: dein Text, die Art des Feedbacks, die Seite, von der du kamst, und – wenn du
+          angemeldet bist – dein Konto. Das sieht nur die Moderation.
+        </li>
       </ul>
       <h2>E-Mails und Benachrichtigungen</h2>
       <p>
@@ -82,6 +92,23 @@ export function PrivacyPage() {
         Änderungen. Keine Werbung, keine Newsletter. E-Mails schaltest du im <Link to="/profil#benachrichtigungen">Profil</Link>{' '}
         ab, einzelne Stammspiele schaltest du auf ihrer Seite oder über den Link in jeder E-Mail stumm. Die Knöpfe in
         E-Mails („Ich bin dabei“) enthalten einen signierten Link, der nur für dich und nur bis zum Spielbeginn gilt.
+      </p>
+      <p>
+        Außerdem schreiben wir dir, wenn du es auslöst oder eingestellt hast: den Link zum Bestätigen deiner
+        E-Mail-Adresse nach der Registrierung, den Link zum Zurücksetzen deines Passworts (60 Minuten gültig; gespeichert
+        wird nur ein Prüfwert, nicht der Link), Nachrichten von Organisator:innen an alle, die bei einem Event dabei
+        sind, und Hinweise zu deinen Such-Alarmen.
+      </p>
+      <h2>Kalender-Abo</h2>
+      <p>
+        Im Profil kannst du einen persönlichen Kalender-Link erzeugen. Er enthält einen geheimen Schlüssel; wer den Link
+        kennt, sieht deine Termine (Titel, Zeit, Ort), aber keine Namen anderer. Mit „Link erneuern“ wird der alte Link
+        sofort ungültig. Kalender-Apps rufen den Link regelmäßig von unserem Server ab.
+      </p>
+      <h2>Deine Daten herunterladen</h2>
+      <p>
+        Im <Link to="/profil">Profil</Link> unter „Deine Daten“ kannst du jederzeit eine Kopie der Daten herunterladen,
+        die wir zu deinem Konto gespeichert haben.
       </p>
       <h2>Verlässlichkeit</h2>
       <p>
@@ -152,7 +179,9 @@ export function PrivacyPage() {
         Du kannst dein Konto jederzeit im <Link to="/profil">Profil</Link> löschen. Deine anstehenden Events mit
         Anmeldungen werden dann abgesagt. Organisierst du ein Stammspiel, übernimmt es dein Co-Host; ohne Co-Host endet
         es und der offene Termin wird abgesagt. Deine Zusagen, Antworten, Mitgliedschaften und Benachrichtigungen werden
-        gelöscht, frei werdende Plätze gehen an die Warteliste. Alle übrigen personenbezogenen Daten werden entfernt.
+        gelöscht, frei werdende Plätze gehen an die Warteliste. Auch deine Fragen und Infos unter Events, deine
+        Such-Alarme und dein Kalender-Link werden gelöscht; Feedback bleibt ohne Bezug zu deinem Konto erhalten. Alle
+        übrigen personenbezogenen Daten werden entfernt.
       </p>
     </div>
   )
