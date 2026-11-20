@@ -1,0 +1,243 @@
+/* Printable poster ("Aushang"): one A4 portrait page.
+   The sheet is a picture of the printed paper, so it has its own paper and ink
+   colours in every theme. Everything around it follows the app theme.
+   All sizes on the sheet are multiples of --u = one millimetre of paper:
+   scaled to the preview width on screen, a real millimetre in print. */
+.poster-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-4);
+  background: var(--c-surface-2);
+}
+.poster-toolbar,
+.poster-warning,
+.poster-tip {
+  width: min(100%, 210mm);
+  margin-left: auto;
+  margin-right: auto;
+}
+.poster-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.poster-tip {
+  margin-bottom: var(--space-4);
+}
+
+.poster-frame {
+  --poster-paper: #ffffff;
+  --poster-ink: #14161c;
+  --poster-ink-soft: #3d4250;
+  --poster-hl: #d4ff3a;
+  /* Shared styles (headings, hints) read the theme tokens: on paper they are ink. */
+  --c-text: var(--poster-ink);
+  --c-text-muted: var(--poster-ink-soft);
+  --c-text-subtle: var(--poster-ink-soft);
+  width: min(100%, 210mm);
+  aspect-ratio: 210 / 297;
+  margin: 0 auto;
+  container-type: inline-size;
+  background: var(--poster-paper);
+  color: var(--poster-ink);
+  color-scheme: light;
+  box-shadow: var(--shadow-2);
+}
+.poster-sheet {
+  --u: calc(100cqw / 210);
+  height: 100%;
+  padding: calc(12 * var(--u));
+  display: flex;
+  flex-direction: column;
+  gap: calc(7 * var(--u));
+  overflow: hidden;
+  font-size: calc(5 * var(--u));
+  line-height: 1.3;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.poster-head {
+  padding-bottom: calc(6 * var(--u));
+  border-bottom: calc(1.2 * var(--u)) solid var(--poster-ink);
+}
+.poster-sport {
+  display: flex;
+  align-items: center;
+  gap: calc(3 * var(--u));
+  margin-bottom: calc(4 * var(--u));
+  font-size: calc(6 * var(--u));
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.poster-sport-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: calc(15 * var(--u));
+  height: calc(15 * var(--u));
+  border: calc(0.8 * var(--u)) solid var(--poster-ink);
+  border-radius: 50%;
+}
+.poster-sport-icon svg {
+  width: calc(9 * var(--u));
+  height: calc(9 * var(--u));
+}
+.poster-title {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: calc(19 * var(--u));
+  color: var(--poster-ink);
+  line-height: 1.05;
+  letter-spacing: var(--tracking-display);
+  overflow-wrap: anywhere;
+}
+.poster-title--md {
+  font-size: calc(14 * var(--u));
+}
+.poster-title--sm {
+  font-size: calc(10.5 * var(--u));
+  line-height: 1.1;
+}
+
+.poster-facts {
+  list-style: none;
+  display: grid;
+  gap: calc(4.5 * var(--u));
+}
+.poster-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(4 * var(--u));
+}
+.poster-facts svg {
+  flex-shrink: 0;
+  width: calc(8 * var(--u));
+  height: calc(8 * var(--u));
+  margin-top: calc(0.6 * var(--u));
+}
+.poster-facts div {
+  min-width: 0;
+  display: grid;
+  overflow-wrap: anywhere;
+}
+.poster-facts strong {
+  font-size: calc(7.5 * var(--u));
+  line-height: 1.2;
+}
+.poster-facts span {
+  font-size: calc(5.2 * var(--u));
+  color: var(--poster-ink-soft);
+}
+
+.poster-pitch {
+  align-self: flex-start;
+  padding: calc(2 * var(--u)) calc(4 * var(--u));
+  border-radius: calc(2 * var(--u));
+  background: var(--poster-hl);
+  font-size: calc(5.6 * var(--u));
+  font-weight: var(--weight-bold);
+}
+
+/* The QR code takes the room that is left: large for a short poster, smaller for long texts. */
+.poster-scan {
+  flex: 1 1 0;
+  min-height: calc(60 * var(--u));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.poster-qr {
+  flex: 1 1 0;
+  min-height: calc(40 * var(--u));
+  max-height: calc(92 * var(--u));
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.poster-qr-paper {
+  fill: var(--poster-paper);
+}
+.poster-qr-ink {
+  fill: #000000;
+}
+.poster-scan-caption {
+  margin-top: calc(2 * var(--u));
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: calc(9 * var(--u));
+  line-height: 1.15;
+}
+.poster-url {
+  margin-top: calc(1 * var(--u));
+  font-size: calc(4.6 * var(--u));
+  color: var(--poster-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.poster-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(2.5 * var(--u));
+  padding-top: calc(4 * var(--u));
+  border-top: calc(0.4 * var(--u)) solid var(--poster-ink);
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  font-size: calc(6.5 * var(--u));
+  letter-spacing: var(--tracking-display);
+}
+.poster-brand svg {
+  width: calc(9 * var(--u));
+  height: calc(9 * var(--u));
+}
+
+@page {
+  size: A4;
+  margin: 12mm;
+}
+@media print {
+  html:has(.poster-page),
+  html:has(.poster-page) body,
+  html:has(.poster-page) #root {
+    min-height: 0;
+    background: #ffffff !important;
+    color: #14161c !important;
+    /* Also in dark mode: the paper stays white up to the edge. */
+    color-scheme: light !important;
+  }
+  .poster-toolbar,
+  .poster-warning,
+  .poster-tip,
+  html:has(.poster-page) .skip-link,
+  html:has(.poster-page) .wake-notice,
+  html:has(.poster-page) .toast-region {
+    display: none !important;
+  }
+  .poster-page {
+    min-height: 0;
+    padding: 0;
+    background: none;
+  }
+  /* A4 minus the page margins is 186 × 273 mm; a little slack keeps it on one page. */
+  .poster-frame {
+    width: 100%;
+    max-width: 186mm;
+    aspect-ratio: auto;
+    container-type: normal;
+    box-shadow: none;
+    background: #ffffff;
+  }
+  .poster-sheet {
+    --u: 1mm;
+    height: 270mm;
+    padding: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
