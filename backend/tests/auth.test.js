@@ -69,7 +69,7 @@ describe('session and password routes', () => {
     const u = await makeUser();
     const res = await api().get('/api/auth/me').set(u.auth);
     expect(res.status).toBe(200);
-    expect(Object.keys(res.body.user).sort()).toEqual(['_id', 'city', 'email', 'emailNotifications', 'name', 'role', 'sports']);
+    expect(Object.keys(res.body.user).sort()).toEqual(['_id', 'city', 'email', 'emailNotifications', 'emailVerified', 'name', 'role', 'sports']);
   });
 
   it('password change and account deletion reject non-string input with 400', async () => {

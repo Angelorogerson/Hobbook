@@ -44,3 +44,20 @@ describe('skeleton fields', () => {
     }
   });
 });
+
+describe('password change in the profile', () => {
+  it('keeps this device signed in with a fresh session and ends older ones', async () => {
+    const u = await makeUser({ password: 'old-password-1' });
+    // Make the first session clearly older than the change (JWT times have 1 s precision).
+    const jwt = (await import('jsonwebtoken')).default;
+    const oldToken = jwt.sign({ id: u.user._id, iat: Math.floor(Date.now() / 1000) - 60 }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const oldAuth = { Authorization: `Bearer ${oldToken}` };
+
+    const res = await api().put('/api/users/me/password').set(oldAuth).send({ currentPassword: 'old-password-1', newPassword: 'new-password-2' });
+    expect(res.status).toBe(200);
+    expect(res.body.token).toBeTruthy();
+
+    expect((await api().get('/api/auth/me').set(oldAuth)).status).toBe(401);
+    expect((await api().get('/api/auth/me').set({ Authorization: `Bearer ${res.body.token}` })).status).toBe(200);
+  });
+});

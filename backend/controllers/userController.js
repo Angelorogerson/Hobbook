@@ -5,6 +5,7 @@ import { afterPromotion } from '../services/promotion.js';
 import { transferGroup } from '../services/groupAdmin.js';
 import { SPORT_KEYS } from '../config/sports.js';
 import { cleanText } from '../utils/text.js';
+import { signToken } from './authController.js';
 import { Comment, Feedback } from '../models/index.js';
 import { effectiveStatus } from '../utils/serializeEvent.js';
 
@@ -84,7 +85,8 @@ const updatePassword = async (req, res) => {
 
   user.password = newPassword;
   await user.save();
-  res.json({ message: 'Passwort erfolgreich geändert' });
+  // Sessions issued before a password change stop working; this device gets a fresh one.
+  res.json({ message: 'Passwort erfolgreich geändert', token: signToken(user) });
 };
 
 /**
