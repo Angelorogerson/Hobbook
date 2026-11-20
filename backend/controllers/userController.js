@@ -5,6 +5,8 @@ import { afterPromotion } from '../services/promotion.js';
 import { transferGroup } from '../services/groupAdmin.js';
 import { SPORT_KEYS } from '../config/sports.js';
 import { cleanText } from '../utils/text.js';
+import { Comment, Feedback } from '../models/index.js';
+import { effectiveStatus } from '../utils/serializeEvent.js';
 
 const publicUser = (u) => ({
   _id: u._id,
@@ -161,3 +163,136 @@ const getAllUsers = async (req, res) => {
 };
 
 export { updateMe, updatePassword, deleteMe, getAllUsers };
+
+// ── Data export ("Deine Daten") ──
+
+const EXPORT_LIMIT = 5000;
+const idText = (v) => (v ? v.toString() : null);
+const sameId = (a, b) => !!a && !!b && a.toString() === b.toString();
+
+/** What the export says about an event: facts only, no organizer and no participants. */
+const exportEvent = (e, now) => ({
+  id: idText(e._id),
+  title: e.title,
+  sport: e.sport,
+  startAt: e.startAt,
+  endAt: e.endAt,
+  placeName: e.location?.placeName || '',
+  city: e.location?.city || '',
+  status: effectiveStatus(e, now),
+});
+
+/**
+ * GET /api/users/me/export — a copy of everything stored about the signed-in person,
+ * as a JSON download. Nothing is looked up about other people: no names, no email
+ * addresses (notification texts are copied as the person already sees them in the app).
+ * Left out on purpose: password hash, tokens, calendar key and push endpoints.
+ */
+export const exportMe = async (req, res) => {
+  const uid = req.user._id;
+  const now = new Date();
+  const eventFields = 'title sport startAt endAt location.placeName location.city status creator';
+  const newestFirst = (query, by = 'startAt') => query.sort({ [by]: -1 }).limit(EXPORT_LIMIT).lean();
+
+  const [user, mine, waiting, answered, marked, groups, notifications, reports, comments, feedback] = await Promise.all([
+    User.findById(uid).select('+pushSubscriptions').lean(),
+    newestFirst(ConnectEvent.find({ $or: [{ creator: uid }, { participants: uid }] }).select(eventFields)),
+    newestFirst(ConnectEvent.find({ waitlist: uid }).select(`${eventFields} waitlist`)),
+    newestFirst(ConnectEvent.find({ 'responses.user': uid }).select('title startAt responses')),
+    newestFirst(ConnectEvent.find({ 'noShows.user': uid }).select('title startAt noShows')),
+    newestFirst(
+      Group.find({ $or: [{ organizer: uid }, { coHosts: uid }, { 'members.user': uid }] }).select(
+        'name sport organizer coHosts members active location.city createdAt'
+      ),
+      'createdAt'
+    ),
+    newestFirst(Notification.find({ user: uid }).select('type title body createdAt readAt'), 'createdAt'),
+    newestFirst(Report.find({ reporter: uid }).select('reason text status event createdAt'), 'createdAt'),
+    newestFirst(Comment.find({ author: uid }).select('event kind text createdAt'), 'createdAt'),
+    newestFirst(Feedback.find({ user: uid }).select('kind text page status createdAt'), 'createdAt'),
+  ]);
+
+  const savedIds = user.savedEvents || [];
+  const saved = savedIds.length ? await ConnectEvent.find({ _id: { $in: savedIds } }).select('title').lean() : [];
+
+  const data = {
+    exportedAt: now.toISOString(),
+    hinweis:
+      'Das ist eine Kopie der Daten, die Hobbook über dich gespeichert hat. Listen mit Namen oder E-Mail-Adressen anderer Personen sind nicht enthalten, ebenso wenig dein Passwort, Anmelde-Schlüssel oder dein Kalender-Link. Benachrichtigungen stehen so drin, wie du sie in der App siehst.',
+    account: {
+      name: user.name,
+      email: user.email,
+      city: user.city || '',
+      sports: user.sports || [],
+      role: user.role,
+      createdAt: user.createdAt,
+      emailNotifications: user.emailNotifications !== false,
+      emailVerifiedAt: user.emailVerifiedAt || null,
+      ageConfirmedAt: user.ageConfirmedAt || null,
+      alerts: (user.alerts || []).map((a) => ({ city: a.city, sport: a.sport || null, createdAt: a.createdAt })),
+      pushSubscriptionCount: (user.pushSubscriptions || []).length,
+    },
+    eventsOrganized: mine.filter((e) => sameId(e.creator, uid)).map((e) => exportEvent(e, now)),
+    eventsJoined: mine.filter((e) => !sameId(e.creator, uid)).map((e) => exportEvent(e, now)),
+    waitlist: waiting.map((e) => ({
+      ...exportEvent(e, now),
+      position: (e.waitlist || []).findIndex((w) => sameId(w, uid)) + 1,
+    })),
+    savedEvents: saved.map((e) => ({ id: idText(e._id), title: e.title })),
+    stammspiele: groups.map((g) => {
+      const member = (g.members || []).find((m) => sameId(m.user, uid));
+      const role = sameId(g.organizer, uid) ? 'organizer' : (g.coHosts || []).some((c) => sameId(c, uid)) ? 'cohost' : 'member';
+      return {
+        id: idText(g._id),
+        name: g.name,
+        sport: g.sport,
+        city: g.location?.city || '',
+        role,
+        joinedAt: member?.joinedAt || (role === 'organizer' ? g.createdAt : null),
+        muted: member ? member.muted === true : false,
+        active: g.active !== false,
+      };
+    }),
+    answers: answered.flatMap((e) =>
+      (e.responses || [])
+        .filter((r) => sameId(r.user, uid))
+        .map((r) => ({ eventId: idText(e._id), title: e.title, startAt: e.startAt, answer: r.answer, at: r.at, late: r.late === true }))
+    ),
+    noShows: marked.flatMap((e) =>
+      (e.noShows || [])
+        .filter((m) => sameId(m.user, uid))
+        .map((m) => ({
+          eventId: idText(e._id),
+          title: e.title,
+          startAt: e.startAt,
+          markedAt: m.markedAt,
+          disputed: m.disputed === true,
+          disputeNote: m.disputeNote || '',
+        }))
+    ),
+    notifications: notifications.map((n) => ({
+      type: n.type,
+      title: n.title,
+      body: n.body || '',
+      createdAt: n.createdAt,
+      readAt: n.readAt || null,
+    })),
+    // Without the moderators' notes and without who or what was reported by name.
+    reports: reports.map((r) => ({
+      about: r.event ? 'event' : 'person',
+      reason: r.reason,
+      text: r.text || '',
+      createdAt: r.createdAt,
+      status: r.status,
+    })),
+    comments: comments.map((c) => ({ eventId: idText(c.event), kind: c.kind, text: c.text, createdAt: c.createdAt })),
+    feedback: feedback.map((f) => ({ kind: f.kind, text: f.text, page: f.page || '', status: f.status, createdAt: f.createdAt })),
+  };
+
+  res.set({
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Disposition': `attachment; filename="hobbook-daten-${now.toISOString().slice(0, 10)}.json"`,
+    'Cache-Control': 'no-store',
+  });
+  res.send(JSON.stringify(data, null, 2));
+};
