@@ -7,6 +7,12 @@ import { makeEvent } from '@/test/fixtures'
 vi.mock('@/components/map/EventMap', () => ({ default: () => <div data-testid="fake-map" /> }))
 
 const api = { getEvent: vi.fn(), joinEvent: vi.fn(), leaveEvent: vi.fn(), joinWaitlist: vi.fn() }
+// The comments section loads on every event page; keep it off the network here.
+vi.mock('@/api/commentApi', async (orig) => ({
+  ...(await orig<typeof import('@/api/commentApi')>()),
+  listComments: () => Promise.resolve([]),
+}))
+
 vi.mock('@/api/eventApi', async (orig) => ({
   ...(await orig<typeof import('@/api/eventApi')>()),
   getEvent: (...a: unknown[]) => api.getEvent(...a),
