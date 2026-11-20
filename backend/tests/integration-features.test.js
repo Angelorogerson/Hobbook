@@ -61,3 +61,26 @@ describe('password change in the profile', () => {
     expect((await api().get('/api/auth/me').set({ Authorization: `Bearer ${res.body.token}` })).status).toBe(200);
   });
 });
+
+describe('search alerts follow the same city matching as Discover', () => {
+  it('an alert for "Frankfurt" fires for an event in "Frankfurt am Main", but not for another city', async () => {
+    const { alertsSettled } = await import('../services/alerts.js');
+    const { Notification } = await import('../models/index.js');
+    const { eventPayload } = await import('./helpers.js');
+    const host = await makeUser();
+    const watcher = await makeUser();
+    const other = await makeUser();
+    expect((await api().post('/api/alerts').set(watcher.auth).send({ city: 'Frankfurt' })).status).toBe(201);
+    expect((await api().post('/api/alerts').set(other.auth).send({ city: 'Frankenthal' })).status).toBe(201);
+
+    const res = await api()
+      .post('/api/events')
+      .set(host.auth)
+      .send(eventPayload({ location: { placeName: 'Mainufer', address: 'Mainkai 1', city: 'Frankfurt am Main', countryCode: 'DE', lat: 50.1, lng: 8.68 } }));
+    expect(res.status).toBe(201);
+    await alertsSettled();
+
+    expect(await Notification.countDocuments({ user: watcher.user._id, type: 'new_event' })).toBe(1);
+    expect(await Notification.countDocuments({ user: other.user._id, type: 'new_event' })).toBe(0);
+  });
+});

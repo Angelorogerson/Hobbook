@@ -22,10 +22,15 @@ export const alertsSettled = () => Promise.all([...inFlight]);
 /** Active people with an alert for this city and (all sports or this sport), without `exceptId`. */
 async function recipients({ cityKey, sport, exceptId }) {
   if (!cityKey) return [];
+  // Discover finds cities by prefix ("Frankfurt" shows "Frankfurt am Main"), so an alert
+  // saved from such a search must fire too: match alerts whose city is the event's
+  // city or the beginning of it (at least 4 characters).
+  const keys = [cityKey];
+  for (let n = 4; n < cityKey.length; n += 1) keys.push(cityKey.slice(0, n).trimEnd());
   const users = await User.find({
     _id: { $ne: exceptId },
     isActive: { $ne: false },
-    alerts: { $elemMatch: { cityKey, sport: { $in: [null, sport] } } },
+    alerts: { $elemMatch: { cityKey: { $in: [...new Set(keys)] }, sport: { $in: [null, sport] } } },
   })
     .select('_id')
     .limit(MAX_RECIPIENTS)

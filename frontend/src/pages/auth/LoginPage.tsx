@@ -16,6 +16,7 @@ export const INTENT_TEXT: Record<string, string> = {
   create: 'Melde dich an, um ein Event zu erstellen.',
   mine: 'Melde dich an, um deine Events zu sehen.',
   save: 'Melde dich an, um Events zu merken.',
+  alert: 'Melde dich an, damit wir dir bei neuen Events Bescheid sagen können.',
   group: 'Melde dich an, um beim Stammspiel mitzumachen. Danach antwortest du jede Woche mit einem Tipp – auch direkt aus der E-Mail.',
 }
 
