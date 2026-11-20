@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import { Logo, ThemeToggle } from '../ui/Brand'
 
@@ -7,6 +7,7 @@ const rawSupportUrl = import.meta.env.VITE_SUPPORT_URL || ''
 const SUPPORT_URL = rawSupportUrl.startsWith('https://') ? rawSupportUrl : ''
 
 export default function Footer() {
+  const { pathname } = useLocation()
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
@@ -21,7 +22,9 @@ export default function Footer() {
           )}
           <Link to="/ueber">So funktioniert’s</Link>
           <Link to="/regeln">Regeln</Link>
-          <Link to="/feedback">Feedback</Link>
+          <Link to="/feedback" state={{ from: pathname }}>
+            Feedback
+          </Link>
           <Link to="/datenschutz">Datenschutz</Link>
           <Link to="/impressum">Impressum</Link>
           <ThemeToggle />

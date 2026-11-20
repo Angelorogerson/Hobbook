@@ -165,7 +165,9 @@ export default function ProfilePage() {
             <Link to="/regeln">Community-Regeln</Link>
           </li>
           <li>
-            <Link to="/feedback">Feedback geben</Link>
+            <Link to="/feedback" state={{ from: '/profil' }}>
+              Feedback geben
+            </Link>
           </li>
           <li>
             <Link to="/datenschutz">Datenschutz</Link>
