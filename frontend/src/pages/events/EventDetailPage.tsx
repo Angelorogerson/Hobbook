@@ -7,6 +7,7 @@ import {
   Flag,
   MapPin,
   Pencil,
+  Printer,
   Share2,
   Signal,
   Users,
@@ -46,6 +47,7 @@ import StatusBadge from '@/components/events/StatusBadge'
 import CancelEventDialog from '@/components/events/CancelEventDialog'
 import ReportDialog from '@/components/events/ReportDialog'
 import DuplicateEventButton from '@/components/events/DuplicateEventButton'
+import EventComments from '@/components/events/EventComments'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { levelLabel, sportColor, sportLabel } from '@/constants/sports'
 import SportIcon from '@/components/ui/SportIcon'
@@ -176,6 +178,8 @@ export default function EventDetailPage() {
   const isSeries = !!event.series
   const onWaitlist = !!event.waitlistPosition
   const changedSinceJoin = event.joined && !event.isOrganizer && event.changedAt
+  // The server takes no new questions once the event ended more than a week ago.
+  const commentsClosed = Date.now() - new Date(event.endAt).getTime() > 7 * 24 * 3600 * 1000
 
   const share = async () => {
     const url = window.location.href
@@ -412,6 +416,8 @@ export default function EventDetailPage() {
             </section>
           )}
 
+          <EventComments eventId={event._id} isHost={canManage} closed={commentsClosed} />
+
           {event.canMarkNoShows && event.participants && <NoShowForm event={event} onSaved={setEvent} viewerId={authState.user?._id} />}
 
           {event.participants && !isSeries && (
@@ -539,6 +545,11 @@ export default function EventDetailPage() {
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadIcs(event)}>
                   <CalendarPlus size={16} aria-hidden="true" /> In Kalender
                 </button>
+              )}
+              {canManage && isActive && (
+                <Link to={`/events/${event._id}/aushang`} className="btn btn-ghost btn-sm">
+                  <Printer size={16} aria-hidden="true" /> Aushang drucken
+                </Link>
               )}
             </div>
           </div>

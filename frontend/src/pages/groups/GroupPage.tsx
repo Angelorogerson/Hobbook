@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageCircle,
   Pencil,
+  Printer,
   Repeat,
   Send,
   SkipForward,
@@ -306,6 +307,9 @@ export default function GroupPage() {
                 </button>
                 <Link to={`/stammspiel/${group._id}/bearbeiten`} className="btn btn-secondary">
                   <Pencil size={16} aria-hidden="true" /> Bearbeiten
+                </Link>
+                <Link to={`/stammspiel/${group._id}/aushang`} className="btn btn-secondary">
+                  <Printer size={16} aria-hidden="true" /> Aushang drucken
                 </Link>
               </div>
               <p className="hint">
