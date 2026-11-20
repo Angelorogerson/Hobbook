@@ -61,9 +61,39 @@ const userSchema = new mongoose.Schema(
       select: false,
       default: [],
     },
+
+    // ── Account security ──
+    // Set whenever the password changes; sessions issued before it are no longer valid.
+    passwordChangedAt: { type: Date },
+    // Password reset by email: only a hash of the one-time token is stored.
+    passwordResetTokenHash: { type: String, select: false },
+    passwordResetExpires: { type: Date, select: false },
+    // Email confirmation: null/undefined = not confirmed yet.
+    emailVerifiedAt: { type: Date },
+    emailVerifyTokenHash: { type: String, select: false },
+    emailVerifyExpires: { type: Date, select: false },
+
+    // Secret part of the personal calendar feed address (.ics). Replaced to revoke old links.
+    calendarKey: { type: String, select: false },
+
+    // Search alerts ("Sag mir Bescheid"): told when a new public event appears
+    // in this city (and sport, when set). At most 5 per person.
+    alerts: {
+      type: [
+        {
+          city: { type: String, trim: true, required: true, maxlength: 100 },
+          cityKey: { type: String, required: true },
+          sport: { type: String, enum: [...SPORT_KEYS, null], default: null },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true }
 );
+
+userSchema.index({ 'alerts.cityKey': 1 });
 
 // Pre-save hook to hash password
 userSchema.pre('save', async function (next) {
@@ -71,6 +101,9 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
+  // One second back, so a session issued right after the change stays valid
+  // (JWT "issued at" has whole-second precision).
+  if (!this.isNew) this.passwordChangedAt = new Date(Date.now() - 1000);
 
   try {
     const salt = await bcrypt.genSalt(12);

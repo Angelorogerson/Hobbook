@@ -45,6 +45,7 @@ import EventMap from '@/components/map/EventMap'
 import StatusBadge from '@/components/events/StatusBadge'
 import CancelEventDialog from '@/components/events/CancelEventDialog'
 import ReportDialog from '@/components/events/ReportDialog'
+import DuplicateEventButton from '@/components/events/DuplicateEventButton'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { levelLabel, sportColor, sportLabel } from '@/constants/sports'
 import SportIcon from '@/components/ui/SportIcon'
@@ -527,6 +528,7 @@ export default function EventDetailPage() {
                 </button>
               </div>
             )}
+            {canManage && !isSeries && <DuplicateEventButton event={event} />}
 
             <div className="secondary-actions">
               {!event.isOrganizer && <SaveButton event={event} variant="label" onChange={(saved) => setEvent({ ...event, saved })} />}

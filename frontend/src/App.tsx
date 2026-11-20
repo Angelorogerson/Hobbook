@@ -31,6 +31,12 @@ const AnswerLinkPage = lazy(() => import('@/pages/main/LinkActionPages').then((m
 const MuteLinkPage = lazy(() => import('@/pages/main/LinkActionPages').then((m) => ({ default: m.MuteLinkPage })))
 const AdminMetricsPage = lazy(() => import('@/pages/admin/AdminMetricsPage'))
 const WelcomePage = lazy(() => import('@/pages/auth/WelcomePage'))
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
+const VerifyEmailPage = lazy(() => import('@/pages/auth/VerifyEmailPage'))
+const PosterPage = lazy(() => import('@/pages/events/PosterPage'))
+const FeedbackPage = lazy(() => import('@/pages/main/FeedbackPage'))
+const AdminFeedbackPage = lazy(() => import('@/pages/admin/AdminFeedbackPage'))
 
 export const DISCOVER_PATH = '/entdecken'
 
@@ -96,10 +102,26 @@ export default function App() {
           <ServerWakeNotice />
           <ToastProvider>
           <Routes>
+            {/* Printable posters: no navigation around them */}
+            <Route
+              element={
+                <Suspense fallback={<LoadingSpinner fullScreen />}>
+                  <Outlet />
+                </Suspense>
+              }
+            >
+              <Route path="/events/:id/aushang" element={<PosterPage />} />
+              <Route path="/stammspiel/:key/aushang" element={<PosterPage />} />
+            </Route>
+
             <Route element={<Layout />}>
               {/* Public */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/registrieren" element={<RegisterPage />} />
+              <Route path="/passwort-vergessen" element={<ForgotPasswordPage />} />
+              <Route path="/passwort-neu/:token" element={<ResetPasswordPage />} />
+              <Route path="/email-bestaetigen/:token" element={<VerifyEmailPage />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
               <Route path="/" element={<HomeRoute />} />
               <Route path={DISCOVER_PATH} element={<DiscoverPage initialView="list" />} />
               <Route path="/karte" element={<DiscoverPage initialView="map" />} />
@@ -130,6 +152,7 @@ export default function App() {
                 <Route path="/admin" element={<AdminReportsPage />} />
                 <Route path="/admin/events" element={<AdminEventsPage />} />
                 <Route path="/admin/kennzahlen" element={<AdminMetricsPage />} />
+                <Route path="/admin/feedback" element={<AdminFeedbackPage />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

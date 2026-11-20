@@ -11,6 +11,11 @@ import reportRoutes from './routes/reportRoutes.js';
 import geocodeRoutes from './routes/geocodeRoutes.js';
 import groupRoutes from './routes/groupRoutes.js';
 import { notificationRoutes, linkRoutes, jobRoutes, pushRoutes, adminRoutes } from './routes/loopRoutes.js';
+import commentRoutes from './routes/commentRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
+import calendarRoutes from './routes/calendarRoutes.js';
+import placeRoutes from './routes/placeRoutes.js';
 import { SPORTS } from './config/sports.js';
 
 // Legacy venue/booking/favorite routes are intentionally not mounted: the product
@@ -56,6 +61,11 @@ export function createApp() {
   app.use('/api/jobs', jobRoutes);
   app.use('/api/push', pushRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/events', commentRoutes);
+  app.use('/api/alerts', alertRoutes);
+  app.use('/api/feedback', feedbackRoutes);
+  app.use('/api/calendar', calendarRoutes);
+  app.use('/api/places', placeRoutes);
 
   app.use((req, res) => res.status(404).json({ message: 'Route nicht gefunden' }));
 

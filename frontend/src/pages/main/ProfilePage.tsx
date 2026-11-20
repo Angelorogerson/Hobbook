@@ -9,6 +9,10 @@ import { ThemeChoice } from '@/components/ui/Brand'
 import './ProfilePage.css'
 import NotificationSettings from './NotificationSettings'
 import { Presence } from '@/hooks/usePresence'
+import EmailVerifyNotice from '@/components/account/EmailVerifyNotice'
+import AlertsSection from '@/components/account/AlertsSection'
+import CalendarFeedSection from '@/components/account/CalendarFeedSection'
+import DataExportSection from '@/components/account/DataExportSection'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -37,6 +41,8 @@ export default function ProfilePage() {
           <p className="page-subtitle">{user.email}</p>
         </div>
       </div>
+
+      <EmailVerifyNotice />
 
       <section className="card profile-section">
         <h2>Persönliche Angaben</h2>
@@ -132,6 +138,10 @@ export default function ProfilePage() {
 
       <NotificationSettings />
 
+      <AlertsSection />
+
+      <CalendarFeedSection />
+
       <section className="card profile-section">
         <h2>Darstellung</h2>
         <p className="hint" style={{ marginBottom: 12 }}>
@@ -155,6 +165,9 @@ export default function ProfilePage() {
             <Link to="/regeln">Community-Regeln</Link>
           </li>
           <li>
+            <Link to="/feedback">Feedback geben</Link>
+          </li>
+          <li>
             <Link to="/datenschutz">Datenschutz</Link>
           </li>
           <li>
@@ -162,6 +175,8 @@ export default function ProfilePage() {
           </li>
         </ul>
       </section>
+
+      <DataExportSection />
 
       <section className="card profile-section">
         <h2>Konto</h2>

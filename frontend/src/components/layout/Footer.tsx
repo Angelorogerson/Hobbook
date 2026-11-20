@@ -21,6 +21,7 @@ export default function Footer() {
           )}
           <Link to="/ueber">So funktioniert’s</Link>
           <Link to="/regeln">Regeln</Link>
+          <Link to="/feedback">Feedback</Link>
           <Link to="/datenschutz">Datenschutz</Link>
           <Link to="/impressum">Impressum</Link>
           <ThemeToggle />

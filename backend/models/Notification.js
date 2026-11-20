@@ -15,6 +15,9 @@ export const NOTIFICATION_TYPES = [
   'handover', // you organize a Stammspiel now
   'removed', // a host removed you from a Stammspiel
   'spot_passed', // you didn't confirm a spot in time
+  'new_event', // a new event matches one of your search alerts
+  'comment', // someone wrote under an event you organize or asked about
+  'announcement', // a host sent a message to everyone who is in
 ];
 
 /** In-app notice for one person. Old notices expire after 60 days. */
