@@ -9,6 +9,7 @@ import { deleteEvent, getMyEvents, leaveEvent, type SportEvent } from '@/api/eve
 import { apiError } from '@/api/axiosInstance'
 import EventCard from '@/components/events/EventCard'
 import CancelEventDialog from '@/components/events/CancelEventDialog'
+import DuplicateEventButton from '@/components/events/DuplicateEventButton'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import './MyEventsPage.css'
@@ -77,6 +78,14 @@ export default function MyEventsPage() {
   }
 
   const renderActions = (e: SportEvent) => {
+    // Past or cancelled one-off games: host the same event again (not for Stammspiel games).
+    if (tab === 'created' && !isUpcoming(e) && !e.series) {
+      return (
+        <div className="my-actions">
+          <DuplicateEventButton event={e} size="sm" />
+        </div>
+      )
+    }
     if (!isUpcoming(e) || tab === 'saved') return null
     if (tab === 'created') {
       const others = e.participantCount - 1
