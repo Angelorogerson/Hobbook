@@ -31,6 +31,14 @@
   font-style: italic;
   color: var(--c-text-muted);
 }
+/* Feedback inbox: keep the sender's line breaks, never scroll sideways */
+.admin-feedback-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.admin-feedback-page {
+  overflow-wrap: anywhere;
+}
 .admin-actions,
 .admin-row-actions {
   display: flex;

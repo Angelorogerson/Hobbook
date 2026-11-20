@@ -12,6 +12,9 @@ export default function AdminNav() {
       <NavLink to="/admin/kennzahlen" className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}>
         Kennzahlen
       </NavLink>
+      <NavLink to="/admin/feedback" className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}>
+        Feedback
+      </NavLink>
     </nav>
   )
 }

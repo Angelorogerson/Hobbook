@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Check, Minus, Plus, Repeat } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Check, CopyPlus, Info, MapPin, Minus, Plus, Repeat, X } from 'lucide-react'
 import { createEvent, getEvent, updateEvent, type EventInput, type EventLevel, type EventVisibility, type SportEvent } from '@/api/eventApi'
 import { createGroup, getGroup, updateGroup, WEEKDAYS, WEEKDAYS_SHORT, type Group, type GroupInput, type RsvpMode } from '@/api/groupApi'
+import { getMyPlaces, type RecentPlace } from '@/api/placesApi'
 import { apiError } from '@/api/axiosInstance'
 import LocationPicker, { type PickedLocation } from '@/components/map/LocationPicker'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
@@ -134,6 +135,34 @@ function fromEvent(e: SportEvent): FormState {
     rsvpMode: 'ask',
   }
 }
+
+/**
+ * "Nochmal veranstalten": the next start on the same weekday at the same local
+ * time that lies in the future (original start + 7 days × n, n ≥ 1). Counted in
+ * calendar days, so a clock change in between does not move the time of day.
+ */
+export function nextWeeklyStart(startAt: string, now = new Date()): Date {
+  const s = new Date(startAt)
+  if (Number.isNaN(s.getTime())) return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 18, 0)
+  const weeksLater = (n: number) => new Date(s.getFullYear(), s.getMonth(), s.getDate() + 7 * n, s.getHours(), s.getMinutes())
+  let n = Math.max(1, Math.floor((now.getTime() - s.getTime()) / (7 * 24 * 3600 * 1000)))
+  while (weeksLater(n) <= now) n += 1
+  return weeksLater(n)
+}
+
+/** A copy of an event for the create form: everything but the date is taken over. */
+export function fromCopy(e: SportEvent, now = new Date()): FormState {
+  const date = toLocalInputs(nextWeeklyStart(e.startAt, now).toISOString()).date
+  return { ...fromEvent(e), date, weekday: isoWeekdayOf(date) }
+}
+
+/** Same place = same name and the same spot to about 10 m (as the server de-duplicates). */
+const samePlace = (a: PickedLocation, b: RecentPlace) =>
+  a.lat !== null &&
+  a.lng !== null &&
+  a.placeName.trim().toLowerCase() === b.placeName.trim().toLowerCase() &&
+  a.lat.toFixed(4) === b.lat.toFixed(4) &&
+  a.lng.toFixed(4) === b.lng.toFixed(4)
 
 function fromGroup(g: Group): FormState {
   const base = emptyForm()
@@ -297,11 +326,18 @@ export default function EventFormPage() {
   const navigate = useNavigate()
   const { authState } = useAuthContext()
   const [params] = useSearchParams()
+  // "Nochmal veranstalten": create mode with ?kopie=<eventId>.
+  const copyId = isEdit ? null : params.get('kopie')
 
   const [form, setForm] = useState<FormState>(() => ({ ...emptyForm(), weekly: params.get('woche') === '1' }))
   const minTouched = useRef(isEdit)
   const [original, setOriginal] = useState<SportEvent | null>(null)
-  const [loading, setLoading] = useState(isEdit)
+  const [loading, setLoading] = useState(isEdit || !!copyId)
+  const [copy, setCopy] = useState<{ title: string } | 'failed' | null>(null)
+  // Places used before (create mode only): one tap instead of a new search.
+  const [recentPlaces, setRecentPlaces] = useState<RecentPlace[]>([])
+  // The map reads its start position once: a new key shows a place chosen from outside.
+  const [pickerKey, setPickerKey] = useState(0)
   const [loadError, setLoadError] = useState('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -354,6 +390,43 @@ export default function EventFormPage() {
       .catch((err) => setLoadError(apiError(err, 'Event konnte nicht geladen werden.').message))
       .finally(() => setLoading(false))
   }, [id, authState.user?.role])
+
+  useEffect(() => {
+    if (!copyId) return
+    let active = true
+    getEvent(copyId)
+      .then((e) => {
+        if (!active) return
+        // The copied title is the organizer's own: no automatic suggestion over it.
+        titleTouched.current = true
+        setForm((f) => ({ ...fromCopy(e), weekly: f.weekly }))
+        if (e.description || e.bring || e.level !== 'all' || e.visibility !== 'public') setMoreOpen(true)
+        setCopy({ title: e.title })
+      })
+      .catch(() => {
+        if (active) setCopy('failed')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [copyId])
+
+  useEffect(() => {
+    if (isEdit) return
+    let active = true
+    getMyPlaces()
+      .then((places) => {
+        if (active) setRecentPlaces(places)
+      })
+      // The form works without the shortcuts.
+      .catch(() => {})
+    return () => {
+      active = false
+    }
+  }, [isEdit])
 
   const clearError = (...keys: string[]) =>
     setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !keys.includes(k))))
@@ -441,6 +514,15 @@ export default function EventFormPage() {
     }
   }
 
+  const pickRecentPlace = (p: RecentPlace) => {
+    setForm((f) => ({
+      ...f,
+      location: { placeName: p.placeName, address: p.address, city: p.city, countryCode: p.countryCode, lat: p.lat, lng: p.lng },
+    }))
+    setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !k.startsWith('location'))))
+    setPickerKey((k) => k + 1)
+  }
+
   const fieldProps = (name: string) => ({
     'aria-invalid': !!errors[name],
     'aria-describedby': errors[name] ? `err-${name}` : undefined,
@@ -495,6 +577,22 @@ export default function EventFormPage() {
           </p>
         </div>
       </div>
+
+      {copy && copy !== 'failed' && (
+        <div className="notice notice-info copy-hint" role="status">
+          <CopyPlus size={18} aria-hidden="true" />
+          <p>Kopie von „{copy.title}“ – prüfe Datum und Uhrzeit.</p>
+          <button type="button" className="btn btn-ghost btn-sm btn-icon" aria-label="Hinweis schließen" onClick={() => setCopy(null)}>
+            <X size={16} aria-hidden="true" />
+          </button>
+        </div>
+      )}
+      {copy === 'failed' && (
+        <p className="notice notice-warning" role="status">
+          <Info size={18} aria-hidden="true" />
+          Die Vorlage konnte nicht geladen werden. Du startest mit einem leeren Formular.
+        </p>
+      )}
 
       <form onSubmit={publish} noValidate>
         <section className="form-section card">
@@ -649,7 +747,28 @@ export default function EventFormPage() {
           <h2>
             <span className="form-step">2</span> Wo trefft ihr euch?
           </h2>
+          {!isEdit && recentPlaces.length > 0 && (
+            <div className="recent-places" role="group" aria-labelledby="recent-places-label">
+              <span id="recent-places-label" className="recent-places-label">
+                Zuletzt genutzt:
+              </span>
+              {recentPlaces.map((p) => (
+                <button
+                  key={`${p.placeName}|${p.lat}|${p.lng}`}
+                  type="button"
+                  className="chip"
+                  aria-pressed={samePlace(form.location, p)}
+                  title={[p.address, p.city].filter(Boolean).join(', ')}
+                  onClick={() => pickRecentPlace(p)}
+                >
+                  <MapPin size={14} aria-hidden="true" />
+                  <span>{p.placeName}</span>
+                </button>
+              ))}
+            </div>
+          )}
           <LocationPicker
+            key={pickerKey}
             value={form.location}
             onChange={(v) => {
               setForm((f) => ({ ...f, location: v }))

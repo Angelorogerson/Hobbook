@@ -1,0 +1,39 @@
+.feedback-form {
+  display: grid;
+  gap: var(--space-2);
+}
+.feedback-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+/* The radio itself is visually hidden: show keyboard focus on its chip */
+.feedback-kinds .chip:has(:focus-visible) {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+.feedback-text {
+  min-height: 160px;
+}
+.feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+.feedback-thanks h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  letter-spacing: var(--tracking-display);
+  color: var(--c-text);
+}
+.feedback-thanks h1:focus {
+  outline: none;
+}
+.feedback-thanks-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
