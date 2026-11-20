@@ -71,6 +71,9 @@ export default function LoginPage() {
           <div className="field">
             <label htmlFor="login-password">Passwort</label>
             <input id="login-password" type="password" className="input" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Link to="/passwort-vergessen" state={email.trim() ? { email: email.trim() } : undefined} className="auth-forgot">
+              Passwort vergessen?
+            </Link>
           </div>
           {error && (
             <p className="notice notice-danger" role="alert">
