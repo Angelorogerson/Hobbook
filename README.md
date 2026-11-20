@@ -18,6 +18,10 @@ Hobbook ist eine kostenlose, stadtunabhängige Community-Plattform für Sport-Ev
   - Absagen bleibt sichtbar. Löschen geht nur, solange sich niemand sonst angemeldet hat.
 - **Meine Events:** erstellte und beigetretene Events, anstehend und vergangen.
 - **Moderation:** Meldungen bearbeiten, Events absagen oder löschen (Rolle `admin`).
+- **Konto:** Passwort per E-Mail zurücksetzen, E-Mail-Adresse bestätigen, Kalender-Abo (.ics), eigene Daten als JSON herunterladen.
+- **Rund ums Event:** „Fragen & Infos“ mit Nachrichten der Organisator:innen an alle, Aushang mit QR-Code zum Ausdrucken, „Nochmal veranstalten“, zuletzt genutzte Orte.
+- **Finden:** Such-Alarme („Sag mir Bescheid“), Textsuche und Niveau-Filter.
+- **Feedback:** Formular für alle, Eingang in der Moderation.
 - **Datenschutz:**
   - Öffentlich erscheint nur „Vorname N.“.
   - Teilnehmernamen sehen nur Beteiligte.

@@ -84,3 +84,22 @@ describe('search alerts follow the same city matching as Discover', () => {
     expect(await Notification.countDocuments({ user: other.user._id, type: 'new_event' })).toBe(0);
   });
 });
+
+describe('answers to questions reach the person who asked', () => {
+  it('a host message to everyone also notifies an asker who has not joined, once', async () => {
+    const { Notification } = await import('../models/index.js');
+    const host = await makeUser();
+    const joined = await makeUser();
+    const asker = await makeUser();
+    const event = await insertEvent(host.user, { participants: [host.user._id, joined.user._id] });
+
+    expect((await api().post(`/api/events/${event._id}/comments`).set(asker.auth).send({ text: 'Gibt es Leibchen?' })).status).toBe(201);
+    expect((await api().post(`/api/events/${event._id}/comments`).set(joined.auth).send({ text: 'Bringt jemand einen Ball?' })).status).toBe(201);
+    const res = await api().post(`/api/events/${event._id}/comments`).set(host.auth).send({ text: 'Ja, beides da.', kind: 'announcement' });
+    expect(res.status).toBe(201);
+
+    const types = async (u) => (await Notification.find({ user: u.user._id, type: { $in: ['comment', 'announcement'] } }).lean()).map((n) => n.type);
+    expect(await types(asker)).toEqual(['comment']); // "Antwort zu …"
+    expect(await types(joined)).toEqual(['announcement']); // told once, not twice
+  });
+});

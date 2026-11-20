@@ -1,3 +1,22 @@
+# Changes: ten smaller features (2026-11-20)
+
+Branch `feature/ten-features`. Built in parallel on a shared skeleton (database fields, empty routers, placeholder pages), then merged and tested together.
+
+- **Password reset by email:** "Passwort vergessen?" on the login page → `POST /api/auth/forgot` (always the same answer) → emailed one-time link (60 min, only a hash is stored) → `/passwort-neu/:token` → signed in. Sessions issued before a password change stop working; changing the password in the profile returns a fresh session for that device.
+- **Email confirmation (soft):** sign-up sends a link (`/email-bestaetigen/:token`, 7 days). Nothing is blocked without it; the profile shows a notice with "Link erneut senden". `emailVerified` is part of the session user.
+- **Calendar subscription:** profile section "Kalender-Abo" gives a personal `.ics` address (`/api/calendar/feed/<token>.ics`) with all games the person is in or organizes; "Link erneuern" revokes the old address. No names of other people in the feed.
+- **Data export:** profile section "Deine Daten" downloads a JSON copy of everything stored about the account (`GET /api/users/me/export`).
+- **Fragen & Infos on events:** anyone signed in can ask under an event; hosts can answer and tick "An alle Teilnehmenden senden" (in-app notice, email, push). Askers are told about answers. Authors, hosts and moderators can delete. `Comment` model, `/api/events/:id/comments`.
+- **Printable poster ("Aushang"):** `/events/:id/aushang` and `/stammspiel/:key/aushang` render one A4 page with time, place and a QR code generated in the browser (`qrcode-generator`). Linked for hosts on the event and Stammspiel pages.
+- **Search alerts ("Sag mir Bescheid"):** offered when a city search finds nothing (and quietly below results); stored on the user (max 5); a new public event or Stammspiel in that city notifies once. Matching follows Discover's prefix search ("Frankfurt" → "Frankfurt am Main"). Managed in the profile under "Such-Alarme".
+- **Discover text search and level filter:** `GET /api/events?q=&level=`; URL params `suche` and `niveau`.
+- **Host again + recent places:** "Nochmal veranstalten" opens the create form as a copy (`/events/neu?kopie=<id>`) with the next future date on the same weekday; the create form offers "Zuletzt genutzt" places (`GET /api/places/mine`).
+- **Feedback with admin inbox:** `/feedback` (guests too, honeypot, rate-limited) → moderation tab "Feedback" (`/admin/feedback`). The page the person came from is recorded; no email address is shown.
+- **Account deletion** also removes the person's comments and alerts and unlinks their feedback. The privacy page describes all of the above.
+- **Tests:** new backend files `account`, `calendar-export`, `comments`, `alerts-search`, `places-feedback`, `integration-features`; new frontend component tests; E2E `new-features.spec.ts` (9 flows with accessibility checks).
+
+Not built: English/French translation, "+1" guests, event photos, comment threads or live updates.
+
 # Changes: Stammspiel gaps closed (2026-11-18, second pass)
 
 - **Account deletion:** a Stammspiel goes to the longest-serving co-host (notice `handover`), or ends and its open game is called off. Memberships, co-host roles, blocks, answers, waiting-list places, no-show marks and notifications are removed; freed spots go to the waiting list.

@@ -66,18 +66,20 @@ export const listComments = async (req, res) => {
 async function sendNotices({ event, hosts, comment, authorId, authorIsHost }) {
   const base = { body: shorten(comment.text), link: `/events/${event._id}`, event, group: event.group || undefined };
   try {
+    // Everyone who asked something here before (hosts excluded).
+    const askers = async () =>
+      (await Comment.distinct('author', { event: event._id, _id: { $ne: comment._id }, author: { $nin: [...hosts] } }))
+        .map(String)
+        .filter((id) => id !== authorId);
     if (comment.kind === 'announcement') {
       const users = [...(event.participants || []), ...(event.waitlist || [])].map(String).filter((id) => id !== authorId);
       await notify({ ...base, users, type: 'announcement', title: `Nachricht zu „${event.title}“` });
+      // People who asked but have not joined would otherwise never hear the answer.
+      const told = new Set(users);
+      const others = (await askers()).filter((id) => !told.has(id));
+      await notify({ ...base, users: others, type: 'comment', title: `Antwort zu „${event.title}“`, email: false });
     } else if (authorIsHost) {
-      // An answer: everyone who asked something here before.
-      const askers = await Comment.distinct('author', {
-        event: event._id,
-        _id: { $ne: comment._id },
-        author: { $nin: [...hosts] },
-      });
-      const users = askers.map(String).filter((id) => id !== authorId);
-      await notify({ ...base, users, type: 'comment', title: `Antwort zu „${event.title}“`, email: false });
+      await notify({ ...base, users: await askers(), type: 'comment', title: `Antwort zu „${event.title}“`, email: false });
     } else {
       const users = [...hosts].filter((id) => id !== authorId);
       await notify({ ...base, users, type: 'comment', title: `Neue Frage zu „${event.title}“`, email: false });
