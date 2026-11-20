@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { issuedBeforePasswordChange } from './auth.js';
 
 /**
  * Attach req.user when a valid Bearer token is present; never rejects.
@@ -12,7 +13,8 @@ const optionalAuth = async (req, res, next) => {
   try {
     const decoded = jwt.verify(header.slice(7), process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('-password');
-    if (user && user.isActive !== false) req.user = user;
+    // A session from before a password change counts as signed out.
+    if (user && user.isActive !== false && !issuedBeforePasswordChange(decoded, user)) req.user = user;
   } catch {
     // Invalid/expired token on a public route: treat as anonymous.
   }

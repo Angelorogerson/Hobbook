@@ -9,6 +9,8 @@ export interface User {
   city?: string
   sports?: string[]
   emailNotifications?: boolean
+  /** false until the person opened the confirmation link from their email. */
+  emailVerified?: boolean
 }
 
 export interface AuthState {
@@ -55,6 +57,10 @@ interface AuthContextValue {
   register: (userData: RegisterInput) => Promise<void>
   logout: () => void
   updateUser: (userData: Partial<Pick<User, 'name' | 'city' | 'sports' | 'emailNotifications'>>) => Promise<void>
+  /** Sign in with a session the API just issued (e.g. after setting a new password). */
+  setSession: (token: string, user: User) => void
+  /** Reload the signed-in person's account from the API (e.g. after confirming the email address). */
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -108,8 +114,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'UPDATE_USER', payload: data.user })
   }, [])
 
+  const setSession = useCallback((token: string, user: User) => {
+    localStorage.setItem(TOKEN_KEY, token)
+    dispatch({ type: 'LOGIN_SUCCESS', payload: { token, user } })
+  }, [])
+
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem(TOKEN_KEY)) return
+    const { data } = await api.get('/auth/me')
+    dispatch({ type: 'UPDATE_USER', payload: data.user })
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ authState, login, register, logout, updateUser }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ authState, login, register, logout, updateUser, setSession, refreshUser }}>
+      {children}
+    </AuthContext.Provider>
   )
 }
 

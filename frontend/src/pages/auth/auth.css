@@ -48,6 +48,36 @@
   padding: var(--space-3) var(--space-1);
 }
 
+/* Password reset and email confirmation */
+.auth-forgot {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  font-size: var(--text-sm);
+}
+.auth-text {
+  margin-bottom: var(--space-5);
+  color: var(--c-text-muted);
+}
+.auth-card h1:focus {
+  outline: none;
+}
+.auth-center {
+  text-align: center;
+}
+.auth-email {
+  overflow-wrap: anywhere;
+}
+.auth-card .notice p {
+  min-width: 0;
+}
+.auth-actions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
 .auth-more {
   margin-top: var(--space-5);
   padding-top: var(--space-4);

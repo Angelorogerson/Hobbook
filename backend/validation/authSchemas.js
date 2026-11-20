@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { cleanText } from '../utils/text.js';
+import { TOKEN_PATTERN } from '../services/accountMail.js';
 
 // Every auth field must be a plain string. This also blocks query-operator
 // objects such as { "$gt": "" } from reaching MongoDB filters.
@@ -43,3 +44,16 @@ export const updatePasswordSchema = z.object({
 });
 
 export const deleteAccountSchema = z.object({ password: existingPassword });
+
+// One-time token from an email link (32 random bytes as hex). Anything else,
+// including non-strings, is simply an invalid link.
+const linkToken = z
+  .string({ required_error: 'Der Link ist ungültig', invalid_type_error: 'Der Link ist ungültig' })
+  .trim()
+  .regex(TOKEN_PATTERN, 'Der Link ist ungültig');
+
+export const forgotPasswordSchema = z.object({ email });
+
+export const resetPasswordSchema = z.object({ token: linkToken, password: newPassword });
+
+export const verifyEmailSchema = z.object({ token: linkToken });
