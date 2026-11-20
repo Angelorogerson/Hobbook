@@ -10,6 +10,7 @@ import { notify } from '../services/notify.js';
 import { cancelWithNotice, notifyChanged, toLocationDoc } from './connectEventController.js';
 import { afterPromotion } from '../services/promotion.js';
 import { isBlocked, removeMember, transferGroup } from '../services/groupAdmin.js';
+import { notifyAlertsForGroup } from '../services/alerts.js';
 
 const H = 3600 * 1000;
 
@@ -177,6 +178,8 @@ export const createGroup = async (req, res) => {
     }
   }
   await ensureOccurrence(group.toObject(), new Date(), { force: true });
+  // Search alerts: not awaited, never throws into the request.
+  void notifyAlertsForGroup(group.toObject());
   const { group: full } = await findGroup(String(group._id));
   res.status(201).json({ group: await serializeGroup(full, req.user) });
 };

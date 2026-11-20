@@ -63,6 +63,52 @@
     min-height: var(--control-h);
   }
 }
+/* Text search: a compact pill under the city search; never wider than the bar */
+.filterbar-text {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.filterbar-text-input {
+  min-width: 0;
+  min-height: var(--control-h-sm);
+  padding: 0 var(--space-10) 0 var(--space-4);
+  border-color: var(--c-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+}
+.filterbar-text-input.is-on {
+  border-color: var(--c-ink);
+}
+/* Our own clear button works in every browser; hide the native one */
+.filterbar-text-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.filterbar-text-clear {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  place-items: center;
+  width: var(--control-h);
+  height: 100%;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--c-text-muted);
+  cursor: pointer;
+}
+.filterbar-text-clear:hover {
+  color: var(--c-text);
+}
+@media (pointer: coarse) {
+  .filterbar-text-input {
+    min-height: var(--control-h);
+    /* 16px keeps iOS from zooming into the field */
+    font-size: var(--text-md);
+  }
+}
 .filterbar-near-error {
   margin: 0;
   font-size: var(--text-sm);

@@ -42,6 +42,42 @@
   display: grid;
   gap: var(--space-3);
 }
+/* Empty state: "Event erstellen" and "Sag mir Bescheid" side by side, stacked when narrow */
+.discover-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+/* The alert label names the city and can be long: let it wrap instead of overflowing */
+.btn.alert-btn {
+  max-width: 100%;
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+  line-height: var(--leading-tight);
+  white-space: normal;
+  text-align: left;
+}
+.alert-btn > svg {
+  flex-shrink: 0;
+}
+.btn.alert-btn.is-active {
+  color: var(--c-accent-text);
+}
+/* Below the results: a quiet line, not another call to action */
+.discover-alert-line {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+.discover-alert-line .btn.alert-btn {
+  color: var(--c-text-muted);
+  font-weight: var(--weight-medium);
+}
+.discover-alert-line .btn.alert-btn.is-active {
+  color: var(--c-accent-text);
+}
 .discover-map {
   position: relative;
   min-height: 0;
@@ -103,6 +139,7 @@
   /* Map view: keep the quick filters, drop the heading, search and count to give the map room */
   .discover--map .discover-title,
   .discover--map .filterbar-search,
+  .discover--map .filterbar-text,
   .discover--map .discover-count {
     display: none;
   }

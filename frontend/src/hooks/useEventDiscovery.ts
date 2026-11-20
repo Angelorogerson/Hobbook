@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { listEvents, type BBox, type EventQuery, type SportEvent } from '@/api/eventApi'
+import { listEvents, type BBox, type EventLevel, type EventQuery, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import { loadPlace, savePlace } from '@/utils/geo'
 
@@ -14,6 +14,13 @@ export const WHEN_OPTIONS: { key: WhenFilter; label: string }[] = [
   { key: 'week', label: '7 Tage' },
 ]
 
+export type LevelFilter = '' | Exclude<EventLevel, 'all'>
+const LEVEL_FILTERS: LevelFilter[] = ['beginner', 'intermediate', 'advanced']
+
+/** The API searches from 2 characters on and accepts up to 60. */
+export const SEARCH_MIN = 2
+export const SEARCH_MAX = 60
+
 export interface DiscoveryFilters {
   city: string
   sport: string
@@ -25,6 +32,10 @@ export interface DiscoveryFilters {
   freeOnly: boolean
   /** Only games of weekly Stammspiele. */
   seriesOnly: boolean
+  /** Text search in title and place name. */
+  search: string
+  /** Events with this level (or for everyone); '' = every level. */
+  level: LevelFilter
 }
 
 const PAGE_SIZE = 200 // map + list share one result set; the API caps at 200
@@ -106,6 +117,7 @@ export function useEventDiscovery() {
   const filters: DiscoveryFilters = useMemo(() => {
     const city = params.get('stadt') || ''
     const area = parseArea(params.get('bereich'))
+    const level = params.get('niveau') as LevelFilter
     return {
       city,
       sport: params.get('sport') || '',
@@ -115,6 +127,8 @@ export function useEventDiscovery() {
       near: city || area ? null : near,
       freeOnly: params.get('frei') === '1',
       seriesOnly: params.get('stamm') === '1',
+      search: (params.get('suche') || '').trim().slice(0, SEARCH_MAX),
+      level: LEVEL_FILTERS.includes(level) ? level : '',
     }
   }, [params, near])
 
@@ -133,10 +147,13 @@ export function useEventDiscovery() {
       radiusKm: filters.near ? NEAR_RADIUS_KM : undefined,
       ...rangeFor(filters.when),
       series: filters.seriesOnly || undefined,
+      // Shorter texts are not searched (the API would refuse them).
+      q: filters.search.length >= SEARCH_MIN ? filters.search : undefined,
+      level: filters.level || undefined,
       limit: PAGE_SIZE,
     }),
     // freeOnly is applied in the browser and must not trigger a new request
-    [filters.area, filters.city, filters.sport, filters.near, filters.when, filters.seriesOnly]
+    [filters.area, filters.city, filters.sport, filters.near, filters.when, filters.seriesOnly, filters.search, filters.level]
   )
 
   useEffect(() => {
@@ -159,7 +176,7 @@ export function useEventDiscovery() {
   }, [query, reloadKey])
 
   const update = useCallback(
-    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich' | 'frei' | 'stamm', string | null>>) => {
+    (patch: Partial<Record<'stadt' | 'sport' | 'wann' | 'bereich' | 'frei' | 'stamm' | 'suche' | 'niveau', string | null>>) => {
       setParams(
         (prev) => {
           const next = new URLSearchParams(prev)
@@ -203,6 +220,8 @@ export function useEventDiscovery() {
     setFreeOnly: (on: boolean) => update({ frei: on ? '1' : null }),
     setSeriesOnly: (on: boolean) => update({ stamm: on ? '1' : null }),
     setSport: (sport: string) => update({ sport: sport || null }),
+    setSearch: (text: string) => update({ suche: text.trim().slice(0, SEARCH_MAX) || null }),
+    setLevel: (level: string) => update({ niveau: LEVEL_FILTERS.includes(level as LevelFilter) ? level : null }),
     setWhen: (when: WhenFilter) => update({ wann: when === 'all' ? null : when }),
     setArea: (area: BBox) => update({ bereich: serializeArea(area), stadt: null }),
     clearArea: () => update({ bereich: null }),

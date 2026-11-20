@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarX2, List, Map as MapIcon, Plus, RefreshCw } from
 import EventMap from '@/components/map/EventMap'
 import EventCard from '@/components/events/EventCard'
 import FilterBar from '@/components/events/FilterBar'
+import AlertButton from '@/components/events/AlertButton'
 import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
 import { NEAR_RADIUS_KM, useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
@@ -47,10 +48,33 @@ export default function DiscoverPage({ initialView }: Props) {
     () =>
       areaActive
         ? 'area'
-        : [d.filters.city, d.filters.sport, d.filters.when, d.filters.near ? 'near' : '', d.filters.freeOnly ? 'f' : '', d.filters.seriesOnly ? 's' : '', d.loading ? 'l' : 'r'].join('|'),
-    [areaActive, d.filters.city, d.filters.sport, d.filters.when, d.filters.near, d.filters.freeOnly, d.filters.seriesOnly, d.loading]
+        : [
+            d.filters.city,
+            d.filters.sport,
+            d.filters.when,
+            d.filters.near ? 'near' : '',
+            d.filters.freeOnly ? 'f' : '',
+            d.filters.seriesOnly ? 's' : '',
+            d.filters.search,
+            d.filters.level,
+            d.loading ? 'l' : 'r',
+          ].join('|'),
+    [
+      areaActive,
+      d.filters.city,
+      d.filters.sport,
+      d.filters.when,
+      d.filters.near,
+      d.filters.freeOnly,
+      d.filters.seriesOnly,
+      d.filters.search,
+      d.filters.level,
+      d.loading,
+    ]
   )
   const unmappable = d.events.filter((e) => e.location.lat === null).length
+  // "Sag mir Bescheid" needs a city: not for map-area or near-me searches.
+  const alertCity = areaActive ? '' : d.filters.city
 
   const heading = [
     d.filters.seriesOnly
@@ -81,6 +105,8 @@ export default function DiscoverPage({ initialView }: Props) {
             onWhen={d.setWhen}
             onFreeOnly={d.setFreeOnly}
             onSeriesOnly={d.setSeriesOnly}
+            onLevel={d.setLevel}
+            onSearch={d.setSearch}
             onClearArea={d.clearArea}
             onReset={d.reset}
             onNearMe={d.locate}
@@ -128,14 +154,24 @@ export default function DiscoverPage({ initialView }: Props) {
               icon={<CalendarX2 size={24} aria-hidden="true" />}
               title="Hier ist noch nichts los."
               action={
-                <Link to="/events/neu" className="btn btn-primary">
-                  <Plus size={18} aria-hidden="true" /> Event erstellen
-                </Link>
+                <div className="discover-empty-actions">
+                  <Link to="/events/neu" className="btn btn-primary">
+                    <Plus size={18} aria-hidden="true" /> Event erstellen
+                  </Link>
+                  {alertCity && <AlertButton city={alertCity} sport={d.filters.sport || undefined} />}
+                </div>
               }
             >
               {d.hiddenFull > 0
                 ? 'Alle passenden Events sind gerade voll.'
-                : areaActive || d.filters.city || d.filters.near || d.filters.sport || d.filters.when !== 'all'
+                : areaActive ||
+                    d.filters.city ||
+                    d.filters.near ||
+                    d.filters.sport ||
+                    d.filters.when !== 'all' ||
+                    d.filters.seriesOnly ||
+                    d.filters.search ||
+                    d.filters.level
                   ? 'Für diesen Ort und diese Filter gibt es gerade keine offenen Events.'
                   : 'Es gibt gerade keine offenen Events.'}{' '}
               Starte das erste – andere können es dann hier und auf der Karte finden.
@@ -170,6 +206,12 @@ export default function DiscoverPage({ initialView }: Props) {
               </li>
             ))}
           </ol>
+
+          {alertCity && !d.loading && !d.error && d.events.length > 0 && (
+            <p className="discover-alert-line">
+              <AlertButton city={alertCity} sport={d.filters.sport || undefined} variant="quiet" />
+            </p>
+          )}
         </div>
       </section>
 

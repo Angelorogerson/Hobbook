@@ -128,6 +128,10 @@ export interface EventQuery {
   includePast?: boolean
   /** Only games of weekly Stammspiele. */
   series?: boolean
+  /** Text search in title and place name (2–60 characters). */
+  q?: string
+  /** Events with this level or for everyone. */
+  level?: Exclude<EventLevel, 'all'>
 }
 
 export interface EventListResult {
@@ -156,6 +160,8 @@ export function toQueryParams(q: EventQuery): Record<string, string> {
   if (q.limit) p.limit = String(q.limit)
   if (q.includePast) p.includePast = 'true'
   if (q.series) p.series = 'true'
+  if (q.q?.trim()) p.q = q.q.trim()
+  if (q.level) p.level = q.level
   return p
 }
 
