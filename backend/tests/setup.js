@@ -9,7 +9,8 @@ process.env.JWT_EXPIRES_IN = '1h';
 let mongo;
 
 beforeAll(async () => {
-  mongo = await MongoMemoryServer.create();
+  // A generous launch timeout: on a busy machine mongod can need more than the default 10 s.
+  mongo = await MongoMemoryServer.create({ instance: { launchTimeout: 60000 } });
   await mongoose.connect(mongo.getUri());
   // Build indexes (2dsphere is required for geo queries).
   await Promise.all(Object.values(mongoose.models).map((m) => m.syncIndexes()));
