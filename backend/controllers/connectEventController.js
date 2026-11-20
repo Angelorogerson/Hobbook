@@ -7,6 +7,7 @@ import { notify } from '../services/notify.js';
 import { announceDecision, isHost } from '../services/stammspiel.js';
 import { afterPromotion, confirmSpot } from '../services/promotion.js';
 import { isBlocked } from '../services/groupAdmin.js';
+import { notifyAlertsForEvent } from '../services/alerts.js';
 
 const CREATOR_FIELDS = 'name';
 const CREATOR_DETAIL_FIELDS = 'name createdAt';
@@ -87,6 +88,12 @@ export const getEvents = async (req, res) => {
 
   if (q.sport?.length) filter.sport = { $in: q.sport };
   if (q.series) filter.group = { $ne: null };
+  // Events for everyone ('all') fit every level.
+  if (q.level) filter.level = { $in: [q.level, 'all'] };
+  if (q.q) {
+    const text = { $regex: escapeRegex(q.q), $options: 'i' };
+    filter.$or = [{ title: text }, { 'location.placeName': text }];
+  }
   if (q.city) {
     const key = cityKey(q.city);
     if (key) filter['location.cityKey'] = { $regex: `^${escapeRegex(key)}` };
@@ -205,6 +212,8 @@ export const createEvent = async (req, res) => {
     participants: [req.user._id],
     status: 'open',
   });
+  // Search alerts: not awaited, never throws into the request.
+  void notifyAlertsForEvent(event.toObject());
   const full = await loadForResponse(event._id);
   res.status(201).json({ event: serializeEvent(full, { viewer: req.user, detail: true }) });
 };

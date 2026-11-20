@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { LocateFixed, Search, X } from 'lucide-react'
-import { SPORTS } from '@/constants/sports'
-import { WHEN_OPTIONS, type DiscoveryFilters, type WhenFilter } from '@/hooks/useEventDiscovery'
+import { LEVELS, SPORTS } from '@/constants/sports'
+import { SEARCH_MAX, SEARCH_MIN, WHEN_OPTIONS, type DiscoveryFilters, type WhenFilter } from '@/hooks/useEventDiscovery'
 import './FilterBar.css'
 
 interface Props {
@@ -11,6 +11,10 @@ interface Props {
   onWhen: (when: WhenFilter) => void
   onFreeOnly: (on: boolean) => void
   onSeriesOnly?: (on: boolean) => void
+  /** Level picker ('' = every level). */
+  onLevel?: (level: string) => void
+  /** Text search in title and place name ('' = off). */
+  onSearch?: (text: string) => void
   onClearArea: () => void
   onReset: () => void
   /** Search around the viewer's position (asks the browser for permission). */
@@ -18,6 +22,14 @@ interface Props {
   onClearNear?: () => void
   locating?: boolean
   locateError?: string | null
+}
+
+const SEARCH_DEBOUNCE_MS = 400
+
+/** What a typed text searches for: one letter alone (or nothing) means no text search. */
+const toSearch = (typed: string) => {
+  const t = typed.trim()
+  return t.length >= SEARCH_MIN ? t : ''
 }
 
 /**
@@ -31,6 +43,8 @@ export default function FilterBar({
   onWhen,
   onFreeOnly,
   onSeriesOnly,
+  onLevel,
+  onSearch,
   onClearArea,
   onReset,
   onNearMe,
@@ -41,7 +55,35 @@ export default function FilterBar({
   const [city, setCity] = useState(filters.city)
   useEffect(() => setCity(filters.city), [filters.city])
 
-  const active = !!(filters.city || filters.sport || filters.when !== 'all' || filters.area || filters.near || filters.freeOnly || filters.seriesOnly)
+  // The text field follows the URL, but never rewrites what is being typed
+  // (a trailing space, or a single letter that is not searched yet).
+  const [text, setText] = useState(filters.search)
+  useEffect(() => setText((t) => (toSearch(t) === filters.search ? t : filters.search)), [filters.search])
+
+  // Search while typing, after a short pause.
+  // (The handler lives in a ref so that a re-render of the page doesn't restart the pause.)
+  const wanted = toSearch(text)
+  const onSearchRef = useRef(onSearch)
+  useEffect(() => {
+    onSearchRef.current = onSearch
+  })
+  useEffect(() => {
+    if (wanted === filters.search) return
+    const timer = window.setTimeout(() => onSearchRef.current?.(wanted), SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(timer)
+  }, [wanted, filters.search])
+
+  const active = !!(
+    filters.city ||
+    filters.sport ||
+    filters.when !== 'all' ||
+    filters.area ||
+    filters.near ||
+    filters.freeOnly ||
+    filters.seriesOnly ||
+    filters.search ||
+    filters.level
+  )
 
   return (
     <div className="filterbar">
@@ -71,6 +113,44 @@ export default function FilterBar({
           Suchen
         </button>
       </form>
+
+      {onSearch && (
+        <form
+          className="filterbar-text"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (wanted !== filters.search) onSearch(wanted)
+          }}
+        >
+          <label htmlFor="filter-text" className="sr-only">
+            Titel oder Platz
+          </label>
+          <input
+            id="filter-text"
+            className={`input filterbar-text-input${filters.search ? ' is-on' : ''}`}
+            type="search"
+            placeholder="Titel oder Platz"
+            value={text}
+            maxLength={SEARCH_MAX}
+            onChange={(e) => setText(e.target.value)}
+            autoComplete="off"
+            enterKeyHint="search"
+          />
+          {text && (
+            <button
+              type="button"
+              className="filterbar-text-clear"
+              aria-label="Textsuche löschen"
+              onClick={() => {
+                setText('')
+                if (filters.search) onSearch('')
+              }}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          )}
+        </form>
+      )}
 
       <div className="filterbar-chips" role="group" aria-label="Filter">
         {onNearMe && (
@@ -112,6 +192,26 @@ export default function FilterBar({
             </option>
           ))}
         </select>
+
+        {onLevel && (
+          <>
+            <label htmlFor="filter-level" className="sr-only">
+              Niveau
+            </label>
+            <select
+              id="filter-level"
+              className={`select chip-select${filters.level ? ' is-on' : ''}`}
+              value={filters.level}
+              onChange={(e) => onLevel(e.target.value)}
+            >
+              {LEVELS.map((l) => (
+                <option key={l.key} value={l.key === 'all' ? '' : l.key}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         <button type="button" className="chip" aria-pressed={filters.freeOnly} onClick={() => onFreeOnly(!filters.freeOnly)}>
           Plätze frei

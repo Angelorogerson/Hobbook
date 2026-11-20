@@ -136,6 +136,17 @@ export const listEventsQuerySchema = z.object({
   includeCancelled: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
   // Only games of weekly Stammspiele
   series: z.enum(['true', 'false']).optional().transform((v) => v === 'true'),
+  // Text search in title and place name (an empty value means: no search)
+  q: z.preprocess(
+    (v) => (typeof v === 'string' ? v.trim() || undefined : v),
+    z
+      .string({ invalid_type_error: 'Suche ist ungültig' })
+      .min(2, 'Suche muss mindestens 2 Zeichen haben')
+      .max(60, 'Suche darf höchstens 60 Zeichen haben')
+      .optional()
+  ),
+  // Events with this level or for everyone ('all')
+  level: z.enum(['beginner', 'intermediate', 'advanced'], { errorMap: () => ({ message: 'Niveau ist ungültig' }) }).optional(),
   page: z.coerce.number().int().min(1).max(1000).default(1),
   limit: z.coerce.number().int().min(1).max(200).default(50),
 });
