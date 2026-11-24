@@ -188,12 +188,23 @@ export function useKickoff() {
     const ball = ref.current
     const dot = document.querySelector('.brand .logo-mark circle')
     if (!ball || prefersReducedMotion()) return
-    if (dot) {
-      const b = ball.getBoundingClientRect()
+    // The ball rests right after "Spiel."; measure that word (it is not moved
+    // sideways by any animation) and the logo dot, and again once the web font
+    // has loaded and the headline has its final width. Only CSS vars change,
+    // so the running animation simply follows.
+    const mark = document.querySelector('.lp-h1-mark')
+    const measure = () => {
+      if (!dot || !mark) return
       const d = dot.getBoundingClientRect()
-      ball.style.setProperty('--kick-x', `${d.left + d.width / 2 - (b.left + b.width / 2)}px`)
-      ball.style.setProperty('--kick-y', `${d.top + d.height / 2 - (b.top + b.height / 2)}px`)
+      const m = mark.getBoundingClientRect()
+      const size = ball.offsetWidth || 20
+      const restX = m.right + size * 0.6
+      const restY = m.top + m.height * 0.62
+      ball.style.setProperty('--kick-x', `${d.left + d.width / 2 - restX}px`)
+      ball.style.setProperty('--kick-y', `${d.top + d.height / 2 - restY}px`)
     }
+    measure()
+    document.fonts?.ready.then(measure).catch(() => {})
     const root = document.documentElement
     root.classList.add('lp-kickoff')
     const t = window.setTimeout(() => root.classList.remove('lp-kickoff'), MOTION.dur5 + MOTION.dur8 + 100)
