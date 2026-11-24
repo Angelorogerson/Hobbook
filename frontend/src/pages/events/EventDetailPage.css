@@ -272,3 +272,55 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+/* 6 · Launch: a lime light sweeps across the new event, the date tile flips up
+   like a scoreboard and the share button nods once. Only right after publishing. */
+.event-detail-head {
+  position: relative;
+  isolation: isolate;
+}
+.event-detail-head.is-launch::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--space-2) * -1) calc(var(--space-4) * -1);
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--c-hl) 75%, transparent) 50%, transparent 80%);
+  background-size: 250% 100%;
+  animation: launch-sweep var(--dur-8) var(--ease-move) both;
+  pointer-events: none;
+}
+.event-detail-head.is-launch .date-tile {
+  animation: m-flip var(--dur-6) var(--ease-spring) var(--dur-4) backwards;
+  transform-origin: 50% 0;
+}
+.event-live-share {
+  animation: m-impact var(--dur-6) var(--ease-spring) var(--dur-8) backwards;
+}
+@keyframes launch-sweep {
+  0% {
+    opacity: 0;
+    background-position: 100% 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    background-position: 0% 0;
+  }
+}
+
+/* 20 · Every event page opens with the day number flipping into place once */
+@media (prefers-reduced-motion: no-preference) {
+  .event-detail-head .date-tile-day {
+    display: inline-block;
+    transform-origin: 50% 0;
+    animation: m-flip var(--dur-5) var(--ease-spring) var(--dur-3) backwards;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-live-share {
+    animation: none;
+  }
+}

@@ -13,6 +13,7 @@ export const MOTION = {
   dur5: 400,
   dur6: 600,
   dur7: 900,
+  dur8: 1200,
   dur3Out: 140,
   dur4Out: 180,
   /** Map camera: selecting a pin, zooming into a cluster, recentering. */

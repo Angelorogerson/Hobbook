@@ -23,17 +23,31 @@
 .save-btn-label.is-saved {
   color: var(--c-accent-text);
 }
-.save-btn.is-saved svg,
-.save-btn-label.is-saved svg {
+/* 17 · Saving fills the bookmark from the bottom like a glass, then it nods */
+.save-icon {
+  display: inline-grid;
+}
+.save-icon > svg {
+  grid-area: 1 / 1;
+}
+.save-fill {
   fill: currentColor;
 }
-/* A small pop confirms the tap (only right after it, see SaveButton.tsx) */
-.just-saved svg {
-  animation: m-pop var(--dur-4) var(--ease-spring);
-  --scale-pop: 1.3;
+.just-saved .save-fill {
+  animation: save-fill var(--dur-5) var(--ease-enter);
+}
+.just-saved .save-icon {
+  animation: m-pop var(--dur-4) var(--ease-spring) var(--dur-4) backwards;
+  --scale-pop: 1.25;
+}
+@keyframes save-fill {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .just-saved svg {
-    --scale-pop: 1;
+  .just-saved .save-fill,
+  .just-saved .save-icon {
+    animation: none;
   }
 }

@@ -69,7 +69,10 @@ export default function SaveButton({ event, variant = 'icon', onChange }: Props)
       disabled={busy}
       onClick={toggle}
     >
-      <Bookmark size={variant === 'icon' ? 20 : 16} aria-hidden="true" />
+      <span className="save-icon" aria-hidden="true">
+        <Bookmark size={variant === 'icon' ? 20 : 16} />
+        {saved && <Bookmark size={variant === 'icon' ? 20 : 16} className="save-fill" />}
+      </span>
       {variant === 'label' && label}
     </button>
   )

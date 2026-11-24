@@ -150,7 +150,9 @@ describe('reset password page', () => {
     await user.type(screen.getByLabelText('Passwort wiederholen'), 'lang-genug-1')
     await user.click(screen.getByRole('button', { name: 'Passwort speichern' }))
 
-    expect(await screen.findByText('Startseite')).toBeInTheDocument()
+    // A short "done" moment, then the start page
+    expect(await screen.findByRole('heading', { name: 'Passwort gespeichert' })).toBeInTheDocument()
+    expect(await screen.findByText('Startseite', {}, { timeout: 3000 })).toBeInTheDocument()
     expect(authApi.resetPassword).toHaveBeenCalledTimes(1)
     expect(authApi.resetPassword).toHaveBeenCalledWith(TOKEN, 'lang-genug-1')
     expect(auth.setSession).toHaveBeenCalledWith('new-session', session.user)

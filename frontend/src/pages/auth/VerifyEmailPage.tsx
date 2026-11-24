@@ -7,6 +7,7 @@ import { isLinkToken, verifyEmail } from '@/api/authApi'
 import { useAuthContext } from '@/store/AuthContext'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import './auth.css'
+import DrawnCheck from '@/components/ui/DrawnCheck'
 
 type Status = 'working' | 'done' | 'failed'
 
@@ -65,7 +66,10 @@ export default function VerifyEmailPage() {
 
         {status === 'done' && (
           <>
-            <h1>Bestätigt</h1>
+            <div className="done-hit">
+              <DrawnCheck size={72} />
+              <h1>Bestätigt</h1>
+            </div>
             <div className="notice notice-success" role="status">
               <CheckCircle2 size={18} aria-hidden="true" />
               <p>{message} Danke!</p>

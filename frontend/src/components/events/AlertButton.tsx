@@ -6,6 +6,7 @@ import { apiError } from '@/api/axiosInstance'
 import { useAuthContext } from '@/store/AuthContext'
 import { useToast } from '@/components/ui/Toast'
 import { sportLabel } from '@/constants/sports'
+import { useOnChange } from '@/hooks/useOnChange'
 
 interface Props {
   city: string
@@ -79,11 +80,12 @@ export default function AlertButton({ city, sport, variant = 'primary' }: Props)
     }
   }
 
+  const justOn = useOnChange(!!existing)
   const look = variant === 'quiet' ? 'btn btn-ghost btn-sm' : 'btn btn-secondary'
   return (
     <button
       type="button"
-      className={`${look} alert-btn${existing ? ' is-active' : ''}`}
+      className={`${look} alert-btn${existing ? ' is-active' : ''}${justOn && existing ? ' just-on' : ''}`}
       title={existing ? 'Alarm entfernen' : undefined}
       disabled={busy}
       onClick={toggle}

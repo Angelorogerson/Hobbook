@@ -1,0 +1,64 @@
+.drawn-check-wrap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.drawn-check circle,
+.drawn-check path {
+  fill: none;
+  stroke: var(--c-success);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The ring closes, then the tick is drawn into it */
+.drawn-check circle {
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: check-draw var(--dur-6) var(--ease-enter) forwards;
+}
+.drawn-check path {
+  stroke-dasharray: 36;
+  stroke-dashoffset: 36;
+  animation: check-draw var(--dur-5) var(--ease-enter) var(--dur-5) forwards;
+}
+/* …and the hit sends one lime shockwave outwards */
+.drawn-check-wave {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--c-hl);
+  opacity: 0;
+  animation: check-wave var(--dur-8) var(--ease-enter) calc(var(--dur-5) * 2) forwards;
+}
+.drawn-check-wrap {
+  animation: m-pop var(--dur-5) var(--ease-spring) calc(var(--dur-5) * 2) backwards;
+  --scale-pop: var(--scale-burst);
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes check-wave {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(var(--ring));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .drawn-check circle,
+  .drawn-check path {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+  .drawn-check-wave,
+  .drawn-check-wrap {
+    animation: none;
+  }
+}

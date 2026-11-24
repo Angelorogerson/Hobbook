@@ -22,7 +22,9 @@ import { SPORTS, sportColor, sportLabel } from '@/constants/sports'
 import { formatEventDate } from '@/utils/format'
 import { useRevealReady, useRevealScope } from '@/hooks/useReveal'
 import type { SportEvent } from '@/api/eventApi'
-import { CitySearch, DISCOVER, WordRoller, useActiveStep, useDrift, useLandingEvents } from './parts'
+import { CitySearch, DISCOVER, WordRoller, useActiveStep, useDrift, useKickoff, useLandingEvents } from './parts'
+import { useOnChange, usePrevious } from '@/hooks/useOnChange'
+import { MOTION } from '@/utils/motion'
 import './landing.css'
 
 // Ends on the general word, so the sentence settles on "Sport in deiner Nähe".
@@ -70,6 +72,7 @@ export default function LandingPage() {
   }, [])
 
   const list = events || []
+  const ballRef = useKickoff()
   const railRef = useDrift<HTMLUListElement>(list.length > 1)
 
   return (
@@ -82,7 +85,9 @@ export default function LandingPage() {
           </p>
           <h1 className="lp-h1 lp-in" style={order(1)}>
             Finde dein nächstes <span className="lp-h1-mark">Spiel.</span>
-            <span className="lp-ball" aria-hidden="true" />
+            <span className="lp-ball-x" ref={ballRef} aria-hidden="true">
+              <span className="lp-ball" />
+            </span>
           </h1>
           <p className="lp-sub lp-in" style={order(2)}>
             <span className="lp-sub-roll">
@@ -266,6 +271,9 @@ function HowItWorks({ event }: { event?: SportEvent }) {
   const time = event ? formatEventDate(event.startAt, event.endAt, event.timezone).time : '18:00–20:00 Uhr'
   const taken = event ? Math.min(event.participantCount, 5) : 3
   const ballY = marks[active] ?? 0
+  const prevY = usePrevious(ballY)
+  const moving = useOnChange(ballY, MOTION.dur6)
+  const rollDir = ballY < prevY ? 'up' : 'down'
   const firstY = marks[0] ?? 0
 
   return (
@@ -328,7 +336,13 @@ function HowItWorks({ event }: { event?: SportEvent }) {
             <span className="lp-track" aria-hidden="true" style={{ top: firstY, height: Math.max(0, (marks[marks.length - 1] ?? 0) - firstY) }}>
               <span className="lp-track-fill" style={{ transform: `scaleY(${marks.length > 1 ? (ballY - firstY) / ((marks[marks.length - 1] ?? 1) - firstY || 1) : 0})` }} />
             </span>
-            <span className="lp-track-ball" aria-hidden="true" style={{ transform: `translateY(${ballY}px)` }} />
+            <span
+              className={`lp-track-ball${moving ? ' is-moving' : ''}`}
+              data-dir={rollDir}
+              aria-hidden="true"
+              // A 19px ball travels ~60px per turn: rotate with the distance so it really rolls
+              style={{ transform: `translateY(${ballY}px) rotate(${(ballY / 60) * 360}deg)` }}
+            />
             {STEPS.map((s, i) => (
               <li key={s.title} ref={setRef(i)} data-step={i} className={`lp-step${active === i ? ' is-active' : ''}${active > i ? ' is-done' : ''}`}>
                 <span className="lp-step-n" aria-hidden="true">

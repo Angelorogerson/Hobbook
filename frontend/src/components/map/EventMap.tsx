@@ -8,7 +8,7 @@ import { BUILDINGS_MIN_ZOOM, boundsToBBox, createMap, has3dBuildings, set3d, spo
 import { useTheme } from '@/store/ThemeContext'
 import MapFallback from './MapFallback'
 import { Presence } from '@/hooks/usePresence'
-import { MOTION } from '@/utils/motion'
+import { MOTION, prefersReducedMotion } from '@/utils/motion'
 import './EventMap.css'
 
 interface Props {
@@ -30,6 +30,8 @@ interface Props {
   position?: { lat: number; lng: number } | null
   /** Results are being fetched: show a small hint instead of an empty map. */
   loading?: boolean
+  /** First visit of the session: pins arrive with a bigger drop. */
+  kickoff?: boolean
 }
 
 /** Markers closer than this on screen are merged into one count bubble. */
@@ -88,6 +90,7 @@ export default function EventMap({
   focus,
   position,
   loading,
+  kickoff,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MlMap | null>(null)
@@ -162,6 +165,10 @@ export default function EventMap({
     }
   }, [failed, compact, theme])
 
+  // How new pins enter is read at sync time; changing it must not rebuild the markers
+  const entryRef = useRef({ compact, kickoff })
+  entryRef.current = { compact, kickoff }
+
   // Sync markers with the (same) result set the list shows
   useEffect(() => {
     const map = mapRef.current
@@ -171,10 +178,16 @@ export default function EventMap({
 
     markers.forEach((m, id) => {
       if (!ids.has(id)) {
-        m.marker.remove()
         markers.delete(id)
+        // 21 · Pins that drop out of the results shrink away instead of vanishing
+        if (!m.onMap || prefersReducedMotion()) m.marker.remove()
+        else {
+          m.el.classList.add('is-leaving')
+          window.setTimeout(() => m.marker.remove(), MOTION.dur3Out)
+        }
       }
     })
+    let fresh = 0
 
     for (const e of events) {
       if (!mappable(e)) continue
@@ -187,6 +200,13 @@ export default function EventMap({
       const el = document.createElement('button')
       el.type = 'button'
       el.className = 'map-marker'
+      // 11/21 · New pins drop onto the map one after another (bigger on the first visit)
+      if (loaded && !entryRef.current.compact) {
+        el.classList.add('is-entering')
+        if (entryRef.current.kickoff) el.classList.add('is-kickoff')
+        el.style.setProperty('--i', String(Math.min(fresh++, 12)))
+        el.addEventListener('animationend', () => el.classList.remove('is-entering', 'is-kickoff'), { once: true })
+      }
       // The list is the keyboard/screen-reader path; markers are pointer targets.
       el.tabIndex = -1
       el.setAttribute('aria-hidden', 'true')

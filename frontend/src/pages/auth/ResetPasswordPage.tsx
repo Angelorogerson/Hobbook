@@ -6,6 +6,8 @@ import { apiError } from '@/api/axiosInstance'
 import { isLinkToken, resetPassword } from '@/api/authApi'
 import { useAuthContext } from '@/store/AuthContext'
 import { useToast } from '@/components/ui/Toast'
+import DrawnCheck from '@/components/ui/DrawnCheck'
+import { MOTION, prefersReducedMotion } from '@/utils/motion'
 import './auth.css'
 
 export function validateNewPassword(password: string, confirm: string) {
@@ -18,6 +20,7 @@ export function validateNewPassword(password: string, confirm: string) {
 
 export default function ResetPasswordPage() {
   const { token } = useParams()
+  const [done, setDone] = useState(false)
   const navigate = useNavigate()
   const { setSession } = useAuthContext()
   const toast = useToast()
@@ -55,6 +58,14 @@ export default function ResetPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-card card">
+        {done ? (
+          <div className="done-hit" role="status">
+            <DrawnCheck size={72} />
+            <h1>Passwort gespeichert</h1>
+            <p className="auth-text">Du bist angemeldet. Gleich geht’s weiter …</p>
+          </div>
+        ) : (
+          <>
         <h1>Neues Passwort</h1>
         <p className="auth-text">Lege ein neues Passwort für dein Konto fest. Danach bist du angemeldet.</p>
         <form
@@ -70,7 +81,9 @@ export default function ResetPasswordPage() {
               const session = await resetPassword(token, password)
               setSession(session.token, session.user)
               toast('Neues Passwort gespeichert. Du bist angemeldet.')
-              navigate('/', { replace: true })
+              // 12 · A moment of "done" before the app opens
+              setDone(true)
+              window.setTimeout(() => navigate('/', { replace: true }), prefersReducedMotion() ? MOTION.dur2 : MOTION.dur8 + MOTION.dur5)
             } catch (err) {
               const info = apiError(err, 'Das Passwort konnte nicht gespeichert werden. Bitte versuche es erneut.')
               if (info.errors.token) setLinkDead(true)
@@ -129,6 +142,8 @@ export default function ResetPasswordPage() {
             {busy ? 'Wird gespeichert …' : 'Passwort speichern'}
           </button>
         </form>
+          </>
+        )}
         <p className="auth-switch">
           <Link to="/login">Zurück zur Anmeldung</Link>
         </p>

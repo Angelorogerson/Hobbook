@@ -71,6 +71,7 @@
 }
 .map-marker.is-selected .map-marker-pin {
   /* The chosen pin grows: it is the anchor of the preview */
+  z-index: 0;
   transform: scale(calc(1 + (var(--scale-pop) - 1) * 4.5));
   box-shadow: 0 0 0 3px var(--c-text), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
@@ -394,4 +395,48 @@
 
 .map-preview-close:active {
   transform: scale(var(--scale-press));
+}
+
+/* 11/21 · Pins arrive: they drop onto the map and settle; leaving pins shrink.
+   The first visit of a session ("Anpfiff") drops from higher with a longer cascade. */
+.map-marker.is-entering .map-marker-pin {
+  animation: m-drop var(--dur-6) var(--ease-move) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger) * 0.6);
+}
+.map-marker.is-kickoff .map-marker-pin {
+  --move-5: calc(var(--move-4) * 3);
+  animation-duration: var(--dur-7);
+  animation-delay: calc(var(--dur-4) + var(--i, 0) * var(--stagger) * 1.5);
+}
+.map-marker.is-leaving .map-marker-pin {
+  animation: m-exit var(--dur-3-out) var(--ease-exit) forwards;
+  --m-scale: 0.4;
+  --m-move-out: 0px;
+}
+/* 22 · Selecting a pin sends one ring out under it */
+.map-marker.is-selected .map-marker-pin::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: 50%;
+  border: 3px solid var(--marker-color, var(--c-accent));
+  opacity: 0;
+  animation: pin-ring var(--dur-7) var(--ease-enter);
+}
+@keyframes pin-ring {
+  from {
+    opacity: 0.9;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0;
+    transform: scale(calc(var(--ring) * 0.9));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-marker.is-entering .map-marker-pin,
+  .map-marker.is-selected .map-marker-pin::before {
+    animation: none;
+  }
 }

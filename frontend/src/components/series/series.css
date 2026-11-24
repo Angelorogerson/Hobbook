@@ -33,7 +33,7 @@
 .decision-ribbon--on span {
   color: var(--c-on-hl);
 }
-.decision-ribbon--on::before {
+.decision-ribbon--on.is-new::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -41,6 +41,46 @@
   background: var(--c-hl-hover);
   transform-origin: left;
   animation: ribbon-sweep var(--dur-5) var(--ease-enter) both;
+}
+/* 7 · Floodlight on: when a game is decided "on" right here, the card glows
+   once and the people who are in hop one after another. Never on reload. */
+.answer-card {
+  position: relative;
+}
+.answer-card.is-floodlit::after {
+  content: '';
+  position: absolute;
+  inset: calc(var(--space-3) * -1);
+  z-index: -1;
+  border-radius: var(--radius-lg);
+  background: radial-gradient(60% 70% at 50% 0%, color-mix(in srgb, var(--c-hl) 70%, transparent), transparent 75%);
+  pointer-events: none;
+  animation: floodlight var(--dur-8) var(--ease-move) both;
+}
+.answer-card.is-floodlit .decision-ribbon {
+  animation: m-impact var(--dur-6) var(--ease-spring);
+}
+.answer-card.is-floodlit .roster-row:first-child .roster-chip {
+  animation: m-drop var(--dur-7) var(--ease-move) backwards;
+  animation-delay: calc(var(--dur-4) + var(--i, 0) * var(--stagger));
+}
+@keyframes floodlight {
+  0% {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decision-ribbon--on.is-new::before,
+  .answer-card.is-floodlit .roster-row:first-child .roster-chip,
+  .answer-card.is-floodlit .decision-ribbon {
+    animation: none;
+  }
 }
 @keyframes ribbon-sweep {
   from {
@@ -54,6 +94,8 @@
 .decision-ribbon--off {
   background: var(--c-danger-soft);
   color: var(--c-danger);
+}
+.decision-ribbon--off.is-new {
   animation: m-fade-in var(--dur-4) var(--ease-move) backwards;
 }
 .decision-ribbon--off span {
@@ -86,10 +128,12 @@
 .att-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  width: var(--att-fill);
+  width: 100%;
   border-radius: inherit;
   background: var(--c-accent);
-  transition: width var(--dur-4) var(--ease-move);
+  transform-origin: left;
+  transform: scaleX(var(--att-fill));
+  transition: transform var(--dur-5) var(--ease-spring), background-color var(--dur-3) var(--ease-move);
 }
 .att-meter.is-reached .att-fill {
   background: var(--c-success);
@@ -130,6 +174,9 @@
   gap: var(--space-2);
 }
 .answer-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   min-width: 0;
   white-space: normal;
   border: 1px solid var(--c-border-strong);
@@ -147,8 +194,51 @@
   border-color: var(--c-ink);
   color: var(--c-on-ink);
 }
-.answer-btn.is-chosen svg {
-  animation: m-pop var(--dur-4) var(--ease-spring);
+/* 29 · The chosen colour fills out from where the finger landed; the icon pops.
+   Only right after answering, never when the page loads with an answer. */
+.answer-btn.just-chosen::before {
+  content: '';
+  position: absolute;
+  left: var(--tap-x, 50%);
+  top: var(--tap-y, 50%);
+  z-index: -1;
+  width: 260%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: inherit;
+  transform: translate(-50%, -50%) scale(0);
+  animation: tap-fill var(--dur-5) var(--ease-enter) forwards;
+}
+.answer-btn.just-chosen {
+  transition: none;
+}
+.answer-btn--in.just-chosen {
+  background: var(--c-surface);
+  color: var(--c-on-accent);
+}
+.answer-btn--in.just-chosen::before {
+  background: var(--c-accent);
+}
+.answer-btn--out.just-chosen {
+  background: var(--c-surface);
+  color: var(--c-on-ink);
+}
+.answer-btn--out.just-chosen::before {
+  background: var(--c-ink);
+}
+.answer-btn.just-chosen svg {
+  animation: m-pop var(--dur-4) var(--ease-spring) var(--dur-2) backwards;
+}
+@keyframes tap-fill {
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .answer-btn.just-chosen::before {
+    animation: none;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 .answer-note {
   min-height: 1.25em;
@@ -211,18 +301,59 @@
   border-radius: var(--radius-md);
   background: var(--c-warning-soft);
   border: 1px solid var(--c-warning);
-  animation: m-enter var(--dur-4) var(--ease-spring) backwards;
+}
+/* 8 · Nachgerückt: the first time you see it, the spot slides up like a ticket
+   being handed over and the clock ring draws itself. */
+.pending-spot.is-fresh {
+  --m-move: var(--move-5);
+  --m-scale: var(--scale-enter);
+  animation: m-enter var(--dur-6) var(--ease-spring) backwards;
+}
+.pending-clock {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  color: var(--c-warning);
+}
+.pending-clock svg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.pending-clock circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 95;
+}
+.pending-spot.is-fresh .pending-clock circle {
+  stroke-dashoffset: 95;
+  animation: check-draw var(--dur-8) var(--ease-enter) var(--dur-4) forwards;
+}
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pending-spot.is-fresh .pending-clock circle {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }
 .pending-spot p {
   display: flex;
   gap: var(--space-2);
-  align-items: flex-start;
+  align-items: center;
   font-size: var(--text-sm);
 }
 .pending-spot p > svg {
   color: var(--c-warning);
   flex-shrink: 0;
-  margin-top: 2px;
 }
 .pending-spot-actions {
   display: grid;

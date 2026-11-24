@@ -36,9 +36,63 @@
 }
 
 .invite-step {
+  position: relative;
   margin-bottom: var(--space-6);
   border: 2px solid var(--c-accent);
-  animation: m-enter var(--dur-4) var(--ease-enter) backwards;
+  /* 10 · Stammspiel erstellt: the invite unfolds like a ticket from its top edge */
+  transform-origin: 50% 0;
+  animation: ticket-unfold var(--dur-7) var(--ease-spring) backwards;
+}
+.invite-check {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--c-hl);
+  color: var(--c-on-hl);
+  animation: m-impact var(--dur-6) var(--ease-spring) var(--dur-6) backwards;
+}
+.invite-step h2 .invite-check svg {
+  color: var(--c-on-hl);
+}
+/* The tear-off line of the ticket, drawn above the link */
+.invite-step .invite-link {
+  position: relative;
+  padding-top: var(--space-3);
+}
+.invite-step .invite-link::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-top: 2px dashed var(--c-border-strong);
+  transform-origin: left;
+  animation: perforate var(--dur-6) var(--ease-move) var(--dur-6) backwards;
+}
+/* The copy button nudges once to say "this is the next step" */
+.invite-copy {
+  animation: m-pop var(--dur-5) var(--ease-spring) calc(var(--dur-7) + var(--dur-4)) backwards;
+}
+@keyframes ticket-unfold {
+  from {
+    opacity: 0;
+    transform: perspective(900px) rotateX(-70deg) translateY(calc(var(--move-3) * -1));
+  }
+}
+@keyframes perforate {
+  from {
+    transform: scaleX(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .invite-step {
+    animation: m-fade-in var(--dur-2) var(--ease-move) backwards;
+  }
+  .invite-step .invite-link::before {
+    animation: none;
+  }
 }
 .invite-step h2 {
   display: flex;
@@ -61,7 +115,7 @@
   margin-top: var(--space-4);
 }
 .invite-link {
-  margin-top: var(--space-3);
+  margin-top: var(--space-5);
   font-size: var(--text-sm);
   color: var(--c-text-subtle);
   word-break: break-all;

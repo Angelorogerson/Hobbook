@@ -51,6 +51,8 @@ import { Presence } from '@/hooks/usePresence'
 import { levelLabel, sportColor, sportLabel } from '@/constants/sports'
 import { formatEventDate, formatShortWhen, routeLink } from '@/utils/format'
 import '@/components/series/series.css'
+import { SwapIcon, useFlash } from '@/components/ui/SwapIcon'
+import { celebrate } from '@/utils/celebrate'
 import './GroupPage.css'
 
 /** The line people paste into their WhatsApp group: date, count, status, link. */
@@ -73,6 +75,7 @@ export default function GroupPage() {
   const location = useLocation()
   const { authState } = useAuthContext()
   const toast = useToast()
+  const [copied, flash] = useFlash()
   const viewerId = authState.user?._id
 
   const [group, setGroup] = useState<Group | null>(null)
@@ -146,9 +149,12 @@ export default function GroupPage() {
     return `${String(Math.floor(t / 60) % 24).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
   })()
 
-  const copy = async (text: string, done: string) => {
+  const copy = async (text: string, done: string, key = 'link', from?: HTMLElement | null) => {
     try {
       await navigator.clipboard.writeText(text)
+      flash(key)
+      // The first share of a fresh Stammspiel is a moment: a ball flies out of the button
+      if (key === 'invite') celebrate(from, { count: 8, ring: false })
       toast(done)
     } catch {
       toast('Kopieren hat nicht geklappt – markiere den Text von Hand.', 'danger')
@@ -190,7 +196,10 @@ export default function GroupPage() {
       {arrival.created && group.inviteCode && (
         <section className="card card-pad invite-step" aria-labelledby="invite-title">
           <h2 id="invite-title">
-            <Check size={20} aria-hidden="true" /> Dein Stammspiel läuft. Jetzt einmal einladen.
+            <span className="invite-check" aria-hidden="true">
+              <Check size={20} />
+            </span>{' '}
+            Dein Stammspiel läuft. Jetzt einmal einladen.
           </h2>
           <p>
             Poste den Link einmal in eurer Gruppe. Ab dann fragt Hobbook jede Woche alle, wer dabei ist, erinnert nur die, die noch nicht geantwortet
@@ -200,11 +209,16 @@ export default function GroupPage() {
             <a className="btn btn-primary" href={whatsappLink(inviteText)} target="_blank" rel="noreferrer">
               <MessageCircle size={18} aria-hidden="true" /> In WhatsApp teilen
             </a>
-            <button type="button" className="btn btn-secondary" onClick={() => copy(link, 'Link kopiert')}>
-              <Copy size={16} aria-hidden="true" /> Link kopieren
+            <button type="button" className="btn btn-secondary invite-copy" onClick={(e) => copy(link, 'Link kopiert', 'invite', e.currentTarget)}>
+              <SwapIcon done={copied === 'invite'}>
+                <Copy size={16} />
+              </SwapIcon>{' '}
+              Link kopieren
             </button>
           </div>
-          <p className="invite-link num">{link}</p>
+          <p className="invite-link num">
+            <span>{link}</span>
+          </p>
         </section>
       )}
       {arrival.updated && (
@@ -299,8 +313,11 @@ export default function GroupPage() {
                   <BellRing size={16} aria-hidden="true" /> Erinnern
                   {upcoming?.counts?.noAnswer ? ` (${upcoming.counts.noAnswer} ohne Antwort)` : ''}
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => copy(statusText, 'Status kopiert – jetzt in WhatsApp einfügen')}>
-                  <Copy size={16} aria-hidden="true" /> Status für WhatsApp kopieren
+                <button type="button" className="btn btn-secondary" onClick={() => copy(statusText, 'Status kopiert – jetzt in WhatsApp einfügen', 'status')}>
+                  <SwapIcon done={copied === 'status'}>
+                    <Copy size={16} />
+                  </SwapIcon>{' '}
+                  Status für WhatsApp kopieren
                 </button>
                 <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => setDialog('skip')}>
                   <SkipForward size={16} aria-hidden="true" /> Diese Woche aussetzen
@@ -354,8 +371,11 @@ export default function GroupPage() {
                 <a className="btn btn-secondary btn-sm" href={whatsappLink(inviteText)} target="_blank" rel="noreferrer">
                   <Send size={14} aria-hidden="true" /> WhatsApp
                 </a>
-                <button type="button" className="btn btn-secondary btn-sm" onClick={() => copy(link, 'Link kopiert')}>
-                  <Copy size={14} aria-hidden="true" /> Link kopieren
+                <button type="button" className="btn btn-secondary btn-sm" onClick={() => copy(link, 'Link kopiert', 'members')}>
+                  <SwapIcon done={copied === 'members'} size={14}>
+                    <Copy size={14} />
+                  </SwapIcon>{' '}
+                  Link kopieren
                 </button>
               </div>
             </section>

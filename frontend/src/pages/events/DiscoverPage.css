@@ -183,3 +183,20 @@
 .discover-toggle button:active {
   transform: scale(var(--scale-press));
 }
+
+/* 24 · Results cascade in; 11 · the first visit ("Anpfiff") travels further */
+.discover-card-in {
+  --m-move: var(--move-3);
+  animation: m-enter var(--dur-4) var(--ease-enter) backwards;
+  animation-delay: calc(var(--i, 0) * var(--stagger));
+}
+.discover-cards.is-kickoff .discover-card-in {
+  --m-move: var(--move-5);
+  --m-scale: var(--scale-enter);
+  animation-duration: var(--dur-6);
+  animation-timing-function: var(--ease-spring);
+  animation-delay: calc(var(--dur-3) + var(--i, 0) * var(--stagger) * 1.6);
+}
+.discover-count .rolling {
+  overflow: visible;
+}

@@ -58,6 +58,10 @@ import { Avatar } from '@/components/ui/Avatar'
 import { useToast } from '@/components/ui/Toast'
 import './EventDetailPage.css'
 import { Presence } from '@/hooks/usePresence'
+import { SwapIcon, useFlash } from '@/components/ui/SwapIcon'
+import { celebrate } from '@/utils/celebrate'
+import { MOTION, prefersReducedMotion } from '@/utils/motion'
+import RollingNumber from '@/components/ui/RollingNumber'
 
 export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -69,6 +73,8 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<{ message: string; status?: number } | null>(null)
   const [busy, setBusy] = useState(false)
+  const joinRef = useRef<HTMLButtonElement>(null)
+  const [copied, flash] = useFlash()
   const [actionError, setActionError] = useState('')
   const [feedback, setFeedback] = useState('')
   const [dialog, setDialog] = useState<'cancel' | 'report' | null>(null)
@@ -127,6 +133,14 @@ export default function EventDetailPage() {
   }, [resume, event, authState.isLoggedIn, navigate, location.pathname, toast])
 
   const arrival = (location.state as { created?: boolean; updated?: boolean } | null) || {}
+  // 6 · "Dein Event ist live": the launch plays once, right after publishing
+  const [launch] = useState(() => !!arrival.created && !prefersReducedMotion())
+  const liveRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!launch) return
+    const t = window.setTimeout(() => celebrate(liveRef.current, { count: 10 }), MOTION.dur6)
+    return () => window.clearTimeout(t)
+  }, [launch])
 
   if (loading) return <LoadingSpinner fullScreen />
 
@@ -159,7 +173,10 @@ export default function EventDetailPage() {
     setFeedback('')
     try {
       // Only show the new state once the server confirmed it.
-      setEvent(await fn())
+      const next = await fn()
+      // 5 · Ball hit: the join is confirmed, balls fly out of the button
+      if (next.joined && success === 'Du bist dabei!') celebrate(joinRef.current, { color: sportColor(next.sport), count: 10 })
+      setEvent(next)
       setFeedback(success)
     } catch (err) {
       const info = apiError(err)
@@ -188,6 +205,7 @@ export default function EventDetailPage() {
         await navigator.share({ title: event.title, text: `${event.title} – ${day}, ${time}`, url })
       } else {
         await navigator.clipboard.writeText(url)
+        flash('share')
         toast('Link kopiert')
       }
     } catch {
@@ -203,7 +221,7 @@ export default function EventDetailPage() {
 
       <div className="event-detail-grid">
         <div>
-          <header className="event-detail-head">
+          <header className={`event-detail-head${launch ? ' is-launch' : ''}`}>
             <DateTile iso={event.startAt} timeZone={event.timezone} size="lg" />
             <div>
               <div className="event-detail-tags">
@@ -245,13 +263,13 @@ export default function EventDetailPage() {
           </header>
 
           {arrival.created && isActive && (
-            <div className="notice notice-success event-live" role="status">
+            <div className="notice notice-success event-live" role="status" ref={liveRef}>
               <CheckCircle2 size={20} aria-hidden="true" />
               <div className="notice-body">
                 <p>
                   <strong>Dein Event ist live.</strong> Teile den Link, damit Leute mitmachen.
                 </p>
-                <button type="button" className="btn btn-ink btn-sm" onClick={share}>
+                <button type="button" className="btn btn-ink btn-sm event-live-share" onClick={share}>
                   <Share2 size={14} aria-hidden="true" /> Event teilen
                 </button>
               </div>
@@ -370,7 +388,7 @@ export default function EventDetailPage() {
                 <Users size={18} aria-hidden="true" /> Teilnehmende
               </dt>
               <dd>
-                {event.participantCount} von {event.maxParticipants}
+                <RollingNumber value={event.participantCount} text={`${event.participantCount} von ${event.maxParticipants}`} />
                 {isActive && ` · ${event.spotsLeft === 0 ? 'keine Plätze frei' : `${event.spotsLeft} ${event.spotsLeft === 1 ? 'Platz' : 'Plätze'} frei`}`}
               </dd>
             </div>
@@ -484,10 +502,13 @@ export default function EventDetailPage() {
             {!isSeries && isActive && !event.isOrganizer && !event.joined && !onWaitlist && (
               <div className="join-bar">
                 <p className="join-bar-info" aria-hidden="true">
-                  <strong>{event.spotsLeft === 0 ? 'Voll' : `${event.spotsLeft} ${event.spotsLeft === 1 ? 'Platz' : 'Plätze'} frei`}</strong>
+                  <strong>
+                    <RollingNumber value={event.spotsLeft} text={event.spotsLeft === 0 ? 'Voll' : `${event.spotsLeft} ${event.spotsLeft === 1 ? 'Platz' : 'Plätze'} frei`} />
+                  </strong>
                   <span>Kostenlos</span>
                 </p>
               <button
+                ref={joinRef}
                 type="button"
                 className={`btn btn-block ${event.status === 'full' ? 'btn-secondary' : 'btn-primary'}`}
                 disabled={busy}
@@ -539,7 +560,10 @@ export default function EventDetailPage() {
             <div className="secondary-actions">
               {!event.isOrganizer && <SaveButton event={event} variant="label" onChange={(saved) => setEvent({ ...event, saved })} />}
               <button type="button" className="btn btn-ghost btn-sm" onClick={share}>
-                <Share2 size={16} aria-hidden="true" /> Teilen
+                <SwapIcon done={copied === 'share'}>
+                  <Share2 size={16} />
+                </SwapIcon>{' '}
+                Teilen
               </button>
               {isActive && (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadIcs(event)}>

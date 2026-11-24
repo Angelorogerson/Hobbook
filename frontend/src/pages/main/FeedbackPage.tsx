@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { AlertTriangle, ArrowLeft, Heart, Send } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Send } from 'lucide-react'
+import DrawnCheck from '@/components/ui/DrawnCheck'
 import { FEEDBACK_KINDS, sendFeedback, type FeedbackKind } from '@/api/feedbackApi'
 import { apiError } from '@/api/axiosInstance'
 import './FeedbackPage.css'
@@ -69,9 +70,7 @@ export default function FeedbackPage() {
     return (
       <div className="page page--narrow feedback-page">
         <div className="state feedback-thanks">
-          <div className="state-icon">
-            <Heart size={24} aria-hidden="true" />
-          </div>
+          <DrawnCheck size={72} />
           <h1 ref={thanksRef} tabIndex={-1}>
             Danke!
           </h1>

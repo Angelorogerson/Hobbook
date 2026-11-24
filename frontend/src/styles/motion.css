@@ -128,3 +128,113 @@
     }
   }
 }
+
+/* ── Celebration: "ball hit" (utils/celebrate.ts) ───────────
+   A fixed layer at the element's centre; balls fly out and fade, an optional
+   ring spreads. Never rendered with reduced motion.                   */
+.burst {
+  position: fixed;
+  z-index: var(--z-toast);
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.burst-ball {
+  position: absolute;
+  left: calc(var(--bs) / -2);
+  top: calc(var(--bs) / -2);
+  width: var(--bs);
+  height: var(--bs);
+  border-radius: 50%;
+  background: var(--c-hl);
+  box-shadow: 0 0 0 1.5px var(--c-ink);
+  animation: burst-fly var(--dur-8) var(--ease-enter) both;
+}
+.burst-ring {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 3px solid var(--c-hl);
+  border-radius: 50%;
+  animation: burst-ring var(--dur-7) var(--ease-enter) both;
+}
+@keyframes burst-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.4);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--bx), calc(var(--by) + var(--move-4))) scale(1);
+  }
+}
+@keyframes burst-ring {
+  from {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(var(--ring));
+  }
+}
+
+/* One-off "impact" pop for the element that was hit */
+@keyframes m-impact {
+  30% {
+    transform: scale(var(--scale-burst));
+  }
+  60% {
+    transform: scale(calc(2 - var(--scale-burst)));
+  }
+}
+.m-impact {
+  animation: m-impact var(--dur-6) var(--ease-spring);
+}
+
+/* A ball dropping in and bouncing (empty states, welcome sports) */
+@keyframes m-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(calc(var(--move-5) * -1));
+  }
+  45% {
+    opacity: 1;
+    transform: none;
+  }
+  65% {
+    transform: translateY(calc(var(--move-2) * -1));
+  }
+  82% {
+    transform: none;
+  }
+  92% {
+    transform: translateY(calc(var(--move-1) * -0.5));
+  }
+}
+
+/* Scoreboard flip (date tile day number) */
+@keyframes m-flip {
+  from {
+    opacity: 0;
+    transform: perspective(200px) rotateX(-85deg);
+  }
+}
+
+/* A bell (or anything hanging) swings once and settles */
+@keyframes m-swing {
+  15% {
+    transform: rotate(16deg);
+  }
+  35% {
+    transform: rotate(-12deg);
+  }
+  55% {
+    transform: rotate(7deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}

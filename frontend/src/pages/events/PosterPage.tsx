@@ -206,7 +206,9 @@ export default function PosterPage() {
           <p className="poster-pitch">Kostenlos · Einfach vorbeikommen oder online zusagen</p>
 
           <div className="poster-scan">
-            <QrCode value={poster.url} label={`QR-Code: ${poster.url}`} />
+            <div className="poster-qr-wrap">
+              <QrCode value={poster.url} label={`QR-Code: ${poster.url}`} />
+            </div>
             <p className="poster-scan-caption">Scannen und mitmachen</p>
             <p className="poster-url">{readableUrl}</p>
           </div>

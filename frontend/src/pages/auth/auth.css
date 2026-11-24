@@ -116,3 +116,38 @@
   gap: var(--space-3);
   margin-top: var(--space-5);
 }
+
+/* 9 · Willkommen: the sports drop in like balls, one after another; a picked
+   sport hops in its own colour. */
+.welcome-sport {
+  animation: m-drop var(--dur-7) var(--ease-move) backwards;
+  animation-delay: calc(var(--dur-4) + min(var(--i, 0), 11) * var(--stagger) * 0.6);
+}
+.welcome-sport svg {
+  color: var(--sport-color);
+  transition: color var(--dur-2) var(--ease-move);
+}
+.welcome-sport.is-on svg {
+  color: currentColor;
+}
+.welcome-sport.is-hop {
+  animation: m-impact var(--dur-6) var(--ease-spring);
+  --scale-burst: 1.15;
+}
+.welcome-card h1 {
+  animation: m-enter var(--dur-6) var(--ease-enter) backwards;
+  --m-move: var(--move-3);
+}
+
+/* 12 · "Erledigt": the check draws itself, sends a shockwave, the heading rises */
+.done-hit {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+.done-hit h1 {
+  --m-move: var(--move-3);
+  animation: m-enter var(--dur-5) var(--ease-enter) calc(var(--dur-5) * 2) backwards;
+}

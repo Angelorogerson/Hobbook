@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import RollingNumber from './RollingNumber'
+import { useOnChange, usePrevious } from '@/hooks/useOnChange'
 import './DataPieces.css'
 
 /** Weekday + big day number + month: the event's date as a scannable tile. */
@@ -45,8 +47,13 @@ export function CapacityMeter({
   const label =
     status === 'cancelled' ? 'Abgesagt' : status === 'completed' ? 'Vorbei' : left === 0 ? 'Voll' : `${left} ${left === 1 ? 'Platz' : 'Plätze'} frei`
   const segments = max <= 16
+  // Spots that just filled (or freed) pop; "nur noch 2" lights up once when it starts
+  const prevTaken = usePrevious(taken)
+  const becameLow = useOnChange(tone === 'low')
+  const lo = Math.min(prevTaken, taken)
+  const hi = Math.max(prevTaken, taken)
   return (
-    <div className={`capacity capacity--${tone}`}>
+    <div className={`capacity capacity--${tone}${becameLow && tone === 'low' ? ' is-alert' : ''}`}>
       <div
         className="capacity-track"
         role="meter"
@@ -57,16 +64,20 @@ export function CapacityMeter({
         aria-label="Belegung"
       >
         {segments ? (
-          Array.from({ length: max }, (_, i) => <span key={i} className={`capacity-seg${i < taken ? ' is-taken' : ''}`} />)
+          Array.from({ length: max }, (_, i) => (
+            <span key={i} className={`capacity-seg${i < taken ? ' is-taken' : ''}${i >= lo && i < hi ? ' is-new' : ''}`} />
+          ))
         ) : (
-          <span className="capacity-fill" style={{ width: `${Math.min(100, (taken / max) * 100)}%` }} />
+          <span className="capacity-fill" style={{ transform: `scaleX(${Math.min(1, taken / max)})` }} />
         )}
       </div>
       {showLabel && (
         <div className="capacity-label">
-          <span className="capacity-left">{label}</span>
+          <span className="capacity-left">
+            <RollingNumber value={left} text={label} />
+          </span>
           <span className="capacity-count num">
-            {taken}/{max}
+            <RollingNumber value={taken} text={`${taken}/${max}`} />
           </span>
         </div>
       )}

@@ -45,3 +45,44 @@ describe('useReducedMotion', () => {
     window.matchMedia = original
   })
 })
+
+import { useOnChange } from './useOnChange'
+import RollingNumber from '@/components/ui/RollingNumber'
+import { celebrate } from '@/utils/celebrate'
+
+describe('useOnChange', () => {
+  it('never fires on the first render, only when the value changes', () => {
+    vi.useFakeTimers()
+    const { result, rerender } = renderHook(({ v }) => useOnChange(v, 500), { initialProps: { v: 'open' } })
+    expect(result.current).toBe(false)
+    rerender({ v: 'on' })
+    expect(result.current).toBe(true)
+    act(() => vi.advanceTimersByTime(500))
+    expect(result.current).toBe(false)
+    vi.useRealTimers()
+  })
+})
+
+describe('RollingNumber', () => {
+  it('keeps one readable value; the old one is only drawn by CSS', () => {
+    const { container, rerender } = render(<RollingNumber value={3} text="3 von 10" />)
+    expect(container.textContent).toBe('3 von 10')
+    rerender(<RollingNumber value={4} text="4 von 10" />)
+    expect(container.textContent).toBe('4 von 10')
+    expect(container.querySelector('.rolling')).toHaveAttribute('data-from', '3 von 10')
+    expect(container.querySelector('.rolling')).toHaveAttribute('data-dir', 'up')
+  })
+})
+
+describe('celebrate', () => {
+  it('adds nothing to the page when motion is reduced', () => {
+    const original = window.matchMedia
+    window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), addEventListener() {}, removeEventListener() {} })) as never
+    const el = document.createElement('button')
+    document.body.appendChild(el)
+    celebrate(el)
+    expect(document.querySelector('.burst')).toBeNull()
+    window.matchMedia = original
+    el.remove()
+  })
+})

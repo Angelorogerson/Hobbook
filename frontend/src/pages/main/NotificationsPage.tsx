@@ -5,6 +5,7 @@ import { listNotifications, markNotificationsRead, type AppNotification } from '
 import { apiError } from '@/api/axiosInstance'
 import { EmptyState, Skeleton } from '@/components/ui/DataPieces'
 import './NotificationsPage.css'
+import { MOTION } from '@/utils/motion'
 
 const ICONS: Record<string, typeof Bell> = {
   invite: CalendarClock,
@@ -33,6 +34,7 @@ function dayLabel(iso: string, now = new Date()) {
 export default function NotificationsPage() {
   const [items, setItems] = useState<AppNotification[] | null>(null)
   const [error, setError] = useState('')
+  const [readNow, setReadNow] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -42,7 +44,11 @@ export default function NotificationsPage() {
         setItems(notifications)
         if (unread > 0) {
           markNotificationsRead()
-            .then((n) => window.dispatchEvent(new CustomEvent('hobbook:notifications-read', { detail: n })))
+            .then((n) => {
+              window.dispatchEvent(new CustomEvent('hobbook:notifications-read', { detail: n }))
+              // 16 · The "neu" dots stay long enough to be seen, then shrink away
+              window.setTimeout(() => active && setReadNow(true), MOTION.dur8)
+            })
             .catch(() => {})
         }
       })
@@ -106,7 +112,7 @@ export default function NotificationsPage() {
                   <time className="notif-time num" dateTime={n.createdAt}>
                     {new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(new Date(n.createdAt))}
                   </time>
-                  {!n.read && <span className="notif-unread" aria-label="neu" />}
+                  {!n.read && <span className={`notif-unread${readNow ? ' is-read' : ''}`} aria-label={readNow ? undefined : 'neu'} aria-hidden={readNow || undefined} />}
                 </>
               )
               return (

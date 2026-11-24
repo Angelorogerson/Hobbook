@@ -67,14 +67,32 @@
 .capacity-seg.is-taken {
   background: var(--cap-color);
 }
+/* 5/13 · The spot that just changed pops into place */
+.capacity-seg.is-new {
+  animation: seg-pop var(--dur-5) var(--ease-spring);
+}
+@keyframes seg-pop {
+  40% {
+    transform: scaleY(calc(var(--scale-burst) * 1.6));
+  }
+}
+/* 19 · "Nur noch 2": the meter lights up once when it gets tight */
+.capacity.is-alert .capacity-left {
+  animation: m-impact var(--dur-6) var(--ease-spring);
+  display: inline-block;
+}
 .capacity-track:has(.capacity-fill) {
   background: var(--c-neutral-soft);
 }
 .capacity-fill {
   display: block;
+  width: 100%;
   height: 100%;
   border-radius: inherit;
   background: var(--cap-color);
+  transform-origin: left;
+  /* 19 · the bar fills with a spring instead of jumping */
+  transition: transform var(--dur-5) var(--ease-spring), background-color var(--dur-3) var(--ease-move);
 }
 .capacity-label {
   display: flex;

@@ -8,6 +8,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog'
 import { Avatar } from '@/components/ui/Avatar'
 import { useToast } from '@/components/ui/Toast'
 import { Presence } from '@/hooks/usePresence'
+import { MOTION, prefersReducedMotion } from '@/utils/motion'
 import { formatDateTime } from '@/utils/format'
 import './EventComments.css'
 
@@ -34,6 +35,8 @@ export default function EventComments({ eventId, isHost = false, closed = false 
   const [sending, setSending] = useState(false)
   const [error, setError] = useState('')
   const [toDelete, setToDelete] = useState<EventComment | null>(null)
+  const [freshId, setFreshId] = useState<string | null>(null)
+  const [leavingId, setLeavingId] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -58,6 +61,7 @@ export default function EventComments({ eventId, isHost = false, closed = false 
       // Shown only once the server has stored it.
       const created = await postComment(eventId, message, announce ? 'announcement' : 'comment')
       setComments((list) => [...(list || []), created])
+      setFreshId(created._id)
       setText('')
       setToAll(false)
       toast(announce ? 'Gesendet. Alle, die dabei sind, bekommen Bescheid.' : 'Gesendet')
@@ -72,7 +76,9 @@ export default function EventComments({ eventId, isHost = false, closed = false 
     setError('')
     try {
       await deleteComment(eventId, comment._id)
-      setComments((list) => (list || []).filter((c) => c._id !== comment._id))
+      // Fold the message away first, then drop it from the list
+      setLeavingId(comment._id)
+      window.setTimeout(() => setComments((list) => (list || []).filter((c) => c._id !== comment._id)), prefersReducedMotion() ? 0 : MOTION.dur4Out)
       toast('Nachricht gelöscht')
     } catch (err) {
       setError(apiError(err, 'Die Nachricht konnte nicht gelöscht werden.').message)
@@ -108,7 +114,10 @@ export default function EventComments({ eventId, isHost = false, closed = false 
           {comments.map((c) => {
             const announcement = c.kind === 'announcement'
             return (
-              <li key={c._id} className={`comment${announcement ? ' comment--announcement' : ''}`}>
+              <li
+                key={c._id}
+                className={`comment${announcement ? ' comment--announcement' : ''}${c._id === freshId ? ' is-fresh' : ''}${c._id === leavingId ? ' is-leaving' : ''}`}
+              >
                 <Avatar name={c.author.displayName} size="sm" />
                 <div className="comment-body">
                   <p className="comment-meta">

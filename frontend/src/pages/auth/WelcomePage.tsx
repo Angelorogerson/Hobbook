@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ArrowRight, MapPin } from 'lucide-react'
 import { useAuthContext } from '@/store/AuthContext'
@@ -8,6 +8,9 @@ import { SPORTS } from '@/constants/sports'
 import SportIcon from '@/components/ui/SportIcon'
 import { loadPlace } from '@/utils/geo'
 import { resumeState } from './LoginPage'
+import { celebrate } from '@/utils/celebrate'
+import { sportColor } from '@/constants/sports'
+import { MOTION } from '@/utils/motion'
 import './auth.css'
 
 /** The Stammspiel behind an invite or Stammspiel path, if any ("/s/uniplatz", "/stammspiel/:id"). */
@@ -34,6 +37,8 @@ export default function WelcomePage() {
   const [sports, setSports] = useState<string[]>(user?.sports || [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [hop, setHop] = useState<string | null>(null)
+  const submitRef = useRef<HTMLButtonElement>(null)
 
   // Coming from a Stammspiel invite: suggest its city and sport.
   useEffect(() => {
@@ -63,7 +68,9 @@ export default function WelcomePage() {
             setError('')
             try {
               await updateUser({ city: city.trim(), sports })
-              goOn()
+              // A small kick-off before the app opens
+              celebrate(submitRef.current, { count: 10, color: sports[0] ? sportColor(sports[0]) : undefined })
+              window.setTimeout(goOn, MOTION.dur5)
             } catch (err) {
               setError(apiError(err).message)
               setBusy(false)
@@ -87,13 +94,21 @@ export default function WelcomePage() {
           <fieldset className="field">
             <legend className="label">Was spielst du?</legend>
             <div className="welcome-sports">
-              {SPORTS.map((s) => (
-                <label key={s.key} className={`chip${sports.includes(s.key) ? ' is-on' : ''}`}>
+              {SPORTS.map((s, i) => (
+                <label
+                  key={s.key}
+                  className={`chip welcome-sport${sports.includes(s.key) ? ' is-on' : ''}${hop === s.key ? ' is-hop' : ''}`}
+                  style={{ ['--i' as string]: i, ['--sport-color' as string]: sportColor(s.key) }}
+                  onAnimationEnd={(e) => e.animationName === 'm-impact' && setHop(null)}
+                >
                   <input
                     type="checkbox"
                     className="sr-only"
                     checked={sports.includes(s.key)}
-                    onChange={() => setSports((cur) => (cur.includes(s.key) ? cur.filter((x) => x !== s.key) : [...cur, s.key]))}
+                    onChange={() => {
+                      if (!sports.includes(s.key)) setHop(s.key)
+                      setSports((cur) => (cur.includes(s.key) ? cur.filter((x) => x !== s.key) : [...cur, s.key]))
+                    }}
                   />
                   <SportIcon sport={s.key} size={14} /> {s.label}
                 </label>
@@ -106,7 +121,7 @@ export default function WelcomePage() {
             </p>
           )}
           <div className="welcome-actions">
-            <button type="submit" className="btn btn-primary btn-lg" disabled={busy}>
+            <button ref={submitRef} type="submit" className="btn btn-primary btn-lg" disabled={busy}>
               {busy ? 'Speichern …' : 'Weiter'} <ArrowRight size={18} aria-hidden="true" />
             </button>
             <button type="button" className="btn btn-ghost" onClick={goOn}>

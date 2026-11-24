@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertTriangle, Bookmark, CalendarPlus, CheckCircle2, Compass, Plus, Pencil, XCircle, Trash2, LogOut, Repeat, ArrowRight } from 'lucide-react'
 import { getMyGroups, rhythmText, type Group } from '@/api/groupApi'
@@ -14,6 +14,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner'
 import ConfirmDialog from '@/components/common/ConfirmDialog'
 import './MyEventsPage.css'
 import { Presence } from '@/hooks/usePresence'
+import RollingNumber from '@/components/ui/RollingNumber'
 
 type Tab = 'created' | 'joined' | 'saved'
 
@@ -27,6 +28,20 @@ const isUpcoming = (e: SportEvent) => e.status === 'open' || e.status === 'full'
 
 export default function MyEventsPage() {
   const [tab, setTab] = useState<Tab>('created')
+  // 27 · The selected marker slides to the chosen tab (measured, transform only)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const [indicator, setIndicator] = useState<React.CSSProperties>({ opacity: 0 })
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = tabsRef.current?.querySelector<HTMLElement>(`#my-tab-${tab}`)
+      if (!el) return
+      const inset = 12
+      setIndicator({ transform: `translateX(${el.offsetLeft + inset}px) scaleX(${Math.max(0, el.offsetWidth - inset * 2) / 100})` })
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [tab])
   const [data, setData] = useState<{ created: SportEvent[]; joined: SportEvent[]; saved: SportEvent[] } | null>(null)
   const [error, setError] = useState('')
   const [message, setMessageState] = useState<{ text: string; tone: 'success' | 'danger' } | null>(null)
@@ -169,7 +184,8 @@ export default function MyEventsPage() {
       )}
 
       <div
-        className="tabs"
+        ref={tabsRef}
+        className="tabs has-indicator"
         role="tablist"
         aria-label="Meine Events"
         onKeyDown={(e) => {
@@ -193,9 +209,10 @@ export default function MyEventsPage() {
             tabIndex={tab === t.key ? 0 : -1}
             onClick={() => setTab(t.key)}
           >
-            {t.label} ({data?.[t.key].length ?? 0})
+            <RollingNumber value={data?.[t.key].length ?? 0} text={`${t.label} (${data?.[t.key].length ?? 0})`} />
           </button>
         ))}
+        <span className="tab-indicator" aria-hidden="true" style={indicator} />
       </div>
 
       {error && (

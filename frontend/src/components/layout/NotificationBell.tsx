@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Bell } from 'lucide-react'
 import { getUnreadCount } from '@/api/loopApi'
+import { usePrevious } from '@/hooks/useOnChange'
+import { Presence } from '@/hooks/usePresence'
+import { MOTION } from '@/utils/motion'
 
 const POLL_MS = 60_000
 
@@ -39,17 +42,30 @@ export function useUnreadCount(enabled: boolean) {
   return unread
 }
 
-/** Bell with an unread dot. The dot appears with a small fade and scale; it never shakes. */
+/**
+ * Bell with an unread dot. 15 · When more arrive, the bell swings once and the
+ * badge hops; when everything is read, the dot fades away instead of vanishing.
+ */
 export default function NotificationBell({ unread, className = 'nav-link' }: { unread: number; className?: string }) {
   const label = unread ? `Benachrichtigungen, ${unread} ungelesen` : 'Benachrichtigungen'
+  const prev = usePrevious(unread)
+  const [ring, setRing] = useState(0)
+  // The first count after the app opens is not news: only later increases ring.
+  const [since] = useState(() => Date.now())
+  useEffect(() => {
+    if (unread > prev && Date.now() - since > MOTION.dur8 * 3) setRing((n) => n + 1)
+  }, [unread, prev, since])
+  const shown = unread > 0 ? unread : prev
   return (
     <NavLink to="/benachrichtigungen" className={({ isActive }) => `${className} bell${isActive ? ' active' : ''}`} aria-label={label} title={label}>
-      <Bell size={20} aria-hidden="true" />
-      {unread > 0 && (
-        <span className="bell-dot num" aria-hidden="true">
-          {unread > 9 ? '9+' : unread}
+      <span key={ring} className={ring ? 'bell-icon is-ringing' : 'bell-icon'}>
+        <Bell size={20} aria-hidden="true" />
+      </span>
+      <Presence show={unread > 0} exitMs={MOTION.dur3Out}>
+        <span key={ring} className={`bell-dot num${ring ? ' is-bump' : ''}`} aria-hidden="true">
+          {shown > 9 ? '9+' : shown}
         </span>
-      )}
+      </Presence>
     </NavLink>
   )
 }

@@ -9,7 +9,8 @@ import { EmptyState, EventCardSkeleton } from '@/components/ui/DataPieces'
 import { NEAR_RADIUS_KM, useEventDiscovery } from '@/hooks/useEventDiscovery'
 import { sportLabel } from '@/constants/sports'
 import { distanceKm } from '@/utils/geo'
-import { scrollBehavior } from '@/utils/motion'
+import { prefersReducedMotion, scrollBehavior } from '@/utils/motion'
+import RollingNumber from '@/components/ui/RollingNumber'
 import './DiscoverPage.css'
 
 interface Props {
@@ -23,6 +24,17 @@ interface Props {
 export default function DiscoverPage({ initialView }: Props) {
   const navigate = useNavigate()
   const d = useEventDiscovery()
+  // 11 · Anpfiff: the first visit of a session gets the big entrance
+  const [kickoff] = useState(() => {
+    if (prefersReducedMotion()) return false
+    try {
+      if (sessionStorage.getItem('hobbook_kickoff')) return false
+      sessionStorage.setItem('hobbook_kickoff', '1')
+    } catch {
+      /* storage unavailable: still one entrance per page load */
+    }
+    return true
+  })
   const [view, setView] = useState<'list' | 'map'>(initialView)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [selectSource, setSelectSource] = useState<'list' | 'map'>('list')
@@ -115,15 +127,23 @@ export default function DiscoverPage({ initialView }: Props) {
             locateError={d.locateError}
           />
           <p className="discover-count" role="status" aria-live="polite">
-            {d.loading
-              ? 'Events werden geladen …'
-              : d.error
-                ? ''
-                : d.total === 0
-                  ? d.hiddenFull > 0
-                    ? 'Keine Events mit freien Plätzen'
-                    : 'Keine Events gefunden'
-                  : `${d.total} ${d.total === 1 ? 'Event' : 'Events'}${d.total > d.events.length ? ` (die ersten ${d.events.length} werden angezeigt)` : ''}${unmappable ? ` · ${unmappable} ohne Kartenposition` : ''}`}
+            {d.loading ? (
+              'Events werden geladen …'
+            ) : d.error ? (
+              ''
+            ) : (
+              // 14 · The count rolls to its new value when filters change
+              <RollingNumber
+                value={d.total}
+                text={
+                  d.total === 0
+                    ? d.hiddenFull > 0
+                      ? 'Keine Events mit freien Plätzen'
+                      : 'Keine Events gefunden'
+                    : `${d.total} ${d.total === 1 ? 'Event' : 'Events'}${d.total > d.events.length ? ` (die ersten ${d.events.length} werden angezeigt)` : ''}${unmappable ? ` · ${unmappable} ohne Kartenposition` : ''}`
+                }
+              />
+            )}
           </p>
         </div>
 
@@ -180,11 +200,12 @@ export default function DiscoverPage({ initialView }: Props) {
 
           <ol
             key={`${d.events.length}-${d.events[0]?._id ?? ''}-${d.events[d.events.length - 1]?._id ?? ''}`}
-            className="discover-cards m-fade-in"
+            className={`discover-cards${kickoff ? ' is-kickoff' : ''}`}
             aria-label="Gefundene Events"
           >
-            {d.events.map((e) => (
-              <li key={e._id}>
+            {d.events.map((e, i) => (
+              // 24 · Cards cascade in, the first six one after another
+              <li key={e._id} className="discover-card-in" style={{ ['--i' as string]: Math.min(i, 5) }}>
                 <EventCard
                   ref={(el) => {
                     if (el) cardRefs.current.set(e._id, el)
@@ -228,6 +249,7 @@ export default function DiscoverPage({ initialView }: Props) {
           fitKey={fitKey}
           focus={d.filters.near}
           position={d.position}
+          kickoff={kickoff}
           loading={d.loading}
         />
       </section>

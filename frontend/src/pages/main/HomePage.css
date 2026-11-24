@@ -85,6 +85,8 @@
   display: grid;
   gap: var(--space-3);
   animation: m-enter var(--dur-4) var(--ease-enter) backwards;
+  /* 29 · this week's games arrive one after another */
+  animation-delay: calc(var(--i, 0) * var(--stagger));
 }
 .week-card-head {
   display: flex;

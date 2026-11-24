@@ -91,8 +91,8 @@ export default function HomePage() {
             <h2 id="home-week">Deine Woche</h2>
           </div>
           <ul className="home-week-list">
-            {groups.map((g) => (
-              <li key={g._id} className="card card-pad week-card">
+            {groups.map((g, wi) => (
+              <li key={g._id} className="card card-pad week-card" style={{ ['--i' as string]: Math.min(wi, 5) }}>
                 <div className="week-card-head">
                   <div>
                     <Link to={`/stammspiel/${g._id}`} className="week-card-title">

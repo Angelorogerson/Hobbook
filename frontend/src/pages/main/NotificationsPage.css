@@ -79,6 +79,9 @@ a.notif:hover {
   color: var(--c-text-subtle);
 }
 .notif-unread {
+  transition:
+    transform var(--dur-4) var(--ease-exit),
+    opacity var(--dur-4) var(--ease-exit);
   position: absolute;
   top: var(--space-3);
   right: var(--space-3);
@@ -86,4 +89,9 @@ a.notif:hover {
   height: 8px;
   border-radius: 50%;
   background: var(--c-accent);
+}
+
+.notif-unread.is-read {
+  opacity: 0;
+  transform: scale(0);
 }

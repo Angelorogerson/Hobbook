@@ -409,6 +409,33 @@ a.chip:active {
 .tab:active {
   color: var(--c-text);
 }
+/* 27 · One marker slides from tab to tab (MyEvents): see TabIndicator */
+.tabs {
+  position: relative;
+}
+.tabs.has-indicator .tab::after {
+  display: none;
+}
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100px;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-accent);
+  transform-origin: left;
+  transition: transform var(--dur-4) var(--ease-spring);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-indicator {
+    transition: none;
+  }
+  .tab::after {
+    transition: none;
+  }
+}
 .tab:hover {
   color: var(--c-text);
   text-decoration: none;
@@ -439,6 +466,13 @@ a.chip:active {
   border-radius: var(--radius-pill);
   background: var(--c-hl);
   color: var(--c-on-hl);
+  /* 23 · Empty states: the lime disc drops in once like a ball and settles */
+  animation: m-drop var(--dur-7) var(--ease-move) backwards;
+}
+.state h2,
+.state h3,
+.state p {
+  animation: m-fade-in var(--dur-4) var(--ease-move) var(--dur-4) backwards;
 }
 .state h2,
 .state h3 {
@@ -543,5 +577,18 @@ a.chip:active {
 @media (pointer: coarse) {
   .link-btn {
     min-height: var(--control-h);
+  }
+}
+
+/* 18 · A search alert that was just switched on rings once */
+.alert-btn svg {
+  transform-origin: 50% 2px;
+}
+.alert-btn.just-on svg {
+  animation: m-swing var(--dur-7) var(--ease-move);
+}
+@media (prefers-reduced-motion: reduce) {
+  .alert-btn.just-on svg {
+    animation: none;
   }
 }

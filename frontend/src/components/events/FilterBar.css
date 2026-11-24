@@ -114,3 +114,20 @@
   font-size: var(--text-sm);
   color: var(--c-danger);
 }
+
+/* 28 · A filter that switches on hops once; "Zurücksetzen" slides in when it appears */
+.filterbar-chips .chip[aria-pressed='true'],
+.filterbar-chips .chip-select.is-on {
+  animation: m-impact var(--dur-5) var(--ease-spring);
+}
+.filterbar-reset {
+  --m-move: 0px;
+  animation: m-enter var(--dur-3) var(--ease-enter) backwards;
+  animation-name: filter-reset-in;
+}
+@keyframes filter-reset-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--move-3) * -1));
+  }
+}

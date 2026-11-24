@@ -61,14 +61,29 @@
   animation: m-enter var(--dur-6) var(--ease-enter) backwards;
   animation-delay: calc(var(--i, 0) * var(--stagger));
 }
-/* The ball rolls in, comes to rest, and the highlight follows it over "Spiel." */
+/* 1 · Anstoß: the ball jumps out of the logo, hops twice across the page and
+   lands behind "Spiel.", which then lights up. The outer span carries the
+   horizontal travel, the ball itself the hops and the spin (LandingPage.tsx
+   measures the start offset from the logo dot into --kick-x / --kick-y). */
+.lp-ball-x {
+  display: inline-block;
+  vertical-align: baseline;
+}
+.reveal-ready .lp-ball-x {
+  animation: lp-kick-x var(--dur-8) var(--ease-move) backwards;
+  animation-delay: var(--dur-5);
+}
 .reveal-ready .lp-ball {
-  animation: lp-roll var(--dur-7) var(--ease-enter) backwards;
-  animation-delay: calc(var(--stagger) * 2);
+  animation: lp-kick-y var(--dur-8) linear backwards;
+  animation-delay: var(--dur-5);
 }
 .reveal-ready .lp-h1-mark {
   animation: lp-mark var(--dur-5) var(--ease-move) backwards;
-  animation-delay: calc(var(--dur-7) * 0.8);
+  animation-delay: calc(var(--dur-5) + var(--dur-8) * 0.92);
+}
+/* The logo's dot is "kicked off": it is gone while the ball flies and comes back */
+.lp-kickoff .brand .logo-mark circle {
+  animation: lp-logo-dot calc(var(--dur-5) + var(--dur-8)) linear both;
 }
 .lp-kicker {
   display: inline-flex;
@@ -339,11 +354,11 @@
   flex: 0 0 min(380px, 86vw);
 }
 /* Real events arrive one after another with the subtle zoom: "this is live data" */
+/* 2 · Dealt like cards: each event flies in from the right, tilted, and lays itself straight */
 .reveal-ready .lp-card-in {
-  --m-move: var(--move-3);
-  --m-scale: var(--scale-enter);
-  animation: m-enter var(--dur-5) var(--ease-enter) backwards;
-  animation-delay: calc(var(--i, 0) * var(--stagger));
+  animation: lp-deal var(--dur-6) var(--ease-spring) backwards;
+  animation-delay: calc(var(--dur-5) + var(--i, 0) * var(--stagger) * 2);
+  transform-origin: 50% 120%;
 }
 .lp-rail-item .event-card {
   height: 100%;
@@ -658,12 +673,39 @@
   background:
     linear-gradient(var(--c-text), var(--c-text)) center / 100% 2px no-repeat,
     linear-gradient(var(--c-text), var(--c-text)) center / 2px 100% no-repeat, var(--c-hl);
-  transition: transform var(--dur-5) var(--ease-move);
+  transition: transform var(--dur-6) var(--ease-move);
+}
+/* 3 · While it rolls, a short lime trail streaks behind the ball */
+.lp-track-ball::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 7px;
+  height: var(--move-5);
+  margin-left: -3.5px;
+  border-radius: 4px;
+  background: linear-gradient(to bottom, transparent, var(--c-hl));
+  opacity: 0;
+  transition: opacity var(--dur-5) var(--ease-move);
+  z-index: -1;
+}
+.lp-track-ball[data-dir='up']::before {
+  top: 50%;
+  bottom: auto;
+  background: linear-gradient(to top, transparent, var(--c-hl));
+}
+.lp-track-ball.is-moving::before {
+  opacity: 1;
+  transition-duration: var(--dur-2);
 }
 @media (prefers-reduced-motion: reduce) {
   .lp-track-fill,
   .lp-track-ball {
     transition: none;
+  }
+  .lp-track-ball::before {
+    display: none;
   }
 }
 .lp-step {
@@ -778,7 +820,21 @@
 }
 .reveal-ready .lp-final-inner.is-in .city-search-btn {
   animation: m-pop var(--dur-5) var(--ease-spring) backwards;
-  animation-delay: calc(var(--dur-7) + var(--stagger) * 3);
+  animation-delay: calc(var(--dur-7) + var(--dur-5));
+}
+/* 4 · Tor! When the ball lands, a lime shockwave runs out from the search field */
+.lp-final .city-search-row::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 3px solid var(--c-stage-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.reveal-ready .lp-final-inner.is-in .city-search-row::after {
+  animation: lp-goal var(--dur-8) var(--ease-enter) backwards;
+  animation-delay: calc(var(--dur-7) * 0.8);
 }
 .lp-final-links {
   color: var(--c-on-stage-muted);
@@ -829,9 +885,66 @@
   color: var(--c-text-subtle);
 }
 
-@keyframes lp-roll {
+@keyframes lp-kick-x {
   from {
-    transform: translateX(-60vw) rotate(-720deg);
+    transform: translateX(var(--kick-x, -60vw));
+  }
+}
+/* From the logo's height: up over the headline, down, a smaller hop, settle */
+@keyframes lp-kick-y {
+  0% {
+    transform: translateY(var(--kick-y, 0px)) rotate(-540deg) scale(0.55);
+    animation-timing-function: var(--ease-up);
+  }
+  38% {
+    transform: translateY(calc(var(--move-5) * -2.2)) rotate(-300deg) scale(1.15);
+    animation-timing-function: var(--ease-fall);
+  }
+  64% {
+    transform: translateY(0) rotate(-120deg) scale(1, 0.82);
+    animation-timing-function: var(--ease-up);
+  }
+  80% {
+    transform: translateY(calc(var(--move-5) * -0.7)) rotate(-40deg);
+    animation-timing-function: var(--ease-fall);
+  }
+  92% {
+    transform: translateY(0) scale(1.06, 0.92);
+  }
+  100% {
+    transform: none;
+  }
+}
+@keyframes lp-logo-dot {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  32%,
+  90% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes lp-deal {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--move-5) * 3)) rotate(8deg) scale(var(--scale-enter));
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes lp-goal {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.12, 1.6);
   }
 }
 @keyframes lp-mark {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { EventComment } from '@/api/commentApi'
@@ -150,7 +150,8 @@ describe('EventComments', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Löschen' }))
     expect(api.deleteComment).toHaveBeenCalledWith('e1', 'c1')
     expect(await screen.findByText('Bleibt stehen')).toBeInTheDocument()
-    expect(screen.queryByText('Kann man dort parken?')).not.toBeInTheDocument()
+    // The message folds away, then leaves the list
+    await waitFor(() => expect(screen.queryByText('Kann man dort parken?')).not.toBeInTheDocument())
   })
 
   it('shows a load error with a retry', async () => {

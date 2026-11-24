@@ -6,17 +6,8 @@ import type { SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
 import { formatEventDate, formatShortWhen } from '@/utils/format'
+import DrawnCheck from '@/components/ui/DrawnCheck'
 import './LinkActionPages.css'
-
-/** A check that draws itself once: the answer has arrived. */
-function DrawnCheck() {
-  return (
-    <svg className="drawn-check" viewBox="0 0 52 52" width="64" height="64" aria-hidden="true">
-      <circle cx="26" cy="26" r="24" />
-      <path d="M15 27 l7 7 l15 -16" />
-    </svg>
-  )
-}
 
 const when = (e: SportEvent) => {
   const { day, time } = formatEventDate(e.startAt, e.endAt, e.timezone)

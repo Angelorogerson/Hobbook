@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Search } from 'lucide-react'
 import { listEvents, type SportEvent } from '@/api/eventApi'
@@ -174,4 +174,33 @@ export function useActiveStep(count: number) {
     return () => io.disconnect()
   }, [count])
   return { active, marks, setRef: (i: number) => (el: HTMLElement | null) => void (refs.current[i] = el) }
+}
+
+/**
+ * Anstoß: measures where the logo's dot is relative to the headline ball, so
+ * the ball can start its flight exactly there (CSS vars --kick-x / --kick-y),
+ * and marks the page while the dot is "in play". Once per visit; nothing with
+ * reduced motion (the CSS only runs under html.reveal-ready).
+ */
+export function useKickoff() {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const ball = ref.current
+    const dot = document.querySelector('.brand .logo-mark circle')
+    if (!ball || prefersReducedMotion()) return
+    if (dot) {
+      const b = ball.getBoundingClientRect()
+      const d = dot.getBoundingClientRect()
+      ball.style.setProperty('--kick-x', `${d.left + d.width / 2 - (b.left + b.width / 2)}px`)
+      ball.style.setProperty('--kick-y', `${d.top + d.height / 2 - (b.top + b.height / 2)}px`)
+    }
+    const root = document.documentElement
+    root.classList.add('lp-kickoff')
+    const t = window.setTimeout(() => root.classList.remove('lp-kickoff'), MOTION.dur5 + MOTION.dur8 + 100)
+    return () => {
+      window.clearTimeout(t)
+      root.classList.remove('lp-kickoff')
+    }
+  }, [])
+  return ref
 }

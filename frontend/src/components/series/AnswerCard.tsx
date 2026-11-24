@@ -4,9 +4,19 @@ import { answerEvent, type SportEvent } from '@/api/eventApi'
 import { apiError } from '@/api/axiosInstance'
 import { Avatar } from '@/components/ui/Avatar'
 import { formatShortWhen, relativeUntil } from '@/utils/format'
-import { prefersReducedMotion } from '@/utils/motion'
+import { MOTION, prefersReducedMotion } from '@/utils/motion'
+import { celebrate } from '@/utils/celebrate'
+import { useOnChange } from '@/hooks/useOnChange'
+import RollingNumber from '@/components/ui/RollingNumber'
 import PendingSpot from './PendingSpot'
 import './series.css'
+
+/** Where on the button the tap landed: the chosen colour fills out from there. */
+const tapPoint = (e: React.MouseEvent<HTMLElement>) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  // Keyboard "clicks" have no position: start from the centre
+  return e.clientX || e.clientY ? { x: e.clientX - r.left, y: e.clientY - r.top } : { x: r.width / 2, y: r.height / 2 }
+}
 
 /** Status of a Stammspiel game as one short line. */
 export function decisionLabel(e: SportEvent) {
@@ -42,13 +52,16 @@ export function AttendanceMeter({ event }: { event: SportEvent }) {
         aria-valuenow={taken}
         aria-valuetext={`${taken} von ${max} dabei, ab ${min} findet es statt`}
         aria-label="Zusagen"
-        style={{ ['--att-fill' as string]: `${Math.min(100, (taken / max) * 100)}%`, ['--att-min' as string]: `${(min / max) * 100}%` }}
+        style={{ ['--att-fill' as string]: String(Math.min(1, taken / max)), ['--att-min' as string]: `${(min / max) * 100}%` }}
       >
         <span className="att-fill" />
         {min > 0 && <span className={`att-min${pop ? ' is-pop' : ''}`} onAnimationEnd={() => setPop(false)} />}
       </div>
       <p className="att-label">
-        <strong className="num">{taken}</strong> dabei
+        <strong className="num">
+          <RollingNumber value={taken} />
+        </strong>{' '}
+        dabei
         {min > 0 && (
           <span>
             {' · '}
@@ -61,9 +74,9 @@ export function AttendanceMeter({ event }: { event: SportEvent }) {
   )
 }
 
-function Chip({ name, me }: { name: string; me?: boolean }) {
+function Chip({ name, me, index = 0 }: { name: string; me?: boolean; index?: number }) {
   return (
-    <li className={`roster-chip${me ? ' is-me' : ''}`} data-me={me ? '' : undefined}>
+    <li className={`roster-chip${me ? ' is-me' : ''}`} data-me={me ? '' : undefined} style={{ ['--i' as string]: Math.min(index, 8) }}>
       <Avatar name={name} size="sm" /> {me ? 'Du' : name}
     </li>
   )
@@ -98,6 +111,13 @@ export default function AnswerCard({
   const tone = label === 'Findet statt' ? 'on' : label === 'Fällt aus' ? 'off' : label === 'Vorbei' ? 'past' : 'open'
   const deadlinePassed = !!event.deadlineAt && new Date(event.deadlineAt) < new Date()
   const my = event.myAnswer ?? null
+  // Celebrations play when the decision or answer changes here, never on reload.
+  const decidedNow = useOnChange(tone, MOTION.dur8)
+  const ribbonRef = useRef<HTMLParagraphElement>(null)
+  useLayoutEffect(() => {
+    if (decidedNow && tone === 'on') celebrate(ribbonRef.current, { count: 10 })
+  }, [decidedNow, tone])
+  const [tap, setTap] = useState<{ x: number; y: number } | null>(null)
 
   // FLIP: your chip glides from its old row into the new one.
   useLayoutEffect(() => {
@@ -109,9 +129,10 @@ export default function AnswerCard({
     const dx = from.left - to.left
     const dy = from.top - to.top
     if (!dx && !dy) return
+    const spring = getComputedStyle(document.documentElement).getPropertyValue('--ease-spring').trim()
     el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], {
-      duration: 250,
-      easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+      duration: MOTION.dur4,
+      easing: spring || 'ease-out',
     })
   }, [my])
 
@@ -135,11 +156,12 @@ export default function AnswerCard({
   }
 
   const roster = event.roster
+  const tapStyle = tap ? ({ ['--tap-x' as string]: `${tap.x}px`, ['--tap-y' as string]: `${tap.y}px` } as React.CSSProperties) : undefined
   const inPeople = event.participants || []
 
   return (
-    <div ref={rootRef} className={`answer-card answer-card--${tone}${compact ? ' is-compact' : ''}`}>
-      <p className={`decision-ribbon decision-ribbon--${tone}`} key={tone}>
+    <div ref={rootRef} className={`answer-card answer-card--${tone}${compact ? ' is-compact' : ''}${decidedNow && tone === 'on' ? ' is-floodlit' : ''}`}>
+      <p ref={ribbonRef} className={`decision-ribbon decision-ribbon--${tone}${decidedNow ? ' is-new' : ''}`} key={tone}>
         {tone === 'on' ? <Check size={16} aria-hidden="true" /> : tone === 'off' ? <X size={16} aria-hidden="true" /> : <Clock size={16} aria-hidden="true" />}
         <strong>{label}</strong>
         {tone === 'open' && event.deadlineAt && (
@@ -166,19 +188,27 @@ export default function AnswerCard({
           <div className="answer-buttons" role="group" aria-label="Bist du dabei?">
             <button
               type="button"
-              className={`btn btn-lg answer-btn answer-btn--in${my === 'in' || my === 'waiting' ? ' is-chosen' : ''}`}
+              className={`btn btn-lg answer-btn answer-btn--in${my === 'in' || my === 'waiting' ? ' is-chosen' : ''}${justAnswered && (my === 'in' || my === 'waiting') ? ' just-chosen' : ''}`}
               aria-pressed={my === 'in' || my === 'waiting'}
               disabled={!!busy}
-              onClick={() => answer('in')}
+              style={tapStyle}
+              onClick={(e) => {
+                setTap(tapPoint(e))
+                answer('in')
+              }}
             >
               <Check size={18} aria-hidden="true" /> {busy === 'in' ? 'Speichern …' : 'Ich bin dabei'}
             </button>
             <button
               type="button"
-              className={`btn btn-lg answer-btn answer-btn--out${my === 'out' ? ' is-chosen' : ''}`}
+              className={`btn btn-lg answer-btn answer-btn--out${my === 'out' ? ' is-chosen' : ''}${justAnswered && my === 'out' ? ' just-chosen' : ''}`}
               aria-pressed={my === 'out'}
               disabled={!!busy}
-              onClick={() => answer('out')}
+              style={tapStyle}
+              onClick={(e) => {
+                setTap(tapPoint(e))
+                answer('out')
+              }}
             >
               <X size={18} aria-hidden="true" /> {busy === 'out' ? 'Speichern …' : 'Diesmal nicht'}
             </button>
@@ -233,8 +263,8 @@ function RosterRow({ title, people, viewerId, muted }: { title: string; people: 
         {title} <span className="num">{people.length}</span>
       </h3>
       <ul>
-        {people.map((p) => (
-          <Chip key={p._id || p.displayName} name={p.displayName} me={!!viewerId && p._id === viewerId} />
+        {people.map((p, i) => (
+          <Chip key={p._id || p.displayName} name={p.displayName} me={!!viewerId && p._id === viewerId} index={i} />
         ))}
       </ul>
     </section>

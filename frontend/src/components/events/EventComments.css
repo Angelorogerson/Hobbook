@@ -92,3 +92,24 @@
     padding: var(--space-2) var(--space-3);
   }
 }
+
+/* 25 · A message you just sent glides in and glows lime once; a deleted one folds away */
+.comment.is-fresh {
+  --m-move: var(--move-3);
+  animation: m-enter var(--dur-4) var(--ease-spring) backwards;
+  position: relative;
+}
+.comment.is-fresh::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--c-hl) 45%, transparent);
+  pointer-events: none;
+  animation: m-fade-out var(--dur-8) var(--ease-move) var(--dur-4) forwards;
+}
+.comment.is-leaving {
+  animation: m-exit var(--dur-4-out) var(--ease-exit) forwards;
+  --m-scale: var(--scale-enter);
+  --m-move-out: 0px;
+}

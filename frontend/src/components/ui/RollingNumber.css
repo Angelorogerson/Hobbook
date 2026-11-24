@@ -1,0 +1,47 @@
+/* Scoreboard roll: the new value comes in from one side, the old leaves the other.
+   The old value is a pseudo-element (not text), see RollingNumber.tsx. */
+.rolling {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+.rolling-now {
+  display: inline-block;
+}
+.rolling-now.is-rolling {
+  animation: roll-in var(--dur-4) var(--ease-enter) backwards;
+}
+.rolling[data-from]::after {
+  content: attr(data-from);
+  position: absolute;
+  inset: 0;
+  white-space: nowrap;
+  animation: roll-out var(--dur-4) var(--ease-exit) forwards;
+}
+/* Counting up rolls upwards, counting down rolls downwards */
+.rolling[data-dir='down'] {
+  --roll-from: -100%;
+  --roll-to: 100%;
+}
+@keyframes roll-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--roll-from, 100%));
+  }
+}
+@keyframes roll-out {
+  to {
+    opacity: 0;
+    transform: translateY(var(--roll-to, -100%));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rolling-now.is-rolling {
+    animation: m-fade-in var(--dur-2) var(--ease-move) backwards;
+  }
+  .rolling[data-from]::after {
+    animation: m-fade-out var(--dur-2) var(--ease-move) forwards;
+  }
+}

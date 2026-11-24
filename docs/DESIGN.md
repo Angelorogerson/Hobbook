@@ -246,7 +246,28 @@ One motion language, written as tokens (`styles/tokens.css`), primitives (`style
 - Loaders breathe (opacity) instead of spinning or shimmering. The map camera jumps (MapLibre honours the setting).
 - The preference is read live (`useReducedMotion`), so changing it while the page is open takes effect.
 
-**Not used:** parallax, scroll-jacking, blur, 3D tilt, cursor effects, endless decorative loops, animation libraries, and a shared-element morph from card to detail (needs React Router's data router; revisit later).
+**Celebrations (the ball as signature).** The lime dot of the logo is the ball. Big moments use it; everyday moments stay short.
+- Building blocks: `useOnChange` (fires on a change, never on first render), `RollingNumber` (scoreboard roll; one text node, the old value is a CSS pseudo-element), `celebrate()` (8–10 small balls + a ring burst out of an element, removed afterwards), `DrawnCheck` ("Erledigt": check draws, shockwave), `SwapIcon` (icon turns into a check after copying). Tokens: `--dur-8` 1200 ms, `--move-5`, `--scale-burst`, `--ring`, `--ease-up` / `--ease-fall` (a ball in flight).
+- Rules: only on the event itself (never on reload; landing and Discover kick-off once per visit), only transform/opacity (clip-path for the save fill and QR build), at most 10 particles, nothing blocks input, everything decorative is `aria-hidden`, reduced motion shows the end state without particles or travel. No vibration.
+
+| # | Big moment | What happens |
+|---|---|---|
+| 1 | Landing kick-off | The ball jumps out of the logo dot, hops twice over the headline and lands behind "Spiel.", which lights up |
+| 2 | Landing live rail | Real events are dealt in like cards, tilted, then straight |
+| 3 | Step line | The ball really rolls (rotation from distance) with a short lime trail |
+| 4 | Landing finale | The ball drops, a lime shockwave runs out of the search field, the button nods |
+| 5 | Joined | Ball hit from the join button, the spot pops into the meter, "Plätze frei" rolls down |
+| 6 | Event is live | Lime light sweeps over the event head, date tile flips up, share button nods, ball hit |
+| 7 | Game decided "on" | Floodlight glow, ribbon impact, the people who are in hop in turn, ball hit |
+| 8 | Moved up from waiting list | The spot slides up like a handed-over ticket, the clock ring draws (first sighting only); ball hit on "Ich komme" |
+| 9 | Welcome | Sports drop in like balls; a picked sport hops; ball hit on "Weiter" |
+| 10 | Stammspiel created | Invite unfolds like a ticket with a tear-off line, copy button nods, a ball flies out after copying |
+| 11 | Discover kick-off | First visit per session: cards cascade from further away, pins drop from higher |
+| 12 | Done | Email confirmed, new password, email-link answer, feedback: check draws, shockwave, heading rises |
+
+Fine details (13–30): rolling counts (spots, participants, results, tab counts, "x dabei"); bell swings and badge hops on new notifications, dot fades when read; unread dots shrink after reading; bookmark fills from the bottom; alert bell rings when switched on; capacity bar fills with a spring, "nur noch 2" lights up once; event date flips in; new pins drop, removed pins shrink; selected pin sends a ring; empty-state disc drops in; result cascade; new comment glides in with a lime glow, deleted one folds away; copy icon turns into a check; tab marker slides between tabs; a filter that turns on hops, "Zurücksetzen" slides in; answer buttons fill from the tap point; week cards in sequence; poster QR builds row by row with a scan line (screen only).
+
+**Not used:** parallax, scroll-jacking, blur, cursor effects, endless decorative loops, animation libraries, vibration, and a shared-element morph from card to detail (needs React Router's data router; revisit later). 3D is limited to two one-off flips (date tile, invite ticket).
 
 ## 10. Stammspiel (weekly game) surfaces
 

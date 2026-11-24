@@ -1,0 +1,32 @@
+/* 26 · Copied/shared: the icon turns over into a check and back */
+.swap-icon {
+  position: relative;
+  display: inline-grid;
+  flex-shrink: 0;
+}
+.swap-icon > span {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  transition:
+    transform var(--dur-3) var(--ease-spring),
+    opacity var(--dur-2) var(--ease-move);
+}
+.swap-icon-b {
+  opacity: 0;
+  transform: scale(0.4) rotate(-90deg);
+}
+.swap-icon.is-done .swap-icon-a {
+  opacity: 0;
+  transform: scale(0.4) rotate(90deg);
+}
+.swap-icon.is-done .swap-icon-b {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .swap-icon-b,
+  .swap-icon.is-done .swap-icon-a {
+    transform: none;
+  }
+}

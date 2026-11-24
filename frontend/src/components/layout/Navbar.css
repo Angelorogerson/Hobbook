@@ -113,7 +113,29 @@
   text-align: center;
   animation: m-enter var(--dur-3) var(--ease-spring) backwards;
   --m-move: 0px;
-  --m-scale: 0.6;
+  --m-scale: var(--scale-enter);
+}
+.bell-dot.is-bump {
+  animation: m-impact var(--dur-6) var(--ease-spring);
+  --scale-burst: 1.3;
+}
+[data-presence='exit'] .bell-dot {
+  animation: m-exit var(--dur-3-out) var(--ease-exit) forwards;
+  --m-move-out: 0px;
+  --m-scale: var(--scale-enter);
+}
+.bell-icon {
+  display: inline-grid;
+  transform-origin: 50% 2px;
+}
+.bell-icon.is-ringing {
+  animation: m-swing var(--dur-7) var(--ease-move);
+}
+@media (prefers-reduced-motion: reduce) {
+  .bell-icon.is-ringing,
+  .bell-dot.is-bump {
+    animation: none;
+  }
 }
 .topbar-bell {
   display: none;

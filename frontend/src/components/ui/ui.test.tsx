@@ -30,7 +30,7 @@ describe('CapacityMeter', () => {
     expect(container.querySelectorAll('.capacity-seg')).toHaveLength(16)
     rerender(<CapacityMeter taken={20} max={40} status="open" />)
     expect(container.querySelectorAll('.capacity-seg')).toHaveLength(0)
-    expect(container.querySelector('.capacity-fill')).toHaveStyle({ width: '50%' })
+    expect(container.querySelector('.capacity-fill')).toHaveStyle({ transform: 'scaleX(0.5)' })
   })
 })
 

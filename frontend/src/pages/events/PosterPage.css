@@ -153,12 +153,18 @@
   justify-content: center;
   text-align: center;
 }
-.poster-qr {
+.poster-qr-wrap {
+  position: relative;
+  display: flex;
   flex: 1 1 0;
   min-height: calc(40 * var(--u));
   max-height: calc(92 * var(--u));
   max-width: 100%;
   aspect-ratio: 1 / 1;
+}
+.poster-qr {
+  width: 100%;
+  height: 100%;
 }
 .poster-qr-paper {
   fill: var(--poster-paper);
@@ -239,5 +245,49 @@
     padding: 0;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+}
+
+/* 30 · On screen (never in print) the QR code builds up row by row while a
+   lime scan line runs over it, then it is a plain, scannable code. */
+@media screen and (prefers-reduced-motion: no-preference) {
+  .poster-qr-ink {
+    animation: qr-build var(--dur-8) steps(24, end) var(--dur-4) backwards;
+  }
+  .poster-qr-wrap {
+    overflow: hidden;
+  }
+  .poster-qr-wrap::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    /* The lime line sits at the bottom edge of a full-height layer that moves down */
+    background: linear-gradient(to bottom, transparent calc(100% - 8px), var(--c-hl) calc(100% - 8px));
+    opacity: 0;
+    animation: qr-scan var(--dur-8) var(--ease-move) var(--dur-4) backwards;
+  }
+}
+@keyframes qr-build {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes qr-scan {
+  0% {
+    opacity: 1;
+    transform: translateY(-100%);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0);
   }
 }

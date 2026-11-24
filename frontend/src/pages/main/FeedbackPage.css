@@ -37,3 +37,10 @@
   gap: var(--space-2);
   margin-top: var(--space-4);
 }
+
+/* 12 · "Danke!" rises after the check has drawn itself */
+.feedback-thanks h1,
+.feedback-thanks > p {
+  --m-move: var(--move-3);
+  animation: m-enter var(--dur-5) var(--ease-enter) calc(var(--dur-5) * 2) backwards;
+}
