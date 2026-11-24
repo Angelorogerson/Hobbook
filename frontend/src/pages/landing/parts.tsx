@@ -188,18 +188,25 @@ export function useKickoff() {
     const ball = ref.current
     const dot = document.querySelector('.brand .logo-mark circle')
     if (!ball || prefersReducedMotion()) return
-    // The ball rests right after "Spiel."; measure that word (it is not moved
-    // sideways by any animation) and the logo dot, and again once the web font
-    // has loaded and the headline has its final width. Only CSS vars change,
-    // so the running animation simply follows.
-    const mark = document.querySelector('.lp-h1-mark')
+    // Where the ball rests = where it is now minus the sideways shift its
+    // entrance animation has applied (layout is not changed by transforms), so
+    // the animation never has to be stopped. Measured again once the web font
+    // has loaded and the headline has its final shape; only CSS vars change.
+    const shiftOf = (el: Element | null) => {
+      if (!el) return { x: 0, y: 0 }
+      const t = getComputedStyle(el).transform
+      if (!t || t === 'none') return { x: 0, y: 0 }
+      const m = new DOMMatrixReadOnly(t)
+      return { x: m.m41, y: m.m42 }
+    }
     const measure = () => {
-      if (!dot || !mark) return
+      if (!dot) return
       const d = dot.getBoundingClientRect()
-      const m = mark.getBoundingClientRect()
-      const size = ball.offsetWidth || 20
-      const restX = m.right + size * 0.6
-      const restY = m.top + m.height * 0.62
+      const r = ball.getBoundingClientRect()
+      const own = shiftOf(ball)
+      const line = shiftOf(ball.closest('.lp-h1'))
+      const restX = r.left + r.width / 2 - own.x - line.x
+      const restY = r.top + r.height / 2 - own.y - line.y
       ball.style.setProperty('--kick-x', `${d.left + d.width / 2 - restX}px`)
       ball.style.setProperty('--kick-y', `${d.top + d.height / 2 - restY}px`)
     }

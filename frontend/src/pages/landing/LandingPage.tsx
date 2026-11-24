@@ -84,9 +84,12 @@ export default function LandingPage() {
             <Zap size={16} aria-hidden="true" /> Kostenlos · von der Community · ohne Verein
           </p>
           <h1 className="lp-h1 lp-in" style={order(1)}>
-            Finde dein nächstes <span className="lp-h1-mark">Spiel.</span>
-            <span className="lp-ball-x" ref={ballRef} aria-hidden="true">
-              <span className="lp-ball" />
+            Finde dein nächstes{' '}
+            <span className="lp-h1-end">
+              <span className="lp-h1-mark">Spiel.</span>
+              <span className="lp-ball-x" ref={ballRef} aria-hidden="true">
+                <span className="lp-ball" />
+              </span>
             </span>
           </h1>
           <p className="lp-sub lp-in" style={order(2)}>

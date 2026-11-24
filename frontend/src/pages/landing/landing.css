@@ -65,6 +65,10 @@
    lands behind "Spiel.", which then lights up. The outer span carries the
    horizontal travel, the ball itself the hops and the spin (LandingPage.tsx
    measures the start offset from the logo dot into --kick-x / --kick-y). */
+/* "Spiel." and its ball always stay on one line */
+.lp-h1-end {
+  white-space: nowrap;
+}
 .lp-ball-x {
   display: inline-block;
   vertical-align: baseline;
